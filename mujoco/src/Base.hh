@@ -28,7 +28,6 @@
 #include <unordered_map>
 #include <vector>
 
-
 #include <gz/math/AxisAlignedBox.hh>
 #include <gz/math/Pose3.hh>
 #include <gz/math/Quaternion.hh>

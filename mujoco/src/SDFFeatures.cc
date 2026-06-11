@@ -162,13 +162,18 @@ double convertScrewThreadPitch(const double _pitch)
 {
   return _pitch / (2.0 * GZ_PI);
 }
+
 /////////////////////////////////////////////////
 struct ModelKinematicStructure
 {
   std::string name;
 
   std::vector<const ::sdf::Link *> links;
+  /// \brief For index i, modelInfos[i] is the ModelInfo of the model that
+  /// contains links[i].
   std::vector<std::shared_ptr<ModelInfo>> modelInfos;
+  /// \brief For index i, sdfModels[i] is the SDFormat model representation that
+  /// contains links[i].
   std::vector<const ::sdf::Model *> sdfModels;
   // For index i, parents[i] is the parent link of link[i]
   std::vector<const ::sdf::Link *> parents;
@@ -181,7 +186,7 @@ struct ModelKinematicStructure
   // defines childInJoint[i]
   std::vector<std::shared_ptr<ModelInfo>> jointModelInfos;
 
-  std::optional<std::size_t> FindLinkByName(
+  std::optional<std::size_t> FindLinkInModelByName(
       const std::string &_name, const ::sdf::Model *_model)
   {
     auto link = _model->LinkByName(_name);
@@ -303,278 +308,295 @@ struct ModelKinematicStructure
       {
         mjs_addFreeJoint(child);
       }
+      return;
     }
-    else
+
+    mjsJoint *joint{nullptr};
+    mjsJoint *joint2{nullptr};
+    // It is possible to apply joint forces using `qfrc_applied`, but this
+    // makes it harder to retrieve the last applied forces on a joint when
+    // implementing GetJoint. Instead, we use actuators and `mjData::ctrl`.
+    // This allows us to use the same interface for setting velocity servo
+    // commands as well.
+    mjsActuator *actuator{nullptr};
+    if (sdfJoint->Type() == ::sdf::JointType::PRISMATIC)
     {
-      mjsJoint *joint{nullptr};
-      mjsJoint *joint2{nullptr};
-      // It is possible to apply joint forces using `qfrc_applied`, but this
-      // makes it harder to retrieve the last applied forces on a joint when
-      // implementing GetJoint. Instead, we use actuators and `mjData::ctrl`.
-      // This allows us to use the same interface for setting velocity servo
-      // commands as well.
-      mjsActuator *actuator{nullptr};
-      if (sdfJoint->Type() == ::sdf::JointType::PRISMATIC)
-      {
-        joint = mjs_addJoint(child, nullptr);
-        joint->type = mjJNT_SLIDE;
-        const auto *sdfAxis = sdfJoint->Axis(0);
-        convertJointAxis(sdfAxis, joint->axis);
-        copyStandardJointAxisProperties(joint, sdfAxis);
-      }
-      else if (sdfJoint->Type() == ::sdf::JointType::REVOLUTE)
-      {
-        joint = mjs_addJoint(child, nullptr);
-        joint->type = mjJNT_HINGE;
-        const auto *sdfAxis = sdfJoint->Axis(0);
-        convertJointAxis(sdfAxis, joint->axis);
-        copyStandardJointAxisProperties(joint, sdfAxis);
-      }
-      else if (sdfJoint->Type() == ::sdf::JointType::BALL)
-      {
-        joint = mjs_addJoint(child, nullptr);
-        joint->type = mjJNT_BALL;
-        const auto *sdfAxis = sdfJoint->Axis(0);
-        if (sdfAxis)
-        {
-          convertJointAxis(sdfAxis, joint->axis);
-          copyStandardJointAxisProperties(joint, sdfAxis);
-          // For ball joints, the first range parameter should always be set to
-          // zero.
-          if (joint->limited && std::abs(joint->range[0]) > 0.0)
-          {
-            gzwarn << "MuJoCo requires the lower joint position limit of ball "
-                      "joints to be zero.\n";
-            joint->range[0] = 0;
-          }
-        }
-      }
-      else if (sdfJoint->Type() == ::sdf::JointType::SCREW)
-      {
-        // Screw joints in MuJoCo are modeled by coupling a hinge joint
-        // (rotation) and a slide joint (translation) along the same axis on
-        // the child body using a joint equality constraint (mjEQ_JOINT).
-        // We store the hinge joint (`joint`) as the primary joint in
-        // JointInfo. This matches DART's choice of using the rotational DOF
-        // as the primary, ensuring both physics plugins expose consistent
-        // angular units (radians and rad/s) for screw joints across the
-        // gz-physics API.
-        // Like the universal joint, `joint` and `joint2` are compiled
-        // contiguously on the same child body.
-        joint = mjs_addJoint(child, nullptr);
-        joint->type = mjJNT_HINGE;
-        const auto *sdfAxis1 = sdfJoint->Axis(0);
-        if (sdfAxis1)
-        {
-          convertJointAxis(sdfAxis1, joint->axis);
-          copyStandardJointAxisProperties(joint, sdfAxis1);
-          // Disable independent position limits on the primary rotational
-          // hinge joint. In MuJoCo's soft constraint solver, enforcing limits
-          // on the hinge joint when coupled with a small thread pitch causes
-          // premature solver clamping and massive numerical damping. By mapping
-          // position limits purely onto the translational slide joint, we
-          // ensure exact kinematic limit enforcement without solver resistance.
-          joint->limited = false;
-        }
-
-        joint2 = mjs_addJoint(child, nullptr);
-        joint2->type = mjJNT_SLIDE;
-        if (sdfAxis1)
-        {
-          convertJointAxis(sdfAxis1, joint2->axis);
-          // We only copy position limits and range to the secondary slide
-          // joint. All passive dynamics (damping, frictionloss, stiffness) and
-          // actuator effort limits are enforced purely on the primary
-          // rotational hinge joint to avoid double-counting and physical unit
-          // mismatches.
-          joint2->limited = static_cast<int>(!std::isinf(sdfAxis1->Lower()) &&
-                                             !std::isinf(sdfAxis1->Upper()));
-          if (joint2->limited)
-          {
-            const double pitch =
-                convertScrewThreadPitch(sdfJoint->ScrewThreadPitch());
-            joint2->range[0] = sdfAxis1->Lower() * pitch;
-            joint2->range[1] = sdfAxis1->Upper() * pitch;
-          }
-        }
-      }
-      else if (sdfJoint->Type() == ::sdf::JointType::UNIVERSAL)
-      {
-        // Universal joints in MuJoCo are modeled as two hinge joints in
-        // series on the child body. We only need to keep a pointer to the
-        // first hinge joint (`joint`) in JointInfo. Since MuJoCo compiles
-        // joints on the same body contiguously in memory, all getters/setters
-        // can safely access the second joint (`joint2`)'s state data using
-        // `nq_index + 1` and `nv_index + 1` without needing to store it
-        // separately in JointInfo.
-        joint = mjs_addJoint(child, nullptr);
-        joint->type = mjJNT_HINGE;
-        const auto *sdfAxis1 = sdfJoint->Axis(0);
-        if (sdfAxis1)
-        {
-          convertJointAxis(sdfAxis1, joint->axis);
-          copyStandardJointAxisProperties(joint, sdfAxis1);
-        }
-
-        joint2 = mjs_addJoint(child, nullptr);
-        joint2->type = mjJNT_HINGE;
-        const auto *sdfAxis2 = sdfJoint->Axis(1);
-        if (sdfAxis2)
-        {
-          convertJointAxis(sdfAxis2, joint2->axis);
-          copyStandardJointAxisProperties(joint2, sdfAxis2);
-        }
-      }
-      else if (sdfJoint->Type() != ::sdf::JointType::FIXED)
-      {
-        gzwarn << "Joint type " << static_cast<int>(sdfJoint->Type())
-               << " in joint [" << sdfJoint->Name() << "] not supported\n";
-        return;
-      }
-
-      // Resolve the pose of the joint relative to the body with which
-      // it's associated. Note that this body is the child link of the joint
-      // in SDF terms.
-      auto jointPose = resolveSdfPose(sdfJoint->SemanticPose());
-      mjsEquality *eq = nullptr;
-      // Note that no joints will be created when processing a fixed joint.
-      if (joint)
-      {
-        const std::string mjJointName =
-            ::sdf::JoinName(_modelInfo->name, sdfJoint->Name());
-        mjs_setName(joint->element, mjJointName.c_str());
-        actuator = mjs_addActuator(_spec, nullptr);
-        actuator->trntype = mjtTrn::mjTRN_JOINT;
-
-        mjs_setString(actuator->target, mjJointName.c_str());
-
-        copyPos(jointPose.Pos(), joint->pos);
-
-        if (joint2)
-        {
-          // We uniquely name the second axis using getJointAxisName helper
-          // with a flat suffix. This flat name avoids indicating any
-          // Kinematic/SDF nesting (`::axis2`) while still satisfying
-          // MuJoCo's requirement that joints must be uniquely named.
-          const std::string mjJointName2 = getJointAxisName(mjJointName, 1);
-          mjs_setName(joint2->element, mjJointName2.c_str());
-          mjsActuator *actuator2 = mjs_addActuator(_spec, nullptr);
-          actuator2->trntype = mjtTrn::mjTRN_JOINT;
-          mjs_setString(actuator2->target, mjJointName2.c_str());
-
-          copyPos(jointPose.Pos(), joint2->pos);
-
-          // If this is a screw joint, couple the slide and hinge axes using
-          // a joint equality constraint (mjEQ_JOINT) with the specified pitch.
-          if (sdfJoint->Type() == ::sdf::JointType::SCREW)
-          {
-            eq = mjs_addEquality(_spec, nullptr);
-            eq->type = mjEQ_JOINT;
-            eq->active = 1;
-            mjs_setString(eq->name1, mjJointName2.c_str());
-            mjs_setString(eq->name2, mjJointName.c_str());
-
-            // dif = pos[1] - ref[1] = hinge_pos - hinge_ref
-            // cpos = pos[0] - ref[0] - data[0] - data[1]*dif = 0
-            // enforces: slide_pos - slide_ref =
-            // data[1] * (hinge_pos - hinge_ref)
-            // where data[1] = pitch (meters/rad) = ScrewThreadPitch/2pi
-            std::fill(std::begin(eq->data), std::end(eq->data), 0.0);
-            eq->data[1] =
-                convertScrewThreadPitch(sdfJoint->ScrewThreadPitch());
-          }
-        }
-      }
-      auto jointInfo =
-          std::make_shared<JointInfo>(_base.GetNextEntity(), _modelInfo);
-      jointInfo->name = sdfJoint->Name();
-      jointInfo->joint = joint;
-      jointInfo->childBody = child;
-      jointInfo->actuator = actuator;
-      jointInfo->worldInfo = worldInfo;
-      if (sdfJoint->Type() == ::sdf::JointType::SCREW)
-      {
-        jointInfo->screwConstraintSpec = eq;
-      }
-      if (sdfJoint->Type() == ::sdf::JointType::BALL)
-      {
-        jointInfo->worldInfo->ballJointPositionsCache.push_back(std::nullopt);
-        jointInfo->ballJointCacheIndex =
-            jointInfo->worldInfo->ballJointPositionsCache.size() - 1;
-      }
-
-      auto jointSite = mjs_addSite(child, nullptr);
-      copyPos(jointPose.Pos(), jointSite->pos);
-      copyQuat(jointPose.Rot(), jointSite->quat);
-      _base.frames[jointInfo->entityId] =
-          std::make_shared<FrameInfo>(jointSite, worldInfo);
-
-      _modelInfo->joints.AddEntity(jointInfo->entityId, jointInfo,
-                                   jointInfo->name, _modelInfo->entityId);
+      joint = mjs_addJoint(child, nullptr);
+      joint->type = mjJNT_SLIDE;
+      const auto *sdfAxis = sdfJoint->Axis(0);
+      convertJointAxis(sdfAxis, joint->axis);
+      copyStandardJointAxisProperties(joint, sdfAxis);
     }
+    else if (sdfJoint->Type() == ::sdf::JointType::REVOLUTE)
+    {
+      joint = mjs_addJoint(child, nullptr);
+      joint->type = mjJNT_HINGE;
+      const auto *sdfAxis = sdfJoint->Axis(0);
+      convertJointAxis(sdfAxis, joint->axis);
+      copyStandardJointAxisProperties(joint, sdfAxis);
+    }
+    else if (sdfJoint->Type() == ::sdf::JointType::BALL)
+    {
+      joint = mjs_addJoint(child, nullptr);
+      joint->type = mjJNT_BALL;
+      const auto *sdfAxis = sdfJoint->Axis(0);
+      if (sdfAxis)
+      {
+        convertJointAxis(sdfAxis, joint->axis);
+        copyStandardJointAxisProperties(joint, sdfAxis);
+        // For ball joints, the first range parameter should always be set to
+        // zero.
+        if (joint->limited && std::abs(joint->range[0]) > 0.0)
+        {
+          gzwarn << "MuJoCo requires the lower joint position limit of ball "
+                    "joints to be zero.\n";
+          joint->range[0] = 0;
+        }
+      }
+    }
+    else if (sdfJoint->Type() == ::sdf::JointType::SCREW)
+    {
+      // Screw joints in MuJoCo are modeled by coupling a hinge joint
+      // (rotation) and a slide joint (translation) along the same axis on
+      // the child body using a joint equality constraint (mjEQ_JOINT).
+      // We store the hinge joint (`joint`) as the primary joint in
+      // JointInfo. This matches DART's choice of using the rotational DOF
+      // as the primary, ensuring both physics plugins expose consistent
+      // angular units (radians and rad/s) for screw joints across the
+      // gz-physics API.
+      // Like the universal joint, `joint` and `joint2` are compiled
+      // contiguously on the same child body.
+      joint = mjs_addJoint(child, nullptr);
+      joint->type = mjJNT_HINGE;
+      const auto *sdfAxis1 = sdfJoint->Axis(0);
+      if (sdfAxis1)
+      {
+        convertJointAxis(sdfAxis1, joint->axis);
+        copyStandardJointAxisProperties(joint, sdfAxis1);
+        // Disable independent position limits on the primary rotational
+        // hinge joint. In MuJoCo's soft constraint solver, enforcing limits
+        // on the hinge joint when coupled with a small thread pitch causes
+        // premature solver clamping and massive numerical damping. By mapping
+        // position limits purely onto the translational slide joint, we
+        // ensure exact kinematic limit enforcement without solver resistance.
+        joint->limited = false;
+      }
+
+      joint2 = mjs_addJoint(child, nullptr);
+      joint2->type = mjJNT_SLIDE;
+      if (sdfAxis1)
+      {
+        convertJointAxis(sdfAxis1, joint2->axis);
+        // We only copy position limits and range to the secondary slide
+        // joint. All passive dynamics (damping, frictionloss, stiffness) and
+        // actuator effort limits are enforced purely on the primary
+        // rotational hinge joint to avoid double-counting and physical unit
+        // mismatches.
+        joint2->limited = static_cast<int>(!std::isinf(sdfAxis1->Lower()) &&
+                                           !std::isinf(sdfAxis1->Upper()));
+        if (joint2->limited)
+        {
+          const double pitch =
+              convertScrewThreadPitch(sdfJoint->ScrewThreadPitch());
+          joint2->range[0] = sdfAxis1->Lower() * pitch;
+          joint2->range[1] = sdfAxis1->Upper() * pitch;
+        }
+      }
+    }
+    else if (sdfJoint->Type() == ::sdf::JointType::UNIVERSAL)
+    {
+      // Universal joints in MuJoCo are modeled as two hinge joints in
+      // series on the child body. We only need to keep a pointer to the
+      // first hinge joint (`joint`) in JointInfo. Since MuJoCo compiles
+      // joints on the same body contiguously in memory, all getters/setters
+      // can safely access the second joint (`joint2`)'s state data using
+      // `nq_index + 1` and `nv_index + 1` without needing to store it
+      // separately in JointInfo.
+      joint = mjs_addJoint(child, nullptr);
+      joint->type = mjJNT_HINGE;
+      const auto *sdfAxis1 = sdfJoint->Axis(0);
+      if (sdfAxis1)
+      {
+        convertJointAxis(sdfAxis1, joint->axis);
+        copyStandardJointAxisProperties(joint, sdfAxis1);
+      }
+
+      joint2 = mjs_addJoint(child, nullptr);
+      joint2->type = mjJNT_HINGE;
+      const auto *sdfAxis2 = sdfJoint->Axis(1);
+      if (sdfAxis2)
+      {
+        convertJointAxis(sdfAxis2, joint2->axis);
+        copyStandardJointAxisProperties(joint2, sdfAxis2);
+      }
+    }
+    else if (sdfJoint->Type() != ::sdf::JointType::FIXED)
+    {
+      gzwarn << "Joint type " << static_cast<int>(sdfJoint->Type())
+             << " in joint [" << sdfJoint->Name() << "] not supported\n";
+      return;
+    }
+
+    // Resolve the pose of the joint relative to the body with which
+    // it's associated. Note that this body is the child link of the joint
+    // in SDF terms.
+    auto jointPose = resolveSdfPose(sdfJoint->SemanticPose());
+    mjsEquality *eq = nullptr;
+    // Note that no joints will be created when processing a fixed joint.
+    if (joint)
+    {
+      const std::string mjJointName =
+          ::sdf::JoinName(_modelInfo->name, sdfJoint->Name());
+      mjs_setName(joint->element, mjJointName.c_str());
+      actuator = mjs_addActuator(_spec, nullptr);
+      actuator->trntype = mjtTrn::mjTRN_JOINT;
+
+      mjs_setString(actuator->target, mjJointName.c_str());
+
+      copyPos(jointPose.Pos(), joint->pos);
+
+      if (joint2)
+      {
+        // We uniquely name the second axis using getJointAxisName helper
+        // with a flat suffix. This flat name avoids indicating any
+        // Kinematic/SDF nesting (`::axis2`) while still satisfying
+        // MuJoCo's requirement that joints must be uniquely named.
+        const std::string mjJointName2 = getJointAxisName(mjJointName, 1);
+        mjs_setName(joint2->element, mjJointName2.c_str());
+        mjsActuator *actuator2 = mjs_addActuator(_spec, nullptr);
+        actuator2->trntype = mjtTrn::mjTRN_JOINT;
+        mjs_setString(actuator2->target, mjJointName2.c_str());
+
+        copyPos(jointPose.Pos(), joint2->pos);
+
+        // If this is a screw joint, couple the slide and hinge axes using
+        // a joint equality constraint (mjEQ_JOINT) with the specified pitch.
+        if (sdfJoint->Type() == ::sdf::JointType::SCREW)
+        {
+          eq = mjs_addEquality(_spec, nullptr);
+          eq->type = mjEQ_JOINT;
+          eq->active = 1;
+          mjs_setString(eq->name1, mjJointName2.c_str());
+          mjs_setString(eq->name2, mjJointName.c_str());
+
+          // dif = pos[1] - ref[1] = hinge_pos - hinge_ref
+          // cpos = pos[0] - ref[0] - data[0] - data[1]*dif = 0
+          // enforces: slide_pos - slide_ref =
+          // data[1] * (hinge_pos - hinge_ref)
+          // where data[1] = pitch (meters/rad) = ScrewThreadPitch/2pi
+          std::fill(std::begin(eq->data), std::end(eq->data), 0.0);
+          eq->data[1] =
+              convertScrewThreadPitch(sdfJoint->ScrewThreadPitch());
+        }
+      }
+    }
+    auto jointInfo =
+        std::make_shared<JointInfo>(_base.GetNextEntity(), _modelInfo);
+    jointInfo->name = sdfJoint->Name();
+    jointInfo->joint = joint;
+    jointInfo->childBody = child;
+    jointInfo->actuator = actuator;
+    jointInfo->worldInfo = worldInfo;
+    if (sdfJoint->Type() == ::sdf::JointType::SCREW)
+    {
+      jointInfo->screwConstraintSpec = eq;
+    }
+    if (sdfJoint->Type() == ::sdf::JointType::BALL)
+    {
+      jointInfo->worldInfo->ballJointPositionsCache.push_back(std::nullopt);
+      jointInfo->ballJointCacheIndex =
+          jointInfo->worldInfo->ballJointPositionsCache.size() - 1;
+    }
+
+    auto jointSite = mjs_addSite(child, nullptr);
+    copyPos(jointPose.Pos(), jointSite->pos);
+    copyQuat(jointPose.Rot(), jointSite->quat);
+    _base.frames[jointInfo->entityId] =
+        std::make_shared<FrameInfo>(jointSite, worldInfo);
+
+    _modelInfo->joints.AddEntity(jointInfo->entityId, jointInfo,
+                                 jointInfo->name, _modelInfo->entityId);
   }
 
-std::string getRelativeScopedName(
-    const std::string &modelName, const std::string &rootModelName)
-{
-  if (modelName == rootModelName)
-    return "";
-  if (modelName.rfind(rootModelName + "::", 0) == 0)
+  /// \brief Resolve the pose of a target link (specified by its model name and
+  /// link name) relative to the root model of the kinematic tree.
+  /// \details This resolves the scoped name of the target link relative to the
+  /// root model, and then resolves its pose using the root model's reference
+  /// link as a bridge to correctly handle nested model boundaries.
+  /// \param[in] _rootSdfModel The root SDFormat model of this kinematic tree.
+  /// \param[in] _modelName Name of the model containing the target link.
+  /// \param[in] _linkName Name of the target link.
+  /// \return The resolved pose of the target link relative to the root model.
+  math::Pose3d resolveLinkPoseInRoot(const ::sdf::Model &_rootSdfModel,
+                                     const std::string &_rootModelScopedName,
+                                     const std::string &_modelName,
+                                     const std::string &_linkName)
   {
-    return modelName.substr(rootModelName.length() + 2);
-  }
-  return modelName;
-}
+    std::string relativeModelName = _modelName;
+    if (_modelName == _rootModelScopedName)
+    {
+      relativeModelName = "";
+    }
+    else if (_modelName.rfind(_rootModelScopedName + "::", 0) == 0)
+    {
+      relativeModelName = _modelName.substr(_rootModelScopedName.length() + 2);
+    }
 
-  math::Pose3d resolvePoseInRoot(const std::string &_scopedName)
-  {
-    const auto *refLink = this->links[0];
+    std::string scopedName = ::sdf::JoinName(relativeModelName, _linkName);
+
+    const auto *refLink = _rootSdfModel.LinkByIndex(0);
+    if (!refLink)
+    {
+      gzerr << "Root model " << _rootSdfModel.Name()
+            << " has no links to use as a pose resolution bridge!"
+            << std::endl;
+      return math::Pose3d::Zero;
+    }
+
     math::Pose3d refInRoot;
     refLink->SemanticPose().Resolve(refInRoot, "__model__");
     math::Pose3d refInLink;
-    auto errors = refLink->SemanticPose().Resolve(refInLink, _scopedName);
+    auto errors = refLink->SemanticPose().Resolve(refInLink, scopedName);
     if (!errors.empty())
     {
       gzerr << "Failed to resolve " << refLink->Name() << " relative to "
-            << _scopedName << ": " << errors << std::endl;
+            << scopedName << ": " << errors << std::endl;
     }
     return refInRoot * refInLink.Inverse();
   }
 
-  void AddToSpec(Base &_base, const ::sdf::Model &_rootModel, mjSpec *_spec,
+  void AddToSpec(Base &_base, const ::sdf::Model &_rootSdfModel,
+                 const std::string &_rootModelScopedName, mjSpec *_spec,
                  std::size_t _index,
                  mjsBody *_parentBody)
   {
-    auto _modelInfo = this->modelInfos[_index];
-    auto _sdfModel = this->sdfModels[_index];
-    auto worldInfo = _modelInfo->worldInfo;
+    auto modelInfo = this->modelInfos[_index];
+    auto sdfModel = this->sdfModels[_index];
+    auto worldInfo = modelInfo->worldInfo;
 
     const auto *link = this->links[_index];
     auto child = mjs_addBody(_parentBody, nullptr);
     const std::string body_name =
-        ::sdf::JoinName(_modelInfo->name, link->Name());
+        ::sdf::JoinName(modelInfo->name, link->Name());
     mjs_setName(child->element, body_name.c_str());
     auto linkInfo =
-        std::make_shared<LinkInfo>(_base.GetNextEntity(), _modelInfo);
+        std::make_shared<LinkInfo>(_base.GetNextEntity(), modelInfo);
     linkInfo->body = child;
     linkInfo->name = link->Name();
-    linkInfo->modelInfo = _modelInfo;
+    linkInfo->modelInfo = modelInfo;
     linkInfo->worldInfo = worldInfo;
 
     auto childSite = mjs_addSite(child, nullptr);
     _base.frames[linkInfo->entityId] =
         std::make_shared<FrameInfo>(childSite, worldInfo);
 
-    _modelInfo->links.AddEntity(linkInfo->entityId, linkInfo, child,
-                                _modelInfo->entityId);
+    modelInfo->links.AddEntity(linkInfo->entityId, linkInfo, child,
+                                modelInfo->entityId);
     // Determine the pose of this child body relative to its parent body in
     // MuJoCo.
-    math::Pose3d pose;
-    std::string childLinkScopedName = ::sdf::JoinName(
-        getRelativeScopedName(_modelInfo->name, this->modelInfos[0]->name),
-        link->Name());
-
-    math::Pose3d childPoseInRoot = this->resolvePoseInRoot(childLinkScopedName);
+    math::Pose3d childPoseInParent;
+    math::Pose3d childPoseInRoot = this->resolveLinkPoseInRoot(
+        _rootSdfModel, _rootModelScopedName, modelInfo->name, link->Name());
 
     if (this->parents[_index])
     {
@@ -590,40 +612,42 @@ std::string getRelativeScopedName(
 
       if (parentModelInfo)
       {
-        std::string parentLinkScopedName = ::sdf::JoinName(
-            getRelativeScopedName(
-                parentModelInfo->name, this->modelInfos[0]->name),
+        math::Pose3d parentPoseInRoot = this->resolveLinkPoseInRoot(
+            _rootSdfModel, _rootModelScopedName, parentModelInfo->name,
             this->parents[_index]->Name());
-
-        math::Pose3d parentPoseInRoot =
-            this->resolvePoseInRoot(parentLinkScopedName);
-        pose = parentPoseInRoot.Inverse() * childPoseInRoot;
+        childPoseInParent = parentPoseInRoot.Inverse() * childPoseInRoot;
       }
       else
       {
-        // Fallback
-        pose = _sdfModel->RawPose() * link->RawPose();
+        gzerr << "Internal error: parent link " << this->parents[_index]->Name()
+              << " of child link " << link->Name()
+              << " was not found in the kinematic tree links. "
+              << "This should never happen." << std::endl;
+        childPoseInParent = sdfModel->RawPose() * link->RawPose();
       }
     }
     else
     {
       // Parent body is worldbody.
       // Resolve child link pose relative to world.
-      pose = _rootModel.RawPose() * childPoseInRoot;
+      childPoseInParent = _rootSdfModel.RawPose() * childPoseInRoot;
     }
 
-    copyPos(pose.Pos(), child->pos);
-    copyQuat(pose.Rot(), child->quat);
+    copyPos(childPoseInParent.Pos(), child->pos);
+    copyQuat(childPoseInParent.Rot(), child->quat);
 
-    if (!_modelInfo->body)
+    // TODO(azeey) This will end up assigning the first root level link as the
+    // body associated with the model. We should probably consider using the
+    // canonical link here instead.
+    if (!modelInfo->body)
     {
-      _modelInfo->body = child;
+      modelInfo->body = child;
 
       auto modelFrameSite = mjs_addSite(child, nullptr);
       const auto modelFramePose = link->RawPose().Inverse();
       copyPos(modelFramePose.Pos(), modelFrameSite->pos);
       copyQuat(modelFramePose.Rot(), modelFrameSite->quat);
-      _base.frames[_modelInfo->entityId] =
+      _base.frames[modelInfo->entityId] =
           std::make_shared<FrameInfo>(modelFrameSite, worldInfo);
     }
 
@@ -793,11 +817,11 @@ std::string getRelativeScopedName(
     }
 
     // Add joints
-    if (!_sdfModel->Static())
+    if (!sdfModel->Static())
     {
       auto jointModelInfo = this->jointModelInfos[_index]
                                 ? this->jointModelInfos[_index]
-                                : _modelInfo;
+                                : modelInfo;
       this->AddJoint(_base, _spec, childInJoint[_index], child, jointModelInfo);
     }
 
@@ -805,7 +829,8 @@ std::string getRelativeScopedName(
     for (std::size_t i = 0; i < this->children[_index].size(); ++i)
     {
       this->AddToSpec(
-          _base, _rootModel, _spec, this->children[_index][i], child);
+          _base, _rootSdfModel, _rootModelScopedName, _spec,
+          this->children[_index][i], child);
     }
   }
 };
@@ -952,7 +977,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
       }
     }
 
-    auto childIndex = kinTree.FindLinkByName(childLinkName, jointModel);
+    auto childIndex =
+        kinTree.FindLinkInModelByName(childLinkName, jointModel);
     if (!childIndex)
     {
       gzerr << "Error finding link " << childLinkName << " in model "
@@ -969,7 +995,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
       kinTree.jointModelInfos[*childIndex] = jointModelInfo;
       continue;
     }
-    auto parentIndex = kinTree.FindLinkByName(parentLinkName, jointModel);
+    auto parentIndex =
+        kinTree.FindLinkInModelByName(parentLinkName, jointModel);
     if (!parentIndex)
     {
       gzerr << "Error finding link " << parentLinkName << " in model "
@@ -988,7 +1015,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     if (!kinTree.parents[i])
     {
       kinTree.AddToSpec(
-          *this, _sdfModel, spec, i, kinTree.modelInfos[i]->parentBody);
+          *this, _sdfModel, rootModelInfo->name, spec, i,
+          kinTree.modelInfos[i]->parentBody);
     }
   }
   if (!rootModelInfo->body)
