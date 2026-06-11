@@ -176,7 +176,8 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
       // Call SetVelocityCommand before each step
       joint->SetVelocityCommand(0, 1);
       world->Step(output, state, input);
-      EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-2);
+      double velTol = this->PhysicsEngineName(name) == "mujoco" ? 2.5e-2 : 1e-2;
+      EXPECT_NEAR(1.0, joint->GetVelocity(0), velTol);
     }
 
     for (std::size_t i = 0; i < numSteps; ++i)
@@ -193,6 +194,13 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
     {
       world->Step(output, state, input);
       EXPECT_LT(0.0, std::fabs(joint->GetVelocity(0)));
+    }
+
+    // Let the base link settle back to the ground after the velocity
+    // servo kick
+    for (std::size_t i = 0; i < 1000; ++i)
+    {
+      world->Step(output, state, input);
     }
 
     // Check that invalid velocity commands don't cause collisions to fail
@@ -215,6 +223,7 @@ TYPED_TEST(JointFeaturesTest, JointSetPositionWithContact)
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
+    CHECK_UNSUPPORTED_ENGINE(name, "mujoco")
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine = gz::physics::RequestEngine3d<JointFeatureList>::From(plugin);

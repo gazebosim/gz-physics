@@ -36,8 +36,8 @@ struct JointFeatureList : FeatureList<
   GetBasicJointState,
   GetBasicJointProperties,
   SetBasicJointState,
-  SetMimicConstraintFeature
-
+  SetMimicConstraintFeature,
+  SetJointVelocityCommandFeature
   // AttachFixedJointFeature,
   // DetachJointFeature,
   // GetJointTransmittedWrench,
@@ -51,7 +51,6 @@ struct JointFeatureList : FeatureList<
   // SetJointSpringReferenceFeature,
   // SetJointSpringStiffnessFeature,
   // SetJointTransformFromParentFeature,
-  // SetJointVelocityCommandFeature,
   // SetJointVelocityLimitsFeature,
   // SetPrismaticJointProperties,
   // SetRevoluteJointProperties
@@ -116,6 +115,11 @@ class JointFeatures :
       double _multiplier,
       double _offset,
       double _reference) override;
+
+  // ----- Joint Commands -----
+  public: void SetJointVelocityCommand(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   #if 0
   // ----- Set Basic Joint Properties -----

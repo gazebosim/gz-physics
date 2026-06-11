@@ -34,6 +34,31 @@ namespace physics {
 namespace mujoco {
 
 namespace  {
+
+void setActuatorMode(mjModel *m, int actuatorId, bool isVelocity)
+{
+  const int targetBias = isVelocity ? mjBIAS_AFFINE : mjBIAS_NONE;
+  if (m->actuator_biastype[actuatorId] == targetBias)
+  {
+    return;
+  }
+
+  m->actuator_gaintype[actuatorId] = mjGAIN_FIXED;
+  m->actuator_biastype[actuatorId] = static_cast<mjtBias>(targetBias);
+
+  mju_zero(m->actuator_gainprm + actuatorId * mjNGAIN, mjNGAIN);
+  mju_zero(m->actuator_biasprm + actuatorId * mjNBIAS, mjNBIAS);
+
+  if (!isVelocity)
+  {
+    // In force control/passive mode (mjBIAS_NONE):
+    // - gainprm[0] is set to 1.0 so the output force matches the ctrl input.
+    m->actuator_gainprm[actuatorId * mjNGAIN] = 1.0;
+  }
+  // The gain parameters for velocity mode are set in
+  // SimulationFeatures::WorldStep
+}
+
 Eigen::Vector3d *getBallJointPositionImpl(JointInfo *jointInfo)
 {
   auto *d = jointInfo->worldInfo->mjDataObj;
@@ -450,7 +475,7 @@ void JointFeatures::SetJointForce(
     gzerr << "No actuator set up for this joint\n";
     return;
   }
-  int ctrlIndex = mjs_getId(jointInfo->actuator->element);
+  const int ctrlIndex = mjs_getId(jointInfo->actuator->element);
   if (ctrlIndex < 0)
     return;
 
@@ -458,8 +483,58 @@ void JointFeatures::SetJointForce(
   {
     return;
   }
+
+  auto *m = jointInfo->worldInfo->mjModelObj;
+  const int actuatorId = ctrlIndex + static_cast<int>(_dof);
+  setActuatorMode(m, actuatorId, false);
+
   jointInfo->worldInfo->mjDataObj->ctrl[ctrlIndex + _dof] = _value;
-  mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointVelocityCommand(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+
+
+  if (!jointInfo->joint)
+  {
+    gzerr << "Cannot set velocity command on joint [" << jointInfo->name
+          << "] because it is a fixed joint.\n";
+    return;
+  }
+
+  if (!jointInfo->actuator)
+  {
+    gzerr << "No actuator set up for this joint\n";
+    return;
+  }
+  const int ctrlIndex = mjs_getId(jointInfo->actuator->element);
+  if (ctrlIndex < 0)
+    return;
+
+  if (!this->ValidateDofParam(_id, _dof))
+  {
+    return;
+  }
+
+  if (!std::isfinite(_value))
+  {
+    gzerr << "Invalid joint velocity value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF "
+          << _dof << "]. The command will be ignored\n";
+    // If the velocity command is not finite (e.g. NaN), we ignore the command
+    // and return early. This matches the behavior of DART and
+    // bullet-featherstone.
+    return;
+  }
+
+  auto *m = jointInfo->worldInfo->mjModelObj;
+  const int actuatorId = ctrlIndex + static_cast<int>(_dof);
+  setActuatorMode(m, actuatorId, true);
+
+  jointInfo->worldInfo->mjDataObj->ctrl[ctrlIndex + _dof] = _value;
 }
 
 /////////////////////////////////////////////////
