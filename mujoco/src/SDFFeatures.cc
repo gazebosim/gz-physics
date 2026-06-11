@@ -200,6 +200,161 @@ struct ModelKinematicStructure
     return std::distance(links.begin(), it);
   }
 
+  /// \brief Create the kinematic tree structure from an SDFormat model
+  /// representation. This generates ModelInfo and registers entities for the
+  /// root model and any nested child models in the tree.
+  /// \param[in] _modelInfoGenerator Lambda to generate ModelInfo instances.
+  /// \param[in] _sdfModel Root SDFormat model representation of this
+  /// kinematic tree.
+  /// \param[in] _parentModelInfo ModelInfo of the parent model if
+  /// programmatically nested.
+  /// \param[in] _worldInfo WorldInfo of the world containing the model.
+  /// \return ModelInfo of the root model of the kinematic tree, or nullptr
+  /// on error.
+  template <typename ModelInfoGenerator>
+  std::shared_ptr<ModelInfo> CreateFromModelSdf(
+      ModelInfoGenerator &&_modelInfoGenerator,
+      const ::sdf::Model &_sdfModel,
+      ModelInfo *_parentModelInfo,
+      WorldInfo *_worldInfo)
+  {
+    this->name = _sdfModel.Name();
+
+    std::vector<const ::sdf::Model*> allModels;
+    std::vector<const ::sdf::Joint*> allJoints;
+    std::vector<std::shared_ptr<ModelInfo>> allModelInfos;
+
+    // collectSdf is a recursive lambda that collects all links, joints, and
+    // child models in the model hierarchy. For each nested model, it generates
+    // a ModelInfo and registers it under the world.
+    // By default, nested models inherit the parent body of their parent model,
+    // which eventually traces back to the world body.
+    // If the top-level model is programmatically nested (i.e. _parentModelInfo
+    // is non-null), we explicitly override its root's parentBody to the world
+    // body.
+    // This promotes the nested model's free-floating root link to a top-level
+    // link in MuJoCo, allowing it to have a free joint (mjJNT_FREE) rather
+    // than being rigidly welded to the parent model body.
+    std::function<void(const ::sdf::Model *, std::shared_ptr<ModelInfo>)>
+        collectSdf =
+            [&](const ::sdf::Model *model, std::shared_ptr<ModelInfo> mInfo)
+    {
+      allModels.push_back(model);
+      allModelInfos.push_back(mInfo);
+      for (std::size_t i = 0; i < model->LinkCount(); ++i)
+      {
+        this->links.push_back(model->LinkByIndex(i));
+        this->modelInfos.push_back(mInfo);
+        this->sdfModels.push_back(model);
+      }
+      for (std::size_t i = 0; i < model->JointCount(); ++i)
+      {
+        allJoints.push_back(model->JointByIndex(i));
+      }
+      for (std::size_t i = 0; i < model->ModelCount(); ++i)
+      {
+        auto childModel = model->ModelByIndex(i);
+        if (!childModel) continue;
+
+        auto childModelInfo = _modelInfoGenerator();
+        childModelInfo->name = ::sdf::JoinName(mInfo->name, childModel->Name());
+        childModelInfo->parentBody = mInfo->parentBody;
+        childModelInfo->parentModelInfo = mInfo.get();
+        mInfo->nestedModelNameToEntityId[childModel->Name()] =
+            childModelInfo->entityId;
+        _worldInfo->models.AddEntity(
+            childModelInfo->entityId, childModelInfo,
+            Base::JoinNames(_worldInfo->name, childModelInfo->name),
+            _worldInfo->entityId);
+        collectSdf(childModel, childModelInfo);
+      }
+    };
+
+    auto rootModelInfo = _modelInfoGenerator();
+    rootModelInfo->name = _sdfModel.Name();
+    if (_parentModelInfo)
+    {
+      rootModelInfo->name =
+          ::sdf::JoinName(_parentModelInfo->name, _sdfModel.Name());
+      rootModelInfo->parentBody = mjs_findBody(_worldInfo->mjSpecObj, "world");
+      rootModelInfo->parentModelInfo = _parentModelInfo;
+      _parentModelInfo->nestedModelNameToEntityId[_sdfModel.Name()] =
+          rootModelInfo->entityId;
+    }
+    else
+    {
+      rootModelInfo->parentBody = mjs_findBody(_worldInfo->mjSpecObj, "world");
+    }
+    _worldInfo->models.AddEntity(
+        rootModelInfo->entityId, rootModelInfo,
+        Base::JoinNames(_worldInfo->name, rootModelInfo->name),
+        _worldInfo->entityId);
+
+    collectSdf(&_sdfModel, rootModelInfo);
+
+    this->parents.resize(this->links.size(), nullptr);
+    this->childInJoint.resize(this->links.size(), nullptr);
+    this->jointModelInfos.resize(this->links.size(), nullptr);
+    this->children.resize(this->links.size(), {});
+
+    // Now go through the joints and update parent and children
+    for (std::size_t i = 0; i < allJoints.size(); ++i)
+    {
+      const auto *joint = allJoints[i];
+      std::string childLinkName;
+      // TODO(azeey) Handle errors
+      joint->ResolveChildLink(childLinkName);
+
+      // The joint could belong to any model, we need to find which model it
+      // belongs to by matching the joint in allModels.
+      const ::sdf::Model *jointModel = nullptr;
+      std::shared_ptr<ModelInfo> jointModelInfo = nullptr;
+      for (std::size_t j = 0; j < allModels.size(); ++j)
+      {
+        if (allModels[j]->JointByName(joint->Name()) == joint)
+        {
+          jointModel = allModels[j];
+          jointModelInfo = allModelInfos[j];
+          break;
+        }
+      }
+
+      auto childIndex =
+          this->FindLinkInModelByName(childLinkName, jointModel);
+      if (!childIndex)
+      {
+        gzerr << "Error finding link " << childLinkName << " in model "
+              << jointModel->Name() << "\n";
+        return nullptr;
+      }
+
+      std::string parentLinkName;
+      // TODO(azeey) Handle errors
+      joint->ResolveParentLink(parentLinkName);
+      if (parentLinkName == "world")
+      {
+        this->childInJoint[*childIndex] = joint;
+        this->jointModelInfos[*childIndex] = jointModelInfo;
+        continue;
+      }
+      auto parentIndex =
+          this->FindLinkInModelByName(parentLinkName, jointModel);
+      if (!parentIndex)
+      {
+        gzerr << "Error finding link " << parentLinkName << " in model "
+              << jointModel->Name() << "\n";
+        return nullptr;
+      }
+
+      this->parents[*childIndex] = this->links[*parentIndex];
+      this->children[*parentIndex].push_back(*childIndex);
+      this->childInJoint[*childIndex] = joint;
+      this->jointModelInfos[*childIndex] = jointModelInfo;
+    }
+
+    return rootModelInfo;
+  }
+
   void PrintGraph()
   {
     std::cout << "digraph << " << name << " {\n";
@@ -587,16 +742,15 @@ struct ModelKinematicStructure
         std::make_shared<FrameInfo>(childSite, worldInfo);
 
     modelInfo->links.AddEntity(linkInfo->entityId, linkInfo, child,
-                                modelInfo->entityId);
+                               modelInfo->entityId);
+
     // Determine the pose of this child body relative to its parent body in
     // MuJoCo.
     math::Pose3d childPoseInParent;
     math::Pose3d childPoseInRoot = this->resolveLinkPoseInRoot(
         _rootSdfModel, _rootModelScopedName, modelInfo->name, link->Name());
-
     if (this->parents[_index])
     {
-      // Parent body is another link body.
       std::shared_ptr<ModelInfo> parentModelInfo = nullptr;
       auto parentIt = std::find(
           this->links.begin(), this->links.end(), this->parents[_index]);
@@ -625,7 +779,6 @@ struct ModelKinematicStructure
     else
     {
       // Parent body is worldbody.
-      // Resolve child link pose relative to world.
       childPoseInParent = _rootSdfModel.RawPose() * childPoseInRoot;
     }
 
@@ -870,9 +1023,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     return this->GenerateInvalidId();
   }
 
-  auto *spec = worldInfo->mjSpecObj;
-  worldInfo->specDirty = true;
-
+  // If the nested model has already been constructed, return its existing
+  // identity.
   if (parentModelInfo &&
       parentModelInfo->nestedModelNameToEntityId.find(_sdfModel.Name()) !=
           parentModelInfo->nestedModelNameToEntityId.end())
@@ -884,140 +1036,30 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   }
 
   ModelKinematicStructure kinTree;
-  kinTree.name = _sdfModel.Name();
-
-  std::vector<const ::sdf::Model*> allModels;
-  std::vector<const ::sdf::Joint*> allJoints;
-  std::vector<std::shared_ptr<ModelInfo>> allModelInfos;
-
-  std::function<void(const ::sdf::Model *, std::shared_ptr<ModelInfo>)>
-      collectSdf =
-          [&](const ::sdf::Model *model, std::shared_ptr<ModelInfo> mInfo)
+  auto rootModelInfo = kinTree.CreateFromModelSdf(
+      [&]() {
+        return std::make_shared<ModelInfo>(this->GetNextEntity(), worldInfo);
+      },
+      _sdfModel, parentModelInfo, worldInfo);
+  if (!rootModelInfo)
   {
-    allModels.push_back(model);
-    allModelInfos.push_back(mInfo);
-    for (std::size_t i = 0; i < model->LinkCount(); ++i)
-    {
-      kinTree.links.push_back(model->LinkByIndex(i));
-      kinTree.modelInfos.push_back(mInfo);
-      kinTree.sdfModels.push_back(model);
-    }
-    for (std::size_t i = 0; i < model->JointCount(); ++i)
-    {
-      allJoints.push_back(model->JointByIndex(i));
-    }
-    for (std::size_t i = 0; i < model->ModelCount(); ++i)
-    {
-      auto childModel = model->ModelByIndex(i);
-      if (!childModel) continue;
-
-      auto childModelInfo =
-          std::make_shared<ModelInfo>(this->GetNextEntity(), worldInfo);
-      childModelInfo->name = ::sdf::JoinName(mInfo->name, childModel->Name());
-      childModelInfo->parentBody = mInfo->parentBody;
-      mInfo->nestedModelNameToEntityId[childModel->Name()] =
-          childModelInfo->entityId;
-      worldInfo->models.AddEntity(
-          childModelInfo->entityId, childModelInfo,
-          JoinNames(worldInfo->name, childModelInfo->name),
-          worldInfo->entityId);
-      collectSdf(childModel, childModelInfo);
-    }
-  };
-
-  auto rootModelInfo =
-      std::make_shared<ModelInfo>(this->GetNextEntity(), worldInfo);
-  rootModelInfo->name = _sdfModel.Name();
-  if (parentModelInfo)
-  {
-    rootModelInfo->name =
-        ::sdf::JoinName(parentModelInfo->name, _sdfModel.Name());
-    rootModelInfo->parentBody = mjs_findBody(spec, "world");
-    parentModelInfo->nestedModelNameToEntityId[_sdfModel.Name()] =
-        rootModelInfo->entityId;
-  }
-  else
-  {
-    rootModelInfo->parentBody = mjs_findBody(spec, "world");
-  }
-  worldInfo->models.AddEntity(rootModelInfo->entityId, rootModelInfo,
-                              JoinNames(worldInfo->name, rootModelInfo->name),
-                              worldInfo->entityId);
-
-  collectSdf(&_sdfModel, rootModelInfo);
-
-  kinTree.parents.resize(kinTree.links.size(), nullptr);
-  kinTree.childInJoint.resize(kinTree.links.size(), nullptr);
-  kinTree.jointModelInfos.resize(kinTree.links.size(), nullptr);
-  kinTree.children.resize(kinTree.links.size(), {});
-
-  // Now go through the joints and update parent and children
-  for (std::size_t i = 0; i < allJoints.size(); ++i)
-  {
-    const auto *joint = allJoints[i];
-    std::string childLinkName;
-    // TODO(azeey) Handle errors
-    joint->ResolveChildLink(childLinkName);
-
-    // The joint could belong to any model, we need to find which model it
-    // belongs to by matching the joint in allModels.
-    const ::sdf::Model *jointModel = nullptr;
-    std::shared_ptr<ModelInfo> jointModelInfo = nullptr;
-    for (std::size_t j = 0; j < allModels.size(); ++j)
-    {
-      if (allModels[j]->JointByName(joint->Name()) == joint)
-      {
-        jointModel = allModels[j];
-        jointModelInfo = allModelInfos[j];
-        break;
-      }
-    }
-
-    auto childIndex =
-        kinTree.FindLinkInModelByName(childLinkName, jointModel);
-    if (!childIndex)
-    {
-      gzerr << "Error finding link " << childLinkName << " in model "
-            << jointModel->Name() << "\n";
-      return this->GenerateInvalidId();
-    }
-
-    std::string parentLinkName;
-    // TODO(azeey) Handle errors
-    joint->ResolveParentLink(parentLinkName);
-    if (parentLinkName == "world")
-    {
-      kinTree.childInJoint[*childIndex] = joint;
-      kinTree.jointModelInfos[*childIndex] = jointModelInfo;
-      continue;
-    }
-    auto parentIndex =
-        kinTree.FindLinkInModelByName(parentLinkName, jointModel);
-    if (!parentIndex)
-    {
-      gzerr << "Error finding link " << parentLinkName << " in model "
-            << jointModel->Name() << "\n";
-      return this->GenerateInvalidId();
-    }
-
-    kinTree.parents[*childIndex] = kinTree.links[*parentIndex];
-    kinTree.children[*parentIndex].push_back(*childIndex);
-    kinTree.childInJoint[*childIndex] = joint;
-    kinTree.jointModelInfos[*childIndex] = jointModelInfo;
+    return this->GenerateInvalidId();
   }
 
+  // Update mjSpecObj from the kinematic tree
+  worldInfo->specDirty = true;
   for (std::size_t i = 0; i < kinTree.parents.size(); ++i)
   {
     if (!kinTree.parents[i])
     {
       kinTree.AddToSpec(
-          *this, _sdfModel, rootModelInfo->name, spec, i,
+          *this, _sdfModel, rootModelInfo->name, worldInfo->mjSpecObj, i,
           kinTree.modelInfos[i]->parentBody);
     }
   }
   if (!rootModelInfo->body)
   {
-    gzerr << "There was no body associated with the root model\n";
+    gzerr << "There was no body associated with the model\n";
     return this->GenerateInvalidId();
   }
 
@@ -1026,6 +1068,8 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     // Mujoco requires explicitly declaring contact exclusions for body pairs
     // in order to implement self-collide. If self collision is disabled, we
     // need to add exclusions for every body pair in the model.
+    // This includes recursively collecting bodies from any nested child models
+    // to ensure they are also excluded from collision.
     // Bodies in a parent-child relationship are already excluded, however, if
     // the parent is attached to worldbody, then we need to explicitly add an
     // exclusion since the geoms of the parent are considered part of worldbody.

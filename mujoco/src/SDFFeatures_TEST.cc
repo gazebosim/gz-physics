@@ -16,6 +16,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <set>
 
 #include <gz/common/Console.hh>
 #include <gz/physics/GetEntities.hh>
@@ -448,6 +449,17 @@ TEST_P(SDFFeatures_TEST, ConstructSdfNestedModel)
   EXPECT_EQ(2u, worldInfo->models.size());
 
   using gz::physics::mujoco::Base;
+  auto parentModelInfo = worldInfo->models.at(
+      Base::JoinNames("test_world", "parent_model"));
+  ASSERT_NE(nullptr, parentModelInfo);
+
+  auto nestedModelInfo = worldInfo->models.at(
+      Base::JoinNames("test_world", "parent_model::nested_model"));
+  ASSERT_NE(nullptr, nestedModelInfo);
+
+  EXPECT_EQ(nullptr, parentModelInfo->parentModelInfo);
+  EXPECT_EQ(parentModelInfo.get(), nestedModelInfo->parentModelInfo);
+
   auto worldBody = worldInfo->body;
   auto nestedLinkBody = mjs_findChild(
       worldBody,
@@ -460,7 +472,8 @@ TEST_P(SDFFeatures_TEST, ConstructSdfNestedModel)
   EXPECT_STREQ("world", mjs_getString(mjs_getName(parentBody->element)));
 
   // Verify that it has a free joint.
-  auto firstChildElement = mjs_firstChild(nestedLinkBody, mjtObj::mjOBJ_JOINT, 0);
+  auto firstChildElement =
+      mjs_firstChild(nestedLinkBody, mjtObj::mjOBJ_JOINT, 0);
   ASSERT_NE(nullptr, firstChildElement);
   auto firstJoint = mjs_asJoint(firstChildElement);
   ASSERT_NE(nullptr, firstJoint);
@@ -564,6 +577,46 @@ TEST_P(SDFFeatures_TEST, NestedModelsJointsAndCollisions)
           "ball_joint").c_str()));
   ASSERT_NE(nullptr, ballJoint);
   EXPECT_EQ(mjtJoint::mjJNT_BALL, ballJoint->type);
+
+  // Verify contact exclusions (self-collision disabled by default)
+  // 6 links -> 15 exclusions
+  std::set<std::pair<std::string, std::string>> exclusions;
+  for (mjsElement *elem = mjs_firstElement(spec, mjOBJ_EXCLUDE); elem;
+       elem = mjs_nextElement(spec, elem))
+  {
+    mjsExclude *exclude = mjs_asExclude(elem);
+    ASSERT_NE(nullptr, exclude);
+    std::string b1 = mjs_getString(exclude->bodyname1);
+    std::string b2 = mjs_getString(exclude->bodyname2);
+    if (b1 < b2)
+    {
+      exclusions.insert({b1, b2});
+    }
+    else
+    {
+      exclusions.insert({b2, b1});
+    }
+  }
+
+  EXPECT_EQ(15u, exclusions.size());
+
+  auto hasExclusion = [&](const std::string &b1, const std::string &b2) {
+    if (b1 < b2)
+      return exclusions.find({b1, b2}) != exclusions.end();
+    else
+      return exclusions.find({b2, b1}) != exclusions.end();
+  };
+
+  // Check a few pairs to be sure
+  EXPECT_TRUE(hasExclusion(
+      "parent_model::parent_link",
+      "parent_model::nested_model_1::nested_link_1"));
+  EXPECT_TRUE(hasExclusion(
+      "parent_model::nested_model_1::nested_link_1",
+      "parent_model::nested_model_1::nested_model_2::nested_link_5"));
+  EXPECT_TRUE(hasExclusion(
+      "parent_model::nested_model_1::nested_link_2",
+      "parent_model::nested_model_1::nested_model_2::nested_link_4"));
 }
 
 /////////////////////////////////////////////////
