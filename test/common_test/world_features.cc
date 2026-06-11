@@ -653,23 +653,23 @@ TYPED_TEST(NestedModelResetTest, ResetNestedModel)
 
     sdf::Root root;
     const sdf::Errors errors = root.Load(
-        common_test::worlds::kNestedModelSdf);
+        common_test::worlds::kWorldWithNestedModelSdf);
     ASSERT_TRUE(errors.empty()) << errors;
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
     ASSERT_NE(nullptr, world);
 
-    auto model00 = world->GetModel("model_00");
-    ASSERT_NE(nullptr, model00);
+    auto parentModel = world->GetModel("parent_model");
+    ASSERT_NE(nullptr, parentModel);
 
-    auto model01 = world->GetModel("model_00::model_01");
-    ASSERT_NE(nullptr, model01);
+    auto nestedModel = world->GetModel("parent_model::nested_model");
+    ASSERT_NE(nullptr, nestedModel);
 
-    auto link00 = model00->GetLink("link_00");
-    ASSERT_NE(nullptr, link00);
+    auto parentLink = parentModel->GetLink("link1");
+    ASSERT_NE(nullptr, parentLink);
 
-    auto link01 = model01->GetLink("link_01");
-    ASSERT_NE(nullptr, link01);
+    auto nestedLink = nestedModel->GetLink("nested_link1");
+    ASSERT_NE(nullptr, nestedLink);
 
     // Step simulation for 1s (1000 steps at 1ms max_step_size)
     gz::physics::ForwardStep::Input input;
@@ -682,36 +682,37 @@ TYPED_TEST(NestedModelResetTest, ResetNestedModel)
     }
 
     // Record poses after 1s
-    const Eigen::Vector3d pos00_1s =
-        link00->FrameDataRelativeToWorld().pose.translation();
-    const Eigen::Vector3d pos01_1s =
-        link01->FrameDataRelativeToWorld().pose.translation();
-    const Eigen::Quaterniond rot00_1s(
-        link00->FrameDataRelativeToWorld().pose.linear());
-    const Eigen::Quaterniond rot01_1s(
-        link01->FrameDataRelativeToWorld().pose.linear());
+    const Eigen::Vector3d posParent_1s =
+        parentLink->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Vector3d posNested_1s =
+        nestedLink->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Quaterniond rotParent_1s(
+        parentLink->FrameDataRelativeToWorld().pose.linear());
+    const Eigen::Quaterniond rotNested_1s(
+        nestedLink->FrameDataRelativeToWorld().pose.linear());
 
     // Loose checks to verify that gravity is active and the models actually fell
-    EXPECT_LT(pos00_1s.z(), 2.0);
-    EXPECT_LT(pos01_1s.z(), 2.0);
+    EXPECT_LT(posParent_1s.z(), 1.0);
+    EXPECT_LT(posNested_1s.z(), 1.0);
 
     // Reset: remove models and step
-    EXPECT_TRUE(model01->Remove());
-    EXPECT_TRUE(model00->Remove());
+    EXPECT_TRUE(nestedModel->Remove());
+    EXPECT_TRUE(parentModel->Remove());
     world->Step(output, state, input);
 
     // Reconstruct models
-    auto newModel00 = world->ConstructModel(*root.WorldByIndex(0)->ModelByName("model_00"));
-    ASSERT_NE(nullptr, newModel00);
+    auto newParentModel = world->ConstructModel(
+        *root.WorldByIndex(0)->ModelByName("parent_model"));
+    ASSERT_NE(nullptr, newParentModel);
 
-    auto newModel01 = world->GetModel("model_00::model_01");
-    ASSERT_NE(nullptr, newModel01);
+    auto newNestedModel = world->GetModel("parent_model::nested_model");
+    ASSERT_NE(nullptr, newNestedModel);
 
-    auto newLink00 = newModel00->GetLink("link_00");
-    ASSERT_NE(nullptr, newLink00);
+    auto newParentLink = newParentModel->GetLink("link1");
+    ASSERT_NE(nullptr, newParentLink);
 
-    auto newLink01 = newModel01->GetLink("link_01");
-    ASSERT_NE(nullptr, newLink01);
+    auto newNestedLink = newNestedModel->GetLink("nested_link1");
+    ASSERT_NE(nullptr, newNestedLink);
 
     // Step simulation for 1s again
     for (size_t i = 0; i < numSteps; ++i)
@@ -720,29 +721,29 @@ TYPED_TEST(NestedModelResetTest, ResetNestedModel)
     }
 
     // Record poses after reset + 1s
-    const Eigen::Vector3d pos00_reset_1s =
-        newLink00->FrameDataRelativeToWorld().pose.translation();
-    const Eigen::Vector3d pos01_reset_1s =
-        newLink01->FrameDataRelativeToWorld().pose.translation();
-    const Eigen::Quaterniond rot00_reset_1s(
-        newLink00->FrameDataRelativeToWorld().pose.linear());
-    const Eigen::Quaterniond rot01_reset_1s(
-        newLink01->FrameDataRelativeToWorld().pose.linear());
+    const Eigen::Vector3d posParent_reset_1s =
+        newParentLink->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Vector3d posNested_reset_1s =
+        newNestedLink->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Quaterniond rotParent_reset_1s(
+        newParentLink->FrameDataRelativeToWorld().pose.linear());
+    const Eigen::Quaterniond rotNested_reset_1s(
+        newNestedLink->FrameDataRelativeToWorld().pose.linear());
 
     // Check consistency
     AssertVectorApprox vectorPredicate(1e-4);
-    EXPECT_PRED_FORMAT2(vectorPredicate, pos00_1s, pos00_reset_1s);
-    EXPECT_PRED_FORMAT2(vectorPredicate, pos01_1s, pos01_reset_1s);
+    EXPECT_PRED_FORMAT2(vectorPredicate, posParent_1s, posParent_reset_1s);
+    EXPECT_PRED_FORMAT2(vectorPredicate, posNested_1s, posNested_reset_1s);
 
-    EXPECT_NEAR(rot00_1s.w(), rot00_reset_1s.w(), 1e-4);
-    EXPECT_NEAR(rot00_1s.x(), rot00_reset_1s.x(), 1e-4);
-    EXPECT_NEAR(rot00_1s.y(), rot00_reset_1s.y(), 1e-4);
-    EXPECT_NEAR(rot00_1s.z(), rot00_reset_1s.z(), 1e-4);
+    EXPECT_NEAR(rotParent_1s.w(), rotParent_reset_1s.w(), 1e-4);
+    EXPECT_NEAR(rotParent_1s.x(), rotParent_reset_1s.x(), 1e-4);
+    EXPECT_NEAR(rotParent_1s.y(), rotParent_reset_1s.y(), 1e-4);
+    EXPECT_NEAR(rotParent_1s.z(), rotParent_reset_1s.z(), 1e-4);
 
-    EXPECT_NEAR(rot01_1s.w(), rot01_reset_1s.w(), 1e-4);
-    EXPECT_NEAR(rot01_1s.x(), rot01_reset_1s.x(), 1e-4);
-    EXPECT_NEAR(rot01_1s.y(), rot01_reset_1s.y(), 1e-4);
-    EXPECT_NEAR(rot01_1s.z(), rot01_reset_1s.z(), 1e-4);
+    EXPECT_NEAR(rotNested_1s.w(), rotNested_reset_1s.w(), 1e-4);
+    EXPECT_NEAR(rotNested_1s.x(), rotNested_reset_1s.x(), 1e-4);
+    EXPECT_NEAR(rotNested_1s.y(), rotNested_reset_1s.y(), 1e-4);
+    EXPECT_NEAR(rotNested_1s.z(), rotNested_reset_1s.z(), 1e-4);
   }
 }
 
