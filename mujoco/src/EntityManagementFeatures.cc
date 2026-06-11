@@ -99,6 +99,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   worldInfo->mjSpecObj->option.timestep = 0.001;
   // The Mujoco docs recommend the implicitfast integrator
   worldInfo->mjSpecObj->option.integrator = mjtIntegrator::mjINT_IMPLICITFAST;
+  worldInfo->mjSpecObj->compiler.degree = false;
   worldInfo->mjModelObj = mj_compile(spec, nullptr);
   worldInfo->mjDataObj = mj_makeData(worldInfo->mjModelObj);
   worldInfo->body = mjs_findBody(spec, "world");
