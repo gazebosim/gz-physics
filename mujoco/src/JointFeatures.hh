@@ -36,10 +36,11 @@ struct JointFeatureList : FeatureList<
   GetBasicJointState,
   GetBasicJointProperties,
   SetBasicJointState,
-  SetMimicConstraintFeature
+  SetMimicConstraintFeature,
+  AttachFixedJointFeature,
+  DetachJointFeature,
+  SetJointTransformFromParentFeature
 
-  // AttachFixedJointFeature,
-  // DetachJointFeature,
   // GetJointTransmittedWrench,
   // GetPrismaticJointProperties,
   // GetRevoluteJointProperties,
@@ -50,7 +51,6 @@ struct JointFeatureList : FeatureList<
   // SetJointPositionLimitsFeature,
   // SetJointSpringReferenceFeature,
   // SetJointSpringStiffnessFeature,
-  // SetJointTransformFromParentFeature,
   // SetJointVelocityCommandFeature,
   // SetJointVelocityLimitsFeature,
   // SetPrismaticJointProperties,
@@ -117,7 +117,6 @@ class JointFeatures :
       double _offset,
       double _reference) override;
 
-  #if 0
   // ----- Set Basic Joint Properties -----
   public: void SetJointTransformFromParent(
       const Identity &_id, const Pose3d &_pose) override;
@@ -136,7 +135,7 @@ class JointFeatures :
       const BaseLink3dPtr &_parent,
       const std::string &_name) override;
 
-
+  #if 0
   // ----- Free Joint -----
   public: Identity CastToFreeJoint(
       const Identity &_jointID) const override;

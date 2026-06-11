@@ -3009,6 +3009,99 @@ TYPED_TEST(JointFeaturesScrewTest, ScrewJointLimits)
   }
 }
 
+struct JointTransformFromParentFeatureList : gz::physics::FeatureList<
+    gz::physics::ForwardStep,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetWorldFromEngine,
+    gz::physics::GetModelFromWorld,
+    gz::physics::GetLinkFromModel,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetBasicJointProperties,
+    gz::physics::LinkFrameSemantics,
+    gz::physics::SetJointTransformFromParentFeature,
+    gz::physics::sdf::ConstructSdfWorld
+> { };
+
+template <class T>
+class JointTransformFromParentTest:
+  public JointFeaturesTest<T>{};
+
+using JointTransformFromParentTestTypes =
+  ::testing::Types<JointTransformFromParentFeatureList>;
+TYPED_TEST_SUITE(JointTransformFromParentTest,
+                 JointTransformFromParentTestTypes);
+
+TYPED_TEST(JointTransformFromParentTest, SetJointTransformFromParent)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<JointTransformFromParentFeatureList>::From(
+            plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kTestWorld);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("double_pendulum_with_base");
+    ASSERT_NE(nullptr, model);
+
+    auto joint = model->GetJoint("upper_joint");
+    ASSERT_NE(nullptr, joint);
+
+    const gz::math::Pose3d initialTransform =
+        gz::math::eigen3::convert(joint->GetTransformFromParent());
+    EXPECT_EQ(gz::math::Pose3d(0, 0, 2.1, -1.5708, 0, 0), initialTransform);
+
+    auto childLink = model->GetLink("upper_link");
+    ASSERT_NE(nullptr, childLink);
+
+    // Initial child pose
+    gz::physics::FrameData3d initialChildFrameData =
+      childLink->FrameDataRelativeToWorld();
+    gz::math::Pose3d initialChildPose =
+      gz::math::eigen3::convert(initialChildFrameData.pose);
+
+    const gz::math::Pose3d newTransform(0.2, -0.3, 1.4, 0.1, 0.2, 0.3);
+    joint->SetTransformFromParent(gz::math::eigen3::convert(newTransform));
+
+    const gz::math::Pose3d updatedTransform =
+        gz::math::eigen3::convert(joint->GetTransformFromParent());
+    EXPECT_EQ(newTransform, updatedTransform);
+
+    // This checks that the use of SetJointTransformFromParent keeps the
+    // child-to-joint transform fixed. This implies that the child's absolute
+    // pose is actually what's changed when using that API.
+
+    // Step the world so physics engines that use constraint solvers for joints
+    // (like mujoco) will resolve the constraint and teleport the child body.
+    // Because it's a dynamic constraint, we need enough steps for it to move.
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    for (int i = 0; i < 1000; ++i)
+      world->Step(output, state, input);
+
+    // New child pose
+    gz::physics::FrameData3d newChildFrameData =
+      childLink->FrameDataRelativeToWorld();
+    gz::math::Pose3d newChildPose =
+      gz::math::eigen3::convert(newChildFrameData.pose);
+
+    // We expect the child pose to change if the child body is teleported.
+    EXPECT_NE(initialChildPose, newChildPose);
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
