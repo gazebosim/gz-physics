@@ -228,6 +228,10 @@ struct JointInfo
   // 2. O(num_followers) keyframe updates, avoiding expensive
   //    O(total_joints) global searches across the entire model.
   std::vector<MimicConstraintInfo> mimicConstraints;
+  // Pointer to the weld joint equality constraint in the spec
+  mjsEquality* weldConstraintSpec{nullptr};
+  // Compiled weld joint equality constraint index in mjModel (max 1)
+  std::optional<int> weldEqIndex{std::nullopt};
 };
 
 
