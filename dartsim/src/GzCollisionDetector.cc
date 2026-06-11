@@ -320,6 +320,7 @@ bool GzOdeCollisionDetector::BatchRaycast(
   const dGeomID rayId = dCreateRay(spaceId, 1.0);
   dGeomRaySetClosestHit(rayId, 1);
 
+  _results.clear();
   _results.reserve(_rays.size());
   RaycastResult result;
   for(const GzRay &ray : _rays)
