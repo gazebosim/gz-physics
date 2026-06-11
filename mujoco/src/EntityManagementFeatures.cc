@@ -22,6 +22,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <gz/physics/Entity.hh>
 #include <sdf/Types.hh>
@@ -568,10 +569,11 @@ bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
       this->JoinNames(worldInfo->name, modelInfo->name);
 
   // Recursively remove nested models first.
-  // Copy entity IDs to a vector to avoid iterator invalidation when nested models
-  // erase themselves from parentModelInfo->nestedModelNameToEntityId.
+  // Copy entity IDs to a vector to avoid iterator invalidation when nested
+  // models erase themselves from parentModelInfo->nestedModelNameToEntityId.
   std::vector<std::size_t> nestedEntityIds;
-  for (const auto &[nestedName, nestedEntityId] : modelInfo->nestedModelNameToEntityId)
+  for (const auto &[nestedName, nestedEntityId] :
+       modelInfo->nestedModelNameToEntityId)
   {
     nestedEntityIds.push_back(nestedEntityId);
   }
@@ -587,7 +589,8 @@ bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
   if (lastDoubleColon != std::string::npos)
   {
     std::string parentModelName = modelInfo->name.substr(0, lastDoubleColon);
-    std::string parentModelScopedName = this->JoinNames(worldInfo->name, parentModelName);
+    std::string parentModelScopedName =
+        this->JoinNames(worldInfo->name, parentModelName);
     if (worldInfo->models.HasEntity(parentModelScopedName))
     {
       auto parentModelInfo = worldInfo->models.at(parentModelScopedName);
