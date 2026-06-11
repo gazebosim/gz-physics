@@ -302,19 +302,7 @@ struct ModelKinematicStructure
     auto worldInfo = _modelInfo->worldInfo;
     if (!sdfJoint)
     {
-      // No joint has this link as a child, so we add a freejoint.
-      // However, Mujoco only allows free joints on top-level bodies.
-      if (_modelInfo->parentBody == mjs_findBody(_spec, "world"))
-      {
-        mjs_addFreeJoint(child);
-      }
-      else
-      {
-        gzwarn << "MuJoCo only allows free joints on top-level bodies. "
-               << "Rigidly welding nested link ["
-               << mjs_getString(mjs_getName(child->element))
-               << "] to parent body." << std::endl;
-      }
+      mjs_addFreeJoint(child);
     }
     else
     {
@@ -944,7 +932,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   {
     rootModelInfo->name =
         ::sdf::JoinName(parentModelInfo->name, _sdfModel.Name());
-    rootModelInfo->parentBody = parentModelInfo->body;
+    rootModelInfo->parentBody = mjs_findBody(spec, "world");
     parentModelInfo->nestedModelNameToEntityId[_sdfModel.Name()] =
         rootModelInfo->entityId;
   }

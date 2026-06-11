@@ -446,6 +446,25 @@ TEST_P(SDFFeatures_TEST, ConstructSdfNestedModel)
 
   // ModelInfo size should increase (1 for parent_model, 1 for nested_model)
   EXPECT_EQ(2u, worldInfo->models.size());
+
+  using gz::physics::mujoco::Base;
+  auto worldBody = worldInfo->body;
+  auto nestedLinkBody = mjs_findChild(
+      worldBody,
+      Base::JoinNames("parent_model::nested_model", "nested_link").c_str());
+  ASSERT_NE(nullptr, nestedLinkBody);
+
+  // Verify that nestedLinkBody is a direct child of the world body.
+  auto parentBody = mjs_getParent(nestedLinkBody->element);
+  ASSERT_NE(nullptr, parentBody);
+  EXPECT_STREQ("world", mjs_getString(mjs_getName(parentBody->element)));
+
+  // Verify that it has a free joint.
+  auto firstChildElement = mjs_firstChild(nestedLinkBody, mjtObj::mjOBJ_JOINT, 0);
+  ASSERT_NE(nullptr, firstChildElement);
+  auto firstJoint = mjs_asJoint(firstChildElement);
+  ASSERT_NE(nullptr, firstJoint);
+  EXPECT_EQ(mjJNT_FREE, firstJoint->type);
 }
 
 /////////////////////////////////////////////////
