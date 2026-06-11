@@ -221,6 +221,19 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
   }
 
   {
+    int j1Id = mj_name2id(m, mjOBJ_JOINT,
+                          Base::JoinNames("joint_limit_test", "j1").c_str());
+    ASSERT_NE(-1, j1Id);
+
+    // Verify compiled joint limits in mjModel
+    // If compiler.degree was true, the input -0.5 would be interpreted as -0.5
+    // degrees, which compiles to -0.0087 radians.
+    // With compiler.degree = false, it is interpreted as -0.5 radians.
+    EXPECT_NEAR(-0.5, m->jnt_range[2 * j1Id], 1e-4);
+    EXPECT_NEAR(0.5, m->jnt_range[2 * j1Id + 1], 1e-4);
+  }
+
+  {
     auto freeBodyLink =
         mjs_findChild(worldBody, Base::JoinNames("free_body", "link").c_str());
 
