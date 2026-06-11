@@ -60,6 +60,12 @@ class SimulationFeatures :
 
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &_worldID) const override;
+
+  /// \brief Dynamically compute the actuator servo gains for joints in
+  /// velocity control mode.
+  /// \param[in] _worldInfo
+  ///   The world metadata containing the MuJoCo model and data structures.
+  private: void UpdateVelocityServoGains(WorldInfo &_worldInfo);
 };
 
 }

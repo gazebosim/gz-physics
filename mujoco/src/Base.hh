@@ -201,7 +201,7 @@ struct MimicConstraintInfo
 struct JointInfo
 {
   JointInfo(std::size_t _entityId,
-           std::shared_ptr<ModelInfo> _modelInfo)
+            std::shared_ptr<ModelInfo> _modelInfo)
       : entityId(_entityId), modelInfo(_modelInfo)
   {
   }
