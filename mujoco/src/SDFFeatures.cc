@@ -223,8 +223,10 @@ struct ModelKinematicStructure
     this->name = _sdfModel.Name();
 
     std::vector<const ::sdf::Joint*> allJoints;
-    std::unordered_map<const ::sdf::Joint*, const ::sdf::Model*> jointToModel;
-    std::unordered_map<const ::sdf::Joint*, std::shared_ptr<ModelInfo>> jointToModelInfo;
+    std::unordered_map<const ::sdf::Joint*,
+                       const ::sdf::Model*> jointToModel;
+    std::unordered_map<const ::sdf::Joint*,
+                       std::shared_ptr<ModelInfo>> jointToModelInfo;
 
     // collectSdf is a recursive lambda that collects all links, joints, and
     // child models in the model hierarchy. For each nested model, it generates
@@ -310,7 +312,8 @@ struct ModelKinematicStructure
       // TODO(azeey) Handle errors
       joint->ResolveChildLink(childLinkName);
 
-      // The joint could belong to any model, retrieve the model and its info directly
+      // The joint could belong to any model, retrieve the model and its info
+      // directly.
       const ::sdf::Model *jointModel = jointToModel.at(joint);
       std::shared_ptr<ModelInfo> jointModelInfo = jointToModelInfo.at(joint);
 
