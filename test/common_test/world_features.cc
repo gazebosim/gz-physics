@@ -548,9 +548,8 @@ TYPED_TEST(NestedModelRemovalTest, RemoveNestedModelCollisions)
 {
   for (const std::string &name : this->pluginNames)
   {
-    // mujoco does not support nested models yet
     // \todo(iche033) tpe test crashes. Need to investigate
-    CHECK_UNSUPPORTED_ENGINE(name, "mujoco", "tpe")
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe")
 
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
@@ -620,6 +619,131 @@ TYPED_TEST(NestedModelRemovalTest, RemoveNestedModelCollisions)
 
     EXPECT_LT(finalZ, 0.0)
         << "Sphere seems to have hit a phantom collision object!";
+  }
+}
+
+template <class T>
+class NestedModelResetTest : public WorldFeaturesTest<T> { };
+
+using NestedModelResetTestTypes =
+    ::testing::Types<NestedModelRemovalFeatureList>;
+TYPED_TEST_SUITE(NestedModelResetTest, NestedModelResetTestTypes);
+
+/////////////////////////////////////////////////
+/// \brief ResetNestedModel tests the physics reset behavior on nested models.
+/// This matches how gz-sim's Physics system (gz-sim/src/systems/physics/Physics.cc)
+/// implements world resets: by removing model entities with model->Remove()
+/// and reconstructs them using world->ConstructModel(), preserving the active
+/// world entity and its configured parameters (e.g. gravity, solver settings).
+TYPED_TEST(NestedModelResetTest, ResetNestedModel)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // tpe does not support nested models.
+    // Test crashes in bullet-featherstone due to incorrect resolution of
+    // nested model name
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe", "bullet-featherstone")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+      gz::physics::RequestEngine3d<TypeParam>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(
+        common_test::worlds::kWorldWithNestedModelSdf);
+    ASSERT_TRUE(errors.empty()) << errors;
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto parentModel = world->GetModel("parent_model");
+    ASSERT_NE(nullptr, parentModel);
+
+    auto nestedModel = world->GetModel("parent_model::nested_model");
+    ASSERT_NE(nullptr, nestedModel);
+
+    auto parentLink = parentModel->GetLink("link1");
+    ASSERT_NE(nullptr, parentLink);
+
+    auto nestedLink = nestedModel->GetLink("nested_link1");
+    ASSERT_NE(nullptr, nestedLink);
+
+    // Step simulation for 1s (1000 steps at 1ms max_step_size)
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+    const size_t numSteps = 1000;
+    for (size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // Record poses after 1s
+    const Eigen::Vector3d posParent_1s =
+        parentLink->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Vector3d posNested_1s =
+        nestedLink->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Quaterniond rotParent_1s(
+        parentLink->FrameDataRelativeToWorld().pose.linear());
+    const Eigen::Quaterniond rotNested_1s(
+        nestedLink->FrameDataRelativeToWorld().pose.linear());
+
+    // Loose checks to verify that gravity is active and the models actually fell
+    EXPECT_LT(posParent_1s.z(), 1.0);
+    EXPECT_LT(posNested_1s.z(), 1.0);
+
+    // Reset: remove models and step
+    EXPECT_TRUE(nestedModel->Remove());
+    EXPECT_TRUE(parentModel->Remove());
+    world->Step(output, state, input);
+
+    // Reconstruct models
+    auto newParentModel = world->ConstructModel(
+        *root.WorldByIndex(0)->ModelByName("parent_model"));
+    ASSERT_NE(nullptr, newParentModel);
+
+    auto newNestedModel = world->GetModel("parent_model::nested_model");
+    ASSERT_NE(nullptr, newNestedModel);
+
+    auto newParentLink = newParentModel->GetLink("link1");
+    ASSERT_NE(nullptr, newParentLink);
+
+    auto newNestedLink = newNestedModel->GetLink("nested_link1");
+    ASSERT_NE(nullptr, newNestedLink);
+
+    // Step simulation for 1s again
+    for (size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // Record poses after reset + 1s
+    const Eigen::Vector3d posParent_reset_1s =
+        newParentLink->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Vector3d posNested_reset_1s =
+        newNestedLink->FrameDataRelativeToWorld().pose.translation();
+    const Eigen::Quaterniond rotParent_reset_1s(
+        newParentLink->FrameDataRelativeToWorld().pose.linear());
+    const Eigen::Quaterniond rotNested_reset_1s(
+        newNestedLink->FrameDataRelativeToWorld().pose.linear());
+
+    // Check consistency
+    AssertVectorApprox vectorPredicate(1e-4);
+    EXPECT_PRED_FORMAT2(vectorPredicate, posParent_1s, posParent_reset_1s);
+    EXPECT_PRED_FORMAT2(vectorPredicate, posNested_1s, posNested_reset_1s);
+
+    EXPECT_NEAR(rotParent_1s.w(), rotParent_reset_1s.w(), 1e-4);
+    EXPECT_NEAR(rotParent_1s.x(), rotParent_reset_1s.x(), 1e-4);
+    EXPECT_NEAR(rotParent_1s.y(), rotParent_reset_1s.y(), 1e-4);
+    EXPECT_NEAR(rotParent_1s.z(), rotParent_reset_1s.z(), 1e-4);
+
+    EXPECT_NEAR(rotNested_1s.w(), rotNested_reset_1s.w(), 1e-4);
+    EXPECT_NEAR(rotNested_1s.x(), rotNested_reset_1s.x(), 1e-4);
+    EXPECT_NEAR(rotNested_1s.y(), rotNested_reset_1s.y(), 1e-4);
+    EXPECT_NEAR(rotNested_1s.z(), rotNested_reset_1s.z(), 1e-4);
   }
 }
 

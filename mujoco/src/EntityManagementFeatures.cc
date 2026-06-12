@@ -22,6 +22,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <gz/physics/Entity.hh>
 #include <sdf/Types.hh>
@@ -568,7 +569,28 @@ bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
   const std::string scopedName =
       this->JoinNames(worldInfo->name, modelInfo->name);
 
-  // \todo(iche033) Remove nested models once supported.
+  // Recursively remove nested models first.
+  // Copy entity IDs to a vector to avoid iterator invalidation when nested
+  // models erase themselves from parentModelInfo->nestedModelNameToEntityId.
+  std::vector<std::size_t> nestedEntityIds;
+  for (const auto &[nestedName, nestedEntityId] :
+       modelInfo->nestedModelNameToEntityId)
+  {
+    nestedEntityIds.push_back(nestedEntityId);
+  }
+
+  for (std::size_t nestedEntityId : nestedEntityIds)
+  {
+    this->RemoveModelImpl(_worldID, nestedEntityId);
+  }
+  modelInfo->nestedModelNameToEntityId.clear();
+
+  // If this is a nested model, remove it from its parent model's nested map
+  if (modelInfo->parentModelInfo)
+  {
+    auto [_, shortName] = ::sdf::SplitName(modelInfo->name);
+    modelInfo->parentModelInfo->nestedModelNameToEntityId.erase(shortName);
+  }
 
   for (const auto &[linkId, linkInfo] : modelInfo->links.idToObject)
   {
@@ -577,6 +599,11 @@ bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
       this->frames.erase(shapeId);
     }
     this->frames.erase(linkId);
+  }
+
+  for (const auto &[jointId, jointInfo] : modelInfo->joints.idToObject)
+  {
+    this->frames.erase(jointId);
   }
 
   this->frames.erase(_modelID);
