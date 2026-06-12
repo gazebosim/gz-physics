@@ -31,6 +31,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <unordered_map>
 #include <vector>
 
 #include <gz/common/Console.hh>
@@ -169,6 +170,7 @@ struct ModelKinematicStructure
   std::string name;
 
   std::vector<const ::sdf::Link *> links;
+  std::unordered_map<const ::sdf::Link *, std::size_t> linkToIndex;
   /// \brief For index i, modelInfos[i] is the ModelInfo of the model that
   /// contains links[i].
   std::vector<std::shared_ptr<ModelInfo>> modelInfos;
@@ -192,12 +194,12 @@ struct ModelKinematicStructure
     auto link = _model->LinkByName(_name);
     if (!link)
       return {};
-    auto it = std::find(links.begin(), links.end(), link);
-    if (it == links.end())
+    auto it = this->linkToIndex.find(link);
+    if (it == this->linkToIndex.end())
     {
       return {};
     }
-    return std::distance(links.begin(), it);
+    return it->second;
   }
 
   /// \brief Create the kinematic tree structure from an SDFormat model
@@ -220,9 +222,9 @@ struct ModelKinematicStructure
   {
     this->name = _sdfModel.Name();
 
-    std::vector<const ::sdf::Model*> allModels;
     std::vector<const ::sdf::Joint*> allJoints;
-    std::vector<std::shared_ptr<ModelInfo>> allModelInfos;
+    std::unordered_map<const ::sdf::Joint*, const ::sdf::Model*> jointToModel;
+    std::unordered_map<const ::sdf::Joint*, std::shared_ptr<ModelInfo>> jointToModelInfo;
 
     // collectSdf is a recursive lambda that collects all links, joints, and
     // child models in the model hierarchy. For each nested model, it generates
@@ -239,17 +241,20 @@ struct ModelKinematicStructure
         collectSdf =
             [&](const ::sdf::Model *model, std::shared_ptr<ModelInfo> mInfo)
     {
-      allModels.push_back(model);
-      allModelInfos.push_back(mInfo);
       for (std::size_t i = 0; i < model->LinkCount(); ++i)
       {
-        this->links.push_back(model->LinkByIndex(i));
+        const auto *link = model->LinkByIndex(i);
+        this->links.push_back(link);
         this->modelInfos.push_back(mInfo);
         this->sdfModels.push_back(model);
+        this->linkToIndex[link] = this->links.size() - 1;
       }
       for (std::size_t i = 0; i < model->JointCount(); ++i)
       {
-        allJoints.push_back(model->JointByIndex(i));
+        const auto *joint = model->JointByIndex(i);
+        allJoints.push_back(joint);
+        jointToModel[joint] = model;
+        jointToModelInfo[joint] = mInfo;
       }
       for (std::size_t i = 0; i < model->ModelCount(); ++i)
       {
@@ -305,19 +310,9 @@ struct ModelKinematicStructure
       // TODO(azeey) Handle errors
       joint->ResolveChildLink(childLinkName);
 
-      // The joint could belong to any model, we need to find which model it
-      // belongs to by matching the joint in allModels.
-      const ::sdf::Model *jointModel = nullptr;
-      std::shared_ptr<ModelInfo> jointModelInfo = nullptr;
-      for (std::size_t j = 0; j < allModels.size(); ++j)
-      {
-        if (allModels[j]->JointByName(joint->Name()) == joint)
-        {
-          jointModel = allModels[j];
-          jointModelInfo = allModelInfos[j];
-          break;
-        }
-      }
+      // The joint could belong to any model, retrieve the model and its info directly
+      const ::sdf::Model *jointModel = jointToModel.at(joint);
+      std::shared_ptr<ModelInfo> jointModelInfo = jointToModelInfo.at(joint);
 
       auto childIndex =
           this->FindLinkInModelByName(childLinkName, jointModel);
@@ -752,12 +747,10 @@ struct ModelKinematicStructure
     if (this->parents[_index])
     {
       std::shared_ptr<ModelInfo> parentModelInfo = nullptr;
-      auto parentIt = std::find(
-          this->links.begin(), this->links.end(), this->parents[_index]);
-      if (parentIt != this->links.end())
+      auto parentIt = this->linkToIndex.find(this->parents[_index]);
+      if (parentIt != this->linkToIndex.end())
       {
-        std::size_t parentIdx = std::distance(this->links.begin(), parentIt);
-        parentModelInfo = this->modelInfos[parentIdx];
+        parentModelInfo = this->modelInfos[parentIt->second];
       }
 
       if (parentModelInfo)
@@ -1006,14 +999,10 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
   }
   else
   {
-    for (const auto &[worldId, wInfo] : this->worlds.idToObject)
+    parentModelInfo = this->ReferenceInterface<ModelInfo>(_parentID);
+    if (parentModelInfo)
     {
-      if (wInfo->models.HasEntity(_parentID))
-      {
-        parentModelInfo = this->ReferenceInterface<ModelInfo>(_parentID);
-        worldInfo = parentModelInfo->worldInfo;
-        break;
-      }
+      worldInfo = parentModelInfo->worldInfo;
     }
   }
 
@@ -1025,14 +1014,15 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
 
   // If the nested model has already been constructed, return its existing
   // identity.
-  if (parentModelInfo &&
-      parentModelInfo->nestedModelNameToEntityId.find(_sdfModel.Name()) !=
-          parentModelInfo->nestedModelNameToEntityId.end())
+  if (parentModelInfo)
   {
-     std::size_t nestedModelID =
-         parentModelInfo->nestedModelNameToEntityId.at(_sdfModel.Name());
-     return this->GenerateIdentity(
-         nestedModelID, worldInfo->models.at(nestedModelID));
+    auto it = parentModelInfo->nestedModelNameToEntityId.find(_sdfModel.Name());
+    if (it != parentModelInfo->nestedModelNameToEntityId.end())
+    {
+      std::size_t nestedModelID = it->second;
+      return this->GenerateIdentity(
+          nestedModelID, worldInfo->models.at(nestedModelID));
+    }
   }
 
   ModelKinematicStructure kinTree;
