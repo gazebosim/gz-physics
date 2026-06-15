@@ -79,6 +79,8 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   auto *m = worldInfo->mjModelObj;
   const auto bodyId = mjs_getId(modelInfo->body->element);
   const auto jntadr = m->body_jntadr[bodyId];
+  if (jntadr < 0)
+    return;
   const auto qveladr = m->jnt_dofadr[jntadr];
   mju_copy3(&d->qvel[qveladr] + 3, _angularVelocity.data());
   mj_forward(m, d);
@@ -96,6 +98,8 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   auto *m = worldInfo->mjModelObj;
   const auto bodyId = mjs_getId(modelInfo->body->element);
   const auto jntadr = m->body_jntadr[bodyId];
+  if (jntadr < 0)
+    return;
   const auto qveladr = m->jnt_dofadr[jntadr];
   mju_copy3(&d->qvel[qveladr], _linearVelocity.data());
   mj_forward(m, d);
@@ -114,6 +118,8 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   auto *m = worldInfo->mjModelObj;
   const auto bodyId = mjs_getId(modelInfo->body->element);
   const auto jntadr = m->body_jntadr[bodyId];
+  if (jntadr < 0)
+    return;
   const auto qposadr = m->jnt_qposadr[jntadr];
   const Eigen::Quaterniond quat(_pose.rotation());
   const double quatCoeffs[] = {quat.w(), quat.x(), quat.y(), quat.z()};
