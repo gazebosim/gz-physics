@@ -34,6 +34,10 @@ namespace dartsim {
 double JointFeatures::GetJointPosition(
     const Identity &_id, std::size_t _dof) const
 {
+  if (!this->ValidateDofParam(_id, _dof))
+  {
+    return math::NAN_D;
+  }
   return this->ReferenceInterface<JointInfo>(_id)->joint->getPosition(_dof);
 }
 
@@ -41,6 +45,10 @@ double JointFeatures::GetJointPosition(
 double JointFeatures::GetJointVelocity(
     const Identity &_id, std::size_t _dof) const
 {
+  if (!this->ValidateDofParam(_id, _dof))
+  {
+    return math::NAN_D;
+  }
   return this->ReferenceInterface<JointInfo>(_id)->joint->getVelocity(_dof);
 }
 
@@ -48,6 +56,10 @@ double JointFeatures::GetJointVelocity(
 double JointFeatures::GetJointAcceleration(
     const Identity &_id, std::size_t _dof) const
 {
+  if (!this->ValidateDofParam(_id, _dof))
+  {
+    return math::NAN_D;
+  }
   return this->ReferenceInterface<JointInfo>(_id)->joint->getAcceleration(_dof);
 }
 
@@ -55,6 +67,10 @@ double JointFeatures::GetJointAcceleration(
 double JointFeatures::GetJointForce(
     const Identity &_id, std::size_t _dof) const
 {
+  if (!this->ValidateDofParam(_id, _dof))
+  {
+    return math::NAN_D;
+  }
   return this->ReferenceInterface<JointInfo>(_id)->joint->getForce(_dof);
 }
 
@@ -70,6 +86,10 @@ void JointFeatures::SetJointPosition(
     const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  if (!this->ValidateDofParam(_id, _dof))
+  {
+    return;
+  }
 
   // Take extra care that the value is finite. A nan can cause the DART
   // constraint solver to fail, which will in turn either cause a crash or
@@ -89,6 +109,10 @@ void JointFeatures::SetJointVelocity(
     const Identity &_id, std::size_t _dof, double _value)
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+  if (!this->ValidateDofParam(_id, _dof))
+  {
+    return;
+  }
 
   // Take extra care that the value is finite. A nan can cause the DART
   // constraint solver to fail, which will in turn either cause a crash or
@@ -109,6 +133,10 @@ void JointFeatures::SetJointAcceleration(
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
+  if (!this->ValidateDofParam(_id, _dof))
+  {
+    return;
+  }
   // Take extra care that the value is finite. A nan can cause the DART
   // constraint solver to fail, which will in turn either cause a crash or
   // collisions to fail
@@ -128,6 +156,10 @@ void JointFeatures::SetJointForce(
 {
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
+  if (!this->ValidateDofParam(_id, _dof))
+  {
+    return;
+  }
   // Take extra care that the value is finite. A nan can cause the DART
   // constraint solver to fail, which will in turn either cause a crash or
   // collisions to fail
@@ -407,6 +439,20 @@ void JointFeatures::SetJointSpringReference(
   }
 
   joint->setRestPosition(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+bool JointFeatures::ValidateDofParam(const Identity &_id,
+                                     std::size_t _dof) const
+{
+  const auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (_dof >= jointInfo->joint->getNumDofs())
+  {
+    gzerr << "Trying to access an invalid DOF [" << _dof << "] on joint ["
+          << jointInfo->joint->getName() << "]\n";
+    return false;
+  }
+  return true;
 }
 
 /////////////////////////////////////////////////

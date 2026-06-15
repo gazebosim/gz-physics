@@ -91,8 +91,8 @@ struct JointMimicFeatureList : gz::physics::FeatureList<
     gz::physics::GetModelFromWorld,
     gz::physics::LinkFrameSemantics,
     gz::physics::SetBasicJointState,
-    gz::physics::SetJointVelocityCommandFeature,
     gz::physics::SetMimicConstraintFeature,
+    gz::physics::sdf::ConstructSdfModel,
     gz::physics::sdf::ConstructSdfWorld>{};
 
 using JointMimicFeatureTest =
@@ -111,7 +111,8 @@ TEST_F(JointMimicFeatureTest, PrismaticRevoluteMimicTest)
   // prismatic_joint_3 : Mimics revolute_joint_1
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "bullet-featherstone")
+    if(this->PhysicsEngineName(name) != "bullet-featherstone" &&
+       this->PhysicsEngineName(name) != "mujoco")
     {
       GTEST_SKIP();
     }
@@ -271,7 +272,8 @@ TEST_F(JointMimicFeatureTest, PendulumMimicTest)
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "bullet-featherstone")
+    if(this->PhysicsEngineName(name) != "bullet-featherstone" &&
+       this->PhysicsEngineName(name) != "mujoco")
     {
       GTEST_SKIP();
     }
@@ -361,7 +363,8 @@ TEST_F(JointMimicFeatureTest, PendulumsFastSlowMimicTest)
 {
   for (const std::string &name : this->pluginNames)
   {
-    if(this->PhysicsEngineName(name) != "bullet-featherstone")
+    if(this->PhysicsEngineName(name) != "bullet-featherstone" &&
+       this->PhysicsEngineName(name) != "mujoco")
     {
       GTEST_SKIP();
     }
@@ -516,6 +519,232 @@ TEST_F(JointMimicFeatureTest, PendulumsFastSlowMimicTest)
     }
 
     std::cout << "Finished testing plugin: " << name << std::endl;
+  }
+}
+
+// Here, we test mimic constraints on multi-DOF joints (universal joints)
+// specifically mimicking the second axis (axis2) of a universal joint.
+TEST_F(JointMimicFeatureTest, UniversalJointMimicTest)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_SUPPORTED_ENGINE(name, "mujoco")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors =
+        root.Load(common_test::worlds::kMimicUniversalWorld);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+
+    auto model = world->GetModel("universal_model");
+
+    auto leaderJoint = model->GetJoint("universal_joint_1");
+    auto followerJoint = model->GetJoint("universal_joint_2");
+
+    // Ensure both joints start from zero position on both axes.
+    EXPECT_EQ(leaderJoint->GetPosition(0), 0);
+    EXPECT_EQ(leaderJoint->GetPosition(1), 0);
+    EXPECT_EQ(followerJoint->GetPosition(0), 0);
+    EXPECT_EQ(followerJoint->GetPosition(1), 0);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // Set mimic constraint for the second axis (index 1):
+    // follower (axis2) mimics leader (axis2) with multiplier 2.0, offset 0.1,
+    // reference 0.0
+    double multiplier = 2.0;
+    double offset = 0.1;
+    double reference = 0.0;
+
+    followerJoint->SetMimicConstraint(1, leaderJoint, 1, multiplier, offset,
+                                      reference);
+
+    // Test programmatically setting position on the leader's second axis (index
+    // 1)
+    leaderJoint->SetPosition(1, 0.5);
+
+    // Check that our programmatic update correctly set the position on the
+    // follower's second axis (index 1) and DID NOT affect the first axis (index
+    // 0) of either joint!
+    EXPECT_NEAR(leaderJoint->GetPosition(1), 0.5, 1e-6);
+    EXPECT_NEAR(followerJoint->GetPosition(1),
+                multiplier * (0.5 - reference) + offset, 1e-6);
+    EXPECT_NEAR(leaderJoint->GetPosition(0), 0.0, 1e-6);
+    EXPECT_NEAR(followerJoint->GetPosition(0), 0.0, 1e-6);
+
+    // Test programmatically setting velocity on the leader's second axis (index
+    // 1)
+    leaderJoint->SetVelocity(1, 0.2);
+    EXPECT_NEAR(leaderJoint->GetVelocity(1), 0.2, 1e-6);
+    EXPECT_NEAR(followerJoint->GetVelocity(1), 0.2 * multiplier, 1e-6);
+    EXPECT_NEAR(leaderJoint->GetVelocity(0), 0.0, 1e-6);
+    EXPECT_NEAR(followerJoint->GetVelocity(0), 0.0, 1e-6);
+
+    // Reset and step a few times to let gravity/forces take effect
+    leaderJoint->SetPosition(0, 0);
+    leaderJoint->SetPosition(1, 0);
+    followerJoint->SetPosition(0, 0);
+    followerJoint->SetPosition(1, 0);
+
+    for (int i = 0; i < 100; i++)
+      world->Step(output, state, input);
+
+    // Verify that the relation still holds under gravity dynamic simulation
+    const double tolerance = 0.1;
+    EXPECT_NEAR(multiplier * (leaderJoint->GetPosition(1) - reference) + offset,
+                followerJoint->GetPosition(1), tolerance)
+        << "leaderPos1 [" << leaderJoint->GetPosition(1) << "], followerPos1 ["
+        << followerJoint->GetPosition(1) << "]";
+
+    std::cout << "Finished testing plugin: " << name << std::endl;
+  }
+}
+
+// Here, we verify that setting a mimic constraint on a ball joint
+// is correctly disallowed and returns false.
+TEST_F(JointMimicFeatureTest, BallJointMimicSafetyGuardTest)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_SUPPORTED_ENGINE(name, "mujoco")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    std::string worldStr = R"(
+    <sdf version="1.9">
+      <world name="test_world">
+        <model name="test_model">
+          <link name="base" />
+          <link name="point_mass">
+            <inertial>
+              <mass>0.1</mass>
+              <inertia>
+                <ixx>1e-6</ixx>
+                <iyy>1e-6</iyy>
+                <izz>1e-6</izz>
+              </inertia>
+            </inertial>
+          </link>
+          <joint name="ball_joint" type="ball">
+            <parent>base</parent>
+            <child>point_mass</child>
+          </joint>
+          <link name="link_leader"/>
+          <joint name="leader_joint" type="revolute">
+            <parent>base</parent>
+            <child>link_leader</child>
+            <axis>
+              <xyz>1 0 0</xyz>
+            </axis>
+          </joint>
+        </model>
+      </world>
+    </sdf>)";
+
+    sdf::Root root;
+    const sdf::Errors errors = root.LoadSdfString(worldStr);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    auto model = world->GetModel("test_model");
+
+    auto ballJoint = model->GetJoint("ball_joint");
+    auto leaderJoint = model->GetJoint("leader_joint");
+
+    // Attempting to set ball joint as the follower should return false and fail:
+    EXPECT_FALSE(ballJoint->SetMimicConstraint(
+        0, leaderJoint, 0, 1.0, 0.0, 0.0));
+
+    // Attempting to set ball joint as the leader should also return false and fail:
+    EXPECT_FALSE(leaderJoint->SetMimicConstraint(
+        0, ballJoint, 0, 1.0, 0.0, 0.0));
+
+    std::cout << "Finished testing plugin: " << name << std::endl;
+  }
+}
+
+// Test SetMimicConstraint on a programmatically added model since some engines
+// (e.g. MuJoCo) might require rebuilding/recompiling their internal state after
+// new models are spawned.
+TEST_F(JointMimicFeatureTest, SetMimicConstraintOnSpawnedModel)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_SUPPORTED_ENGINE(name, "mujoco")
+    CHECK_SUPPORTED_ENGINE(name, "bullet-featherstone")
+
+    auto plugin = this->loader.Instantiate(name);
+    auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    // Parse an empty world SDF string
+    const std::string worldSDF = R"(
+      <sdf version="1.9">
+        <world name="test_world"/>
+      </sdf>
+    )";
+
+    sdf::Root worldRoot;
+    sdf::Errors worldErrors = worldRoot.LoadSdfString(worldSDF);
+    ASSERT_TRUE(worldErrors.empty()) << worldErrors.front();
+
+    auto world = engine->ConstructWorld(*worldRoot.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    // Parse a simple 2-joint model SDF string
+    const std::string modelSDF = R"(
+      <sdf version="1.9">
+        <model name="simple_model">
+          <link name="parent_link"/>
+          <link name="mid_link"/>
+          <link name="child_link"/>
+          <joint name="leader_joint" type="revolute">
+            <parent>parent_link</parent>
+            <child>mid_link</child>
+            <axis><xyz>0 0 1</xyz></axis>
+          </joint>
+          <joint name="follower_joint" type="revolute">
+            <parent>mid_link</parent>
+            <child>child_link</child>
+            <axis><xyz>0 0 1</xyz></axis>
+          </joint>
+        </model>
+      </sdf>
+    )";
+
+    sdf::Root modelRoot;
+    sdf::Errors modelErrors = modelRoot.LoadSdfString(modelSDF);
+    ASSERT_TRUE(modelErrors.empty()) << modelErrors.front();
+
+    auto model = world->ConstructModel(*modelRoot.Model());
+    ASSERT_NE(nullptr, model);
+
+    auto leader = model->GetJoint("leader_joint");
+    ASSERT_NE(nullptr, leader);
+
+    auto follower = model->GetJoint("follower_joint");
+    ASSERT_NE(nullptr, follower);
+
+    // Call SetMimicConstraint on the joint. Since step hasn't been called, some
+    // engines (e.g. MuJoCo) would not have rebuilt/recompiled their internal
+    // state. This call checks that the API functions regardless of that.
+    bool success = follower->SetMimicConstraint(0, leader, 0, 1.0, 0.0, 0.0);
+    EXPECT_TRUE(success);
   }
 }
 

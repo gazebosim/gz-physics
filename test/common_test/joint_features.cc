@@ -2700,6 +2700,315 @@ TEST_F(FixedJointWeldFeatureTestTypes, FixedJointWeldFall)
   }
 }
 
+struct JointFeatureScrewList : gz::physics::FeatureList<
+    gz::physics::ForwardStep,
+    gz::physics::GetBasicJointProperties,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetLinkFromModel,
+    gz::physics::GetModelFromWorld,
+    gz::physics::LinkFrameSemantics,
+    gz::physics::SetBasicJointState,
+    gz::physics::Gravity,
+    gz::physics::sdf::ConstructSdfWorld
+> { };
+
+template <class T>
+class JointFeaturesScrewTest :
+  public JointFeaturesTest<T>{};
+using JointFeaturesScrewTestTypes =
+  ::testing::Types<JointFeatureScrewList>;
+TYPED_TEST_SUITE(JointFeaturesScrewTest,
+                 JointFeaturesScrewTestTypes);
+
+TYPED_TEST(JointFeaturesScrewTest, ScrewJointCouplingAndDamping)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_SUPPORTED_ENGINE(name, "dartsim", "mujoco")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<JointFeatureScrewList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    std::string worldStr = R"(
+    <sdf version="1.9">
+      <world name="screw_world">
+        <model name="screw_joint_test">
+          <link name="link0"/>
+          <link name="link1">
+            <inertial>
+              <mass>1.0</mass>
+              <inertia>
+                <ixx>0.01</ixx>
+                <iyy>0.01</iyy>
+                <izz>0.01</izz>
+              </inertia>
+            </inertial>
+          </link>
+          <joint name="j0" type="screw">
+            <parent>link0</parent>
+            <child>link1</child>
+            <screw_thread_pitch>2</screw_thread_pitch>
+          </joint>
+          <joint name="world_joint" type="fixed">
+            <parent>world</parent>
+            <child>link0</child>
+          </joint>
+        </model>
+        <model name="screw_joint_with_damping_test">
+          <link name="link0"/>
+          <link name="link1">
+            <inertial>
+              <mass>1.0</mass>
+              <inertia>
+                <ixx>0.01</ixx>
+                <iyy>0.01</iyy>
+                <izz>0.01</izz>
+              </inertia>
+            </inertial>
+          </link>
+          <joint name="j0" type="screw">
+            <parent>link0</parent>
+            <child>link1</child>
+            <screw_thread_pitch>2</screw_thread_pitch>
+            <axis>
+              <dynamics>
+                <damping>50.0</damping>
+              </dynamics>
+            </axis>
+          </joint>
+          <joint name="world_joint" type="fixed">
+            <parent>world</parent>
+            <child>link0</child>
+          </joint>
+        </model>
+      </world>
+    </sdf>)";
+
+    sdf::Root root;
+    const sdf::Errors errors = root.LoadSdfString(worldStr);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+
+    // --------------------------------------------------
+    // 1. Undamped Fall (Baseline & Coupling check)
+    // --------------------------------------------------
+    auto modelBaseline = world->GetModel("screw_joint_test");
+    auto jointBaseline = modelBaseline->GetJoint("j0");
+    auto parentLinkBaseline = modelBaseline->GetLink("link0");
+    auto childLinkBaseline = modelBaseline->GetLink("link1");
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // Ensure that the screw joint has 1 DOF since some engines might use two
+    // coupled joints to implement this.
+    EXPECT_EQ(1u, jointBaseline->GetDegreesOfFreedom());
+
+    // Ensure joint starts at 0
+    jointBaseline->SetPosition(0, 0.0);
+    jointBaseline->SetVelocity(0, 0.0);
+
+    // Sync initial frame poses
+    world->Step(output, state, input);
+    EXPECT_NEAR(0.0, jointBaseline->GetPosition(0), 1e-3);
+
+    // Step the simulation forward under natural gravity
+    const std::size_t numSteps = 100;
+    for (std::size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // Read the resulting linear position and velocity from joint API
+    double linPosBaseline = jointBaseline->GetPosition(0);
+    double linVelBaseline = jointBaseline->GetVelocity(0);
+
+    // Verify that the joint has moved dynamically under gravity
+    EXPECT_GT(std::abs(linPosBaseline), 1e-3);
+    EXPECT_GT(std::abs(linVelBaseline), 1e-2);
+
+    // Read parent and child global poses
+    auto parentFrameBaseline = parentLinkBaseline->FrameDataRelativeToWorld();
+    auto childFrameBaseline = childLinkBaseline->FrameDataRelativeToWorld();
+
+    gz::math::Pose3d parentPoseBaseline =
+        gz::math::eigen3::convert(parentFrameBaseline.pose);
+    gz::math::Pose3d childPoseBaseline =
+        gz::math::eigen3::convert(childFrameBaseline.pose);
+
+    // Compute child pose relative to parent
+    gz::math::Pose3d relativePoseBaseline =
+        parentPoseBaseline.Inverse() * childPoseBaseline;
+
+    const double positionTolerance = 5e-3;
+    const double pitch = 2.0 / (2.0 * GZ_PI);  // pitch = ScrewThreadPitch / 2pi
+
+    // Screw joint axis is Z-axis in SDFormat by default. Both DART and MuJoCo's
+    // primary coordinate represents rotation (radians) for screw joints.
+    // Verify that the primary joint position matches the relative angular Yaw
+    // rotation (radians)
+    EXPECT_NEAR(linPosBaseline, relativePoseBaseline.Rot().Yaw(),
+                positionTolerance);
+
+    // Verify that the relative Z translation matches the scaled primary
+    // coordinate (pitch * rotation)
+    EXPECT_NEAR(relativePoseBaseline.Pos().Z(), pitch * linPosBaseline,
+                positionTolerance);
+
+    // --------------------------------------------------
+    // 2. Damped Fall (Verify static SDF damping decay)
+    // --------------------------------------------------
+    auto modelDamped = world->GetModel("screw_joint_with_damping_test");
+    auto jointDamped = modelDamped->GetJoint("j0");
+
+    // Ensure joint starts at 0
+    jointDamped->SetPosition(0, 0.0);
+    jointDamped->SetVelocity(0, 0.0);
+
+    // Step the simulation forward for the exact same duration
+    for (std::size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    double linPosDamped = jointDamped->GetPosition(0);
+    double linVelDamped = jointDamped->GetVelocity(0);
+
+    // Assert that the static SDF damping has opposed linear/angular velocity
+    // heavily, leading to much less linear travel and velocity compared to the
+    // baseline
+    EXPECT_LT(
+        std::abs(linPosDamped),
+        std::abs(linPosBaseline) * 0.3);  // Decayed position (3.3x smaller)
+    EXPECT_LT(std::abs(linVelDamped),
+              std::abs(linVelBaseline) * 0.2);  // Decayed velocity (5x smaller)
+  }
+}
+
+TYPED_TEST(JointFeaturesScrewTest, ScrewJointLimits)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_SUPPORTED_ENGINE(name, "dartsim", "mujoco")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<JointFeatureScrewList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    std::string worldStr = R"(
+    <sdf version="1.9">
+      <world name="screw_limits_world">
+        <gravity>0 0 0</gravity>
+        <model name="screw_model">
+          <link name="link0"/>
+          <link name="link1">
+            <inertial>
+              <mass>1.0</mass>
+              <inertia>
+                <ixx>0.01</ixx>
+                <iyy>0.01</iyy>
+                <izz>0.01</izz>
+              </inertia>
+            </inertial>
+          </link>
+          <joint name="j0" type="screw">
+            <parent>link0</parent>
+            <child>link1</child>
+            <screw_thread_pitch>0.2</screw_thread_pitch>
+            <axis>
+              <xyz>0 0 1</xyz>
+              <limit>
+                <lower>-10.0</lower>
+                <upper>10.0</upper>
+              </limit>
+            </axis>
+          </joint>
+          <joint name="world_joint" type="fixed">
+            <parent>world</parent>
+            <child>link0</child>
+          </joint>
+        </model>
+      </world>
+    </sdf>)";
+
+    sdf::Root root;
+    const sdf::Errors errors = root.LoadSdfString(worldStr);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("screw_model");
+    ASSERT_NE(nullptr, model);
+    auto joint = model->GetJoint("j0");
+    auto parentLink = model->GetLink("link0");
+    auto childLink = model->GetLink("link1");
+    ASSERT_NE(nullptr, parentLink);
+    ASSERT_NE(nullptr, childLink);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // Step once to initialize
+    world->Step(output, state, input);
+
+    auto getRelativeZ = [&]()
+    {
+      auto parentFrame = parentLink->FrameDataRelativeToWorld();
+      auto childFrame = childLink->FrameDataRelativeToWorld();
+      gz::math::Pose3d parentPose =
+          gz::math::eigen3::convert(parentFrame.pose);
+      gz::math::Pose3d childPose =
+          gz::math::eigen3::convert(childFrame.pose);
+      gz::math::Pose3d relativePose = parentPose.Inverse() * childPose;
+      return relativePose.Pos().Z();
+    };
+
+    const double limit = 10.0;
+
+    // Drive joint with a steady velocity until it reaches the upper limit
+    for (int i = 0; i < 1500; ++i)
+    {
+      if (joint->GetPosition(0) < limit * 0.99)
+        joint->SetForce(0, 2.0);
+      else
+        joint->SetForce(0, 0.0);
+      world->Step(output, state, input);
+    }
+
+    const double posUpper = getRelativeZ();
+    gzdbg << "[" << name << "] link relative Z posUpper after 1500 steps: " << posUpper << std::endl;
+
+    // Drive joint against the lower limit
+    for (int i = 0; i < 1500; ++i)
+    {
+      if (joint->GetPosition(0) > -limit * 0.99)
+        joint->SetForce(0, -2.0);
+      else
+        joint->SetForce(0, 0.0);
+      world->Step(output, state, input);
+    }
+
+    const double posLower = getRelativeZ();
+    gzdbg << "[" << name << "] link relative Z posLower after 1500 steps: " << posLower << std::endl;
+    const double pitch = 0.2 / (2.0 * GZ_PI);
+    EXPECT_NEAR(pitch * limit, posUpper, 5e-2);
+    EXPECT_NEAR(pitch * -limit, posLower, 5e-2);
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
