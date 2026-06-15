@@ -418,5 +418,84 @@ TEST_P(SDFFeatures_TEST, ModelRemoval)
   EXPECT_FALSE(world->RemoveModel(modelName));
 }
 
+/////////////////////////////////////////////////
+TEST_P(SDFFeatures_TEST, SurfaceFriction)
+{
+  common::Console::SetVerbosity(4);
+  using gz::physics::mujoco::Base;
+  std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="test_world">
+      <model name="friction_test">
+        <link name="link0">
+          <collision name="collision0">
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+            <surface>
+              <friction>
+                <ode>
+                  <mu>1.5</mu>
+                </ode>
+                <bullet>
+                  <rolling_friction>0.02</rolling_friction>
+                </bullet>
+                <torsional>
+                  <coefficient>0.003</coefficient>
+                </torsional>
+              </friction>
+            </surface>
+          </collision>
+          <collision name="collision1">
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+            <surface>
+              <friction>
+                <bullet>
+                  <friction>2.5</friction>
+                  <rolling_friction>0.04</rolling_friction>
+                </bullet>
+              </friction>
+            </surface>
+          </collision>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  auto *spec = worldInfo->mjSpecObj;
+  ASSERT_NE(nullptr, spec);
+
+  {
+    auto geom = mjs_asGeom(mjs_findElement(
+        spec, mjtObj::mjOBJ_GEOM,
+        Base::JoinNames(Base::JoinNames("friction_test", "link0"), "collision0").c_str()));
+    ASSERT_NE(nullptr, geom);
+
+    EXPECT_DOUBLE_EQ(1.5, geom->friction[0]);
+    EXPECT_DOUBLE_EQ(0.02, geom->friction[1]);
+    EXPECT_DOUBLE_EQ(0.003, geom->friction[2]);
+  }
+
+  {
+    auto geom = mjs_asGeom(mjs_findElement(
+        spec, mjtObj::mjOBJ_GEOM,
+        Base::JoinNames(Base::JoinNames("friction_test", "link0"), "collision1").c_str()));
+    ASSERT_NE(nullptr, geom);
+
+    EXPECT_DOUBLE_EQ(2.5, geom->friction[0]);
+    EXPECT_DOUBLE_EQ(0.04, geom->friction[1]);
+    // Torsional friction is not specified so it uses the
+    // default mujoco spinning friction value
+    EXPECT_DOUBLE_EQ(0.0001, geom->friction[2]);
+  }
+}
+
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
                         ::testing::Values(LoaderType::Whole));
