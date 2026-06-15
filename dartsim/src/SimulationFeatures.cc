@@ -169,8 +169,6 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
   _changedPoses.entries.clear();
   _changedPoses.entries.reserve(this->links.size());
 
-  std::unordered_map<std::size_t, math::Pose3d> newPoses;
-
   for (const auto &[id, info] : this->links.idToObject)
   {
     // make sure the link exists
@@ -189,17 +187,29 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
           !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
       {
         _changedPoses.entries.push_back(wp);
-        newPoses[id] = wp.pose;
+        this->prevLinkPoses[id] = wp.pose;
       }
-      else
-        newPoses[id] = iter->second;
     }
   }
 
-  // Save the new poses so that they can be used to check for updates in the
-  // next iteration. Re-setting this->prevLinkPoses with the contents of
-  // newPoses ensures that we aren't caching data for links that were removed
-  this->prevLinkPoses = std::move(newPoses);
+  if (this->prevLinkPoses.size() > this->links.size())
+  {
+    // Clear all the removed links
+    auto it = this->prevLinkPoses.begin();
+    while (it != this->prevLinkPoses.end())
+    {
+      if (this->links.idToObject.find(it->first) ==
+          this->links.idToObject.end())
+      {
+        // Link was removed, clear from cache
+        it = this->prevLinkPoses.erase(it);
+      }
+      else
+      {
+        ++it;
+      }
+    }
+  }
 }
 
 SimulationFeatures::RayIntersectionInternal
