@@ -475,7 +475,8 @@ TEST_P(SDFFeatures_TEST, SurfaceFriction)
   {
     auto geom = mjs_asGeom(mjs_findElement(
         spec, mjtObj::mjOBJ_GEOM,
-        Base::JoinNames(Base::JoinNames("friction_test", "link0"), "collision0").c_str()));
+        Base::JoinNames(Base::JoinNames("friction_test", "link0"),
+                        "collision0").c_str()));
     ASSERT_NE(nullptr, geom);
 
     EXPECT_DOUBLE_EQ(1.5, geom->friction[0]);
@@ -486,7 +487,8 @@ TEST_P(SDFFeatures_TEST, SurfaceFriction)
   {
     auto geom = mjs_asGeom(mjs_findElement(
         spec, mjtObj::mjOBJ_GEOM,
-        Base::JoinNames(Base::JoinNames("friction_test", "link0"), "collision1").c_str()));
+        Base::JoinNames(Base::JoinNames("friction_test", "link0"),
+                        "collision1").c_str()));
     ASSERT_NE(nullptr, geom);
 
     EXPECT_DOUBLE_EQ(2.5, geom->friction[0]);
