@@ -1179,10 +1179,11 @@ Identity SDFFeatures::ConstructSdfJoint(
 
       if (solver->getBoxedLcpSolver()->getType() != "PgsBoxedLcpSolver")
       {
-        gzwarn << "Closed kinematic chain detected between [" << parentName 
+        gzwarn << "Closed kinematic chain detected between [" << parentName
                 << "] and [" << _child->getName() << "]. However, loaded solver"
                 << "is [" << solver->getBoxedLcpSolver()->getType() << "]"
-                << " and the world might crash. PgsBoxedLcpSolver is preferred \n";
+                << " and the world might crash. PgsBoxedLcpSolver is preferred"
+                << "\n";
       }
     }
   }
