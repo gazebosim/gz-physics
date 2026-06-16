@@ -26,6 +26,9 @@
 #include <utility>
 
 #include <dart/constraint/ConstraintSolver.hpp>
+#include <dart/constraint/BoxedLcpConstraintSolver.hpp>
+#include <dart/constraint/DantzigBoxedLcpSolver.hpp>
+#include <dart/constraint/PgsBoxedLcpSolver.hpp>
 #include <dart/dynamics/BallJoint.hpp>
 #include <dart/dynamics/BoxShape.hpp>
 #include <dart/dynamics/CapsuleShape.hpp>
@@ -1166,6 +1169,20 @@ Identity SDFFeatures::ConstructSdfJoint(
         constraint = childLinkInfo->weldedNodes.back().second;
       }
       correctChildBn = childWeldBodynode;
+
+      auto worldID = this->GetWorldOfModelImpl(_modelID);
+
+      const dart::simulation::WorldPtr &world = this->worlds.at(worldID);
+
+      auto solver = dynamic_cast<dart::constraint::BoxedLcpConstraintSolver *>(
+        world->getConstraintSolver());
+
+      if (solver->getBoxedLcpSolver()->getType() != "PgsBoxedLcpSolver")
+      {
+        gzwarn << "Closed kinematic chain detected between [" << parentName << "] and [" << _child->getName()
+                << "]. However, loaded solver is [" << solver->getBoxedLcpSolver()->getType() << "]" 
+                << " and the world might crash. PgsBoxedLcpSolver is preferred \n";
+      }
     }
   }
 
