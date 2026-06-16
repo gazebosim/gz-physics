@@ -78,12 +78,22 @@ gz_find_package(DART
     collision-bullet
     collision-ode
     utils
-    utils-urdf
   CONFIG
   VERSION 6.10
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)
+
+if(BUILD_TESTING)
+  gz_find_package(DART
+    COMPONENTS
+    utils-urdf
+    CONFIG
+    VERSION 6.10
+    REQUIRED_BY dartsim
+    PKGCONFIG dart
+    PKGCONFIG_VER_COMPARISON >=)
+endif()
 
 #--------------------------------------
 # Find bullet for the bullet plugin wrapper
