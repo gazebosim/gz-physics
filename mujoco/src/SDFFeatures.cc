@@ -742,10 +742,10 @@ struct ModelKinematicStructure
 
         if (mu.has_value())
           geom->friction[0] = mu.value();
-        if (rollingFriction.has_value())
-          geom->friction[1] = rollingFriction.value();
         if (spinningFriction.has_value())
-          geom->friction[2] = spinningFriction.value();
+          geom->friction[1] = spinningFriction.value();
+        if (rollingFriction.has_value())
+          geom->friction[2] = rollingFriction.value();
 
         mjs_setName(geom->element,
                     ::sdf::JoinName(body_name, collision->Name()).c_str());

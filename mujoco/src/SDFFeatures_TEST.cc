@@ -480,8 +480,8 @@ TEST_P(SDFFeatures_TEST, SurfaceFriction)
     ASSERT_NE(nullptr, geom);
 
     EXPECT_DOUBLE_EQ(1.5, geom->friction[0]);
-    EXPECT_DOUBLE_EQ(0.02, geom->friction[1]);
-    EXPECT_DOUBLE_EQ(0.003, geom->friction[2]);
+    EXPECT_DOUBLE_EQ(0.003, geom->friction[1]); // torsional
+    EXPECT_DOUBLE_EQ(0.02, geom->friction[2]);  // rolling
   }
 
   {
@@ -491,11 +491,12 @@ TEST_P(SDFFeatures_TEST, SurfaceFriction)
                         "collision1").c_str()));
     ASSERT_NE(nullptr, geom);
 
+    // Sliding
     EXPECT_DOUBLE_EQ(2.5, geom->friction[0]);
-    EXPECT_DOUBLE_EQ(0.04, geom->friction[1]);
-    // Torsional friction is not specified so it uses the
-    // default mujoco spinning friction value
-    EXPECT_DOUBLE_EQ(0.0001, geom->friction[2]);
+    // Torsional - not specified in SDF so should use default value
+    EXPECT_DOUBLE_EQ(0.005, geom->friction[1]);
+    // Rolling
+    EXPECT_DOUBLE_EQ(0.04, geom->friction[2]);
   }
 }
 
