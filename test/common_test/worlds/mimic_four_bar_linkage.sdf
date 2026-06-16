@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<sdf version="1.11">e
+<sdf version="1.11">
   <world name="harmonic_mimic_mechanisms">
     <physics name="1ms" type="ignored">
       <max_step_size>0.001</max_step_size>
@@ -173,7 +173,6 @@
       <!-- upper left link, length 0.5 -->
       <link name="upper_left_link">
         <pose degrees="true" relative_to="base_top_left_mount">0.15 0 0 -155 0 0</pose>
-        <self_collide>0</self_collide>
         <inertial auto="true" />
         <collision name="col_upper_joint">
           <pose degrees="true">0 0 0 0 90 0</pose>
@@ -261,7 +260,6 @@
       <!-- upper right link, length 0.5 -->
       <link name="upper_right_link">
         <pose degrees="true" relative_to="base_top_right_mount">0.15 0 0 -155 0 0</pose>
-        <self_collide>0</self_collide>
         <inertial auto="true" />
         <collision name="col_upper_joint">
           <pose degrees="true">0 0 0 0 90 0</pose>
@@ -364,7 +362,6 @@
       <!-- lower link, length 0.5 -->
       <link name="lower_link">
         <pose degrees="true" relative_to="lower_left_joint">0 -0.3 0.2 0 0 0</pose>
-        <self_collide>0</self_collide>
         <inertial auto="true" />
         <collision name="col_box">
           <geometry>
