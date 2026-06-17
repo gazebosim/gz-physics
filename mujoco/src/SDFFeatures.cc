@@ -723,8 +723,11 @@ struct ModelKinematicStructure
             // param.
             if (bulletElem)
             {
-              if (auto rollingElem = bulletElem->FindElement("rolling_friction"))
+              if (auto rollingElem =
+                  bulletElem->FindElement("rolling_friction"))
+              {
                 rollingFriction = rollingElem->Get<double>();
+              }
             }
 
             // Parse torsional friction value
