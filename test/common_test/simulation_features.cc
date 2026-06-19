@@ -1279,6 +1279,53 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
   }
 }
 
+TYPED_TEST(SimulationFeaturesTestFreeGroup, ChangedWorldPosesPublishesSmallDelta)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    if (name.find("dartsim") == std::string::npos)
+      continue;
+
+    auto world = LoadPluginAndWorld<FreeGroupFeatures>(
+      this->loader,
+      name,
+      common_test::worlds::kSphereSdf);
+
+    auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+    ASSERT_NE(nullptr, freeGroup->RootLink());
+
+    StepWorld<FreeGroupFeatures>(world, true);
+
+    const gz::math::Pose3d firstPose{0, 0, 2, 0, 0, 0};
+    freeGroup->SetWorldPose(gz::math::eigen3::convert(firstPose));
+    StepWorld<FreeGroupFeatures>(world, false);
+
+    const gz::math::Pose3d smallDeltaPose{5e-7, 0, 2, 0, 0, 0};
+    freeGroup->SetWorldPose(gz::math::eigen3::convert(smallDeltaPose));
+
+    auto [checkedOutput, output] =
+      StepWorld<FreeGroupFeatures>(world, false);
+    EXPECT_FALSE(checkedOutput);
+
+    const auto changedWorldPoses =
+      output.template Get<gz::physics::ChangedWorldPoses>().entries;
+    const auto rootLinkId = freeGroup->RootLink()->EntityID();
+    auto changedPoseIt = std::find_if(changedWorldPoses.begin(),
+      changedWorldPoses.end(),
+      [rootLinkId](const auto &_worldPose)
+      {
+        return _worldPose.body == rootLinkId;
+      });
+
+    ASSERT_NE(changedWorldPoses.end(), changedPoseIt)
+        << "ChangedWorldPoses must publish real pose deltas below 1e-6";
+    EXPECT_EQ(smallDeltaPose, changedPoseIt->pose);
+  }
+}
+
 template <class T>
 class SimulationFeaturesTestBasic :
   public SimulationFeaturesTest<T>{};
