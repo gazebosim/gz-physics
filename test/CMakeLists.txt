@@ -17,6 +17,11 @@ ExternalProject_Add(
   CMAKE_ARGS
     "-DBUILD_TESTING=OFF"
     "-DCMAKE_INSTALL_PREFIX=${FAKE_INSTALL_PREFIX}"
+<<<<<<< HEAD
+=======
+    "-DSKIP_mujoco=${SKIP_mujoco}"
+    "-DCMAKE_PREFIX_PATH=${CMAKE_INSTALL_PREFIX}"
+>>>>>>> 92b5f16 (Fix building tests when using a custom install location (#999))
 )
 
 add_library(gz-physics-test INTERFACE)
