@@ -185,8 +185,8 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
       // add it to the output poses. Otherwise, keep the existing link pose
       auto iter = this->prevLinkPoses.find(id);
       if ((iter == this->prevLinkPoses.end()) ||
-          !iter->second.Pos().Equal(wp.pose.Pos(), 1e-6) ||
-          !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
+          !iter->second.Pos().Equal(wp.pose.Pos(), 0.0) ||
+          !iter->second.Rot().Equal(wp.pose.Rot(), 0.0))
       {
         _changedPoses.entries.push_back(wp);
         newPoses[id] = wp.pose;
