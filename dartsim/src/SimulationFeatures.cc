@@ -181,32 +181,12 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 
       // If the link's pose is new or has changed, save this new pose and
       // add it to the output poses. Otherwise, keep the existing link pose
-      auto iter = this->prevLinkPoses.find(id);
-      if ((iter == this->prevLinkPoses.end()) ||
-          !iter->second.Pos().Equal(wp.pose.Pos(), 1e-6) ||
-          !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
+      if (!info->prevPose.has_value() ||
+          !info->prevPose->Pos().Equal(wp.pose.Pos(), 1e-6) ||
+          !info->prevPose->Rot().Equal(wp.pose.Rot(), 1e-6))
       {
         _changedPoses.entries.push_back(wp);
-        this->prevLinkPoses[id] = wp.pose;
-      }
-    }
-  }
-
-  if (this->prevLinkPoses.size() > this->links.size())
-  {
-    // Clear all the removed links
-    auto it = this->prevLinkPoses.begin();
-    while (it != this->prevLinkPoses.end())
-    {
-      if (this->links.idToObject.find(it->first) ==
-          this->links.idToObject.end())
-      {
-        // Link was removed, clear from cache
-        it = this->prevLinkPoses.erase(it);
-      }
-      else
-      {
-        ++it;
+        info->prevPose = wp.pose;
       }
     }
   }
