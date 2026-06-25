@@ -37,6 +37,11 @@
 #include <gz/common/Console.hh>
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Inertial.hh>
+<<<<<<< HEAD
+=======
+#include <gz/math/Pose3.hh>
+#include <gz/math/SemanticVersion.hh>
+>>>>>>> 84c9ba1 (Remove hash map allocation on every update step (#1005))
 #include <gz/physics/detail/EntityStorage.hh>
 #include <gz/physics/Implements.hh>
 
@@ -81,6 +86,9 @@ struct LinkInfo
   /// \brief The total link inertia, which may be split between the `link` and
   /// `weldedNodes` body nodes.
   std::optional<math::Inertiald> inertial;
+  /// \brief Cached pose from the previous physics step, used for performance
+  /// optimization.
+  std::optional<math::Pose3d> prevPose;
 };
 
 struct JointInfo
