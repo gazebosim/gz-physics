@@ -244,8 +244,17 @@ struct ModelInfo
   std::size_t entityId;
   mjsBody *body{nullptr};
   WorldInfo *worldInfo;
+  /// \brief Default parent body in MuJoCo for this model's root link.
+  /// \details This is used as a fallback if the root link of this model (or
+  /// any of its nested submodels) is not connected to a parent link via a
+  /// joint. Top-level models and free-floating nested models will default to
+  /// having this set to the world body in the spec.
   mjsBody *parentBody{nullptr};
   std::string name;
+  /// \brief Initial pose of this model relative to the world frame.
+  /// \details Used to resolve world pose for programmatically constructed
+  /// nested models.
+  math::Pose3d initial_model_pose_in_world;
   detail::EntityStorage<std::shared_ptr<LinkInfo>, const mjsBody *> links{};
   detail::EntityStorage<std::shared_ptr<JointInfo>, std::string> joints{};
   ModelInfo *parentModelInfo{nullptr};

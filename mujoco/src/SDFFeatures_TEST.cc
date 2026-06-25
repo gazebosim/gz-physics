@@ -301,6 +301,58 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
 }
 
 /////////////////////////////////////////////////
+TEST_P(SDFFeatures_TEST, TopLevelModelWithNonZeroRootLinkPose)
+{
+  std::string worldStr = R"(
+  <sdf version="1.10">
+    <world name="test_world">
+      <model name="my_model">
+        <pose>1 2 3  0 0 1.57079632679</pose>
+        <link name="my_root_link">
+          <pose>0 1 0  1.57079632679 0 0</pose>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+
+  EXPECT_EQ(1u, worldInfo->models.size());
+
+  using gz::physics::mujoco::Base;
+  auto worldBody = worldInfo->body;
+
+  auto rootLink = mjs_findChild(
+      worldBody, Base::JoinNames("my_model", "my_root_link").c_str());
+  ASSERT_NE(nullptr, rootLink);
+
+  gz::math::Pose3d modelPose(1, 2, 3, 0, 0, GZ_PI/2);
+  gz::math::Pose3d linkPose(0, 1, 0, GZ_PI/2, 0, 0);
+
+  gz::math::Pose3d expectedLinkPoseInWorld = modelPose * linkPose;
+
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Pos().X(), rootLink->pos[0], 1e-6);
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Pos().Y(), rootLink->pos[1], 1e-6);
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Pos().Z(), rootLink->pos[2], 1e-6);
+
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Rot().W(), rootLink->quat[0], 1e-6);
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Rot().X(), rootLink->quat[1], 1e-6);
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Rot().Y(), rootLink->quat[2], 1e-6);
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Rot().Z(), rootLink->quat[3], 1e-6);
+}
+
+/////////////////////////////////////////////////
 TEST_P(SDFFeatures_TEST, UniversalJoint)
 {
   common::Console::SetVerbosity(4);
@@ -429,6 +481,7 @@ TEST_P(SDFFeatures_TEST, ConstructSdfNestedModel)
   <sdf version="1.10">
     <world name="test_world">
       <model name="parent_model">
+        <pose>1 2 3  0 0 1.57079632679</pose>
         <link name="parent_link"/>
       </model>
     </world>
@@ -443,6 +496,7 @@ TEST_P(SDFFeatures_TEST, ConstructSdfNestedModel)
   std::string nestedSdfStr = R"(
   <sdf version="1.10">
     <model name="nested_model">
+      <pose>1 0 0  0 0 -1.57079632679</pose>
       <link name="nested_link"/>
     </model>
   </sdf>)";
@@ -491,6 +545,19 @@ TEST_P(SDFFeatures_TEST, ConstructSdfNestedModel)
   auto firstJoint = mjs_asJoint(firstChildElement);
   ASSERT_NE(nullptr, firstJoint);
   EXPECT_EQ(mjJNT_FREE, firstJoint->type);
+
+  // Verify absolute pose of the nested link body.
+  // parent_model absolute pose: [1, 2, 3, 0, 0, pi/2]
+  // nested_model relative pose: [1, 0, 0, 0, 0, -pi/2]
+  // expected absolute pose: [1, 3, 3, 0, 0, 0]
+  EXPECT_NEAR(1.0, nestedLinkBody->pos[0], 1e-6);
+  EXPECT_NEAR(3.0, nestedLinkBody->pos[1], 1e-6);
+  EXPECT_NEAR(3.0, nestedLinkBody->pos[2], 1e-6);
+
+  EXPECT_NEAR(1.0, nestedLinkBody->quat[0], 1e-6);
+  EXPECT_NEAR(0.0, nestedLinkBody->quat[1], 1e-6);
+  EXPECT_NEAR(0.0, nestedLinkBody->quat[2], 1e-6);
+  EXPECT_NEAR(0.0, nestedLinkBody->quat[3], 1e-6);
 }
 
 /////////////////////////////////////////////////
@@ -592,7 +659,11 @@ TEST_P(SDFFeatures_TEST, NestedModelsJointsAndCollisions)
   EXPECT_EQ(mjtJoint::mjJNT_BALL, ballJoint->type);
 
   // Verify contact exclusions (self-collision disabled by default)
-  // 6 links -> 15 exclusions
+  // Exclusions only apply between links within the same model:
+  // - parent_model (1 link) -> 0 exclusions
+  // - nested_model_1 (2 links) -> 1 exclusion
+  // - nested_model_2 (3 links) -> 3 exclusions
+  // Total = 4 exclusions
   std::set<std::pair<std::string, std::string>> exclusions;
   for (mjsElement *elem = mjs_firstElement(spec, mjOBJ_EXCLUDE); elem;
        elem = mjs_nextElement(spec, elem))
@@ -611,7 +682,7 @@ TEST_P(SDFFeatures_TEST, NestedModelsJointsAndCollisions)
     }
   }
 
-  EXPECT_EQ(15u, exclusions.size());
+  EXPECT_EQ(4u, exclusions.size());
 
   auto hasExclusion = [&](const std::string &b1, const std::string &b2) {
     if (b1 < b2)
@@ -620,16 +691,29 @@ TEST_P(SDFFeatures_TEST, NestedModelsJointsAndCollisions)
       return exclusions.find({b2, b1}) != exclusions.end();
   };
 
-  // Check a few pairs to be sure
-  EXPECT_TRUE(hasExclusion(
-      "parent_model::parent_link",
-      "parent_model::nested_model_1::nested_link_1"));
+  // Exclusions within nested_model_1
   EXPECT_TRUE(hasExclusion(
       "parent_model::nested_model_1::nested_link_1",
+      "parent_model::nested_model_1::nested_link_2"));
+
+  // Exclusions within nested_model_2
+  EXPECT_TRUE(hasExclusion(
+      "parent_model::nested_model_1::nested_model_2::nested_link_3",
+      "parent_model::nested_model_1::nested_model_2::nested_link_4"));
+  EXPECT_TRUE(hasExclusion(
+      "parent_model::nested_model_1::nested_model_2::nested_link_3",
       "parent_model::nested_model_1::nested_model_2::nested_link_5"));
   EXPECT_TRUE(hasExclusion(
-      "parent_model::nested_model_1::nested_link_2",
-      "parent_model::nested_model_1::nested_model_2::nested_link_4"));
+      "parent_model::nested_model_1::nested_model_2::nested_link_4",
+      "parent_model::nested_model_1::nested_model_2::nested_link_5"));
+
+  // No exclusions between parent and child models
+  EXPECT_FALSE(hasExclusion(
+      "parent_model::parent_link",
+      "parent_model::nested_model_1::nested_link_1"));
+  EXPECT_FALSE(hasExclusion(
+      "parent_model::nested_model_1::nested_link_1",
+      "parent_model::nested_model_1::nested_model_2::nested_link_5"));
 }
 
 /////////////////////////////////////////////////
@@ -835,6 +919,100 @@ TEST_P(SDFFeatures_TEST, CrossBoundaryJointsInverted)
   ASSERT_NE(nullptr, revJoint);
   EXPECT_EQ(mjtJoint::mjJNT_HINGE, revJoint->type);
 }
+
+
+/////////////////////////////////////////////////
+// Test self-collision exclusions count and presence for nested models.
+TEST_P(SDFFeatures_TEST, NestedModelSelfCollideExclusions)
+{
+  WorldPtr world = this->LoadWorld(
+      common_test::worlds::kNestedModelSelfCollideSdf);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  auto *spec = worldInfo->mjSpecObj;
+  ASSERT_NE(nullptr, spec);
+
+  std::set<std::pair<std::string, std::string>> exclusions;
+  for (mjsElement *elem = mjs_firstElement(spec, mjOBJ_EXCLUDE); elem;
+       elem = mjs_nextElement(spec, elem))
+  {
+    mjsExclude *exclude = mjs_asExclude(elem);
+    ASSERT_NE(nullptr, exclude);
+    std::string b1 = mjs_getString(exclude->bodyname1);
+    std::string b2 = mjs_getString(exclude->bodyname2);
+    if (b1 < b2)
+    {
+      exclusions.insert({b1, b2});
+    }
+    else
+    {
+      exclusions.insert({b2, b1});
+    }
+  }
+
+  // Expect 12 exclusions total:
+  // Case 1: 0 (parent) + 0 (child) = 0
+  // Case 2: 0 (parent) + 3 (child: CC platform, CC dropper, PC dropper) = 3
+  // Case 3: 3 (parent: platform_pp, dropper_pp, platform_pc) + 0 (child) = 3
+  // Case 4: 3 (parent: platform_pp, dropper_pp, platform_pc) +
+  //         3 (child: CC platform, CC dropper, PC dropper) = 6
+  // Total = 0 + 3 + 3 + 6 = 12
+  EXPECT_EQ(12u, exclusions.size());
+
+  auto hasExclusion = [&](const std::string &b1, const std::string &b2) {
+    if (b1 < b2)
+      return exclusions.find({b1, b2}) != exclusions.end();
+    else
+      return exclusions.find({b2, b1}) != exclusions.end();
+  };
+
+  // Case 2 exclusions (only 1 within child_model)
+  EXPECT_TRUE(hasExclusion(
+      "case2_parent_true_child_false::child_model::child_platform_cc",
+      "case2_parent_true_child_false::child_model::child_dropper_cc"));
+
+  // Case 3 exclusions (only within parent)
+  EXPECT_TRUE(hasExclusion(
+      "case3_parent_false_child_true::parent_platform_pp",
+      "case3_parent_false_child_true::parent_dropper_pp"));
+  EXPECT_TRUE(hasExclusion(
+      "case3_parent_false_child_true::parent_platform_pp",
+      "case3_parent_false_child_true::parent_platform_pc"));
+  EXPECT_TRUE(hasExclusion(
+      "case3_parent_false_child_true::parent_dropper_pp",
+      "case3_parent_false_child_true::parent_platform_pc"));
+
+  // Case 4 exclusions (within parent)
+  EXPECT_TRUE(hasExclusion(
+      "case4_parent_false_child_false::parent_platform_pp",
+      "case4_parent_false_child_false::parent_dropper_pp"));
+  EXPECT_TRUE(hasExclusion(
+      "case4_parent_false_child_false::parent_platform_pp",
+      "case4_parent_false_child_false::parent_platform_pc"));
+  EXPECT_TRUE(hasExclusion(
+      "case4_parent_false_child_false::parent_dropper_pp",
+      "case4_parent_false_child_false::parent_platform_pc"));
+  // Case 4 exclusions (within child_model)
+  EXPECT_TRUE(hasExclusion(
+      "case4_parent_false_child_false::child_model::child_platform_cc",
+      "case4_parent_false_child_false::child_model::child_dropper_cc"));
+  EXPECT_TRUE(hasExclusion(
+      "case4_parent_false_child_false::child_model::child_platform_cc",
+      "case4_parent_false_child_false::child_model::child_dropper_pc"));
+  EXPECT_TRUE(hasExclusion(
+      "case4_parent_false_child_false::child_model::child_dropper_cc",
+      "case4_parent_false_child_false::child_model::child_dropper_pc"));
+
+  // NO cross-boundary exclusions should exist!
+  EXPECT_FALSE(hasExclusion(
+      "case3_parent_false_child_true::parent_platform_pc",
+      "case3_parent_false_child_true::child_model::child_dropper_pc"));
+}
+
+
+
 
 
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,

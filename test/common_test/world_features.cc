@@ -747,6 +747,207 @@ TYPED_TEST(NestedModelResetTest, ResetNestedModel)
   }
 }
 
+struct NestedModelSelfCollideFeatures : gz::physics::FeatureList<
+  gz::physics::GetEngineInfo,
+  gz::physics::Gravity,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::LinkFrameSemantics,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetNestedModelFromModel,
+  gz::physics::GetLinkFromModel,
+  gz::physics::ForwardStep
+> { };
+
+using WorldFeaturesTestSelfCollide = WorldFeaturesTest<NestedModelSelfCollideFeatures>;
+
+/////////////////////////////////////////////////
+// This test verifies self-collision behaviors inside nested model hierarchies.
+//
+// The test uses a world (kNestedModelSelfCollideSdf) defining 4 case models:
+// Case 1: Parent: self_collide=true, Child: self_collide=true
+// Case 2: Parent: self_collide=true, Child: self_collide=false
+// Case 3: Parent: self_collide=false, Child: self_collide=true
+// Case 4: Parent: self_collide=false, Child: self_collide=false
+//
+// For each case, there are three types of platform-dropper collisions checked:
+// - PP (Parent-Parent): Both links belong to the parent model. They should
+//   collide only if Parent self_collide is true.
+// - CC (Child-Child): Both links belong to the nested child model. They should
+//   collide only if Child self_collide is true.
+// - PC (Parent-Child): The platform is in Parent, and the dropper is in Child.
+//   Since they are in different model scopes, they should ALWAYS collide
+//   regardless of the self_collide flags.
+TEST_F(WorldFeaturesTestSelfCollide, NestedModelSelfCollide)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // TPE doesn't support dynamic physics collision checking.
+    // Bullet featherstone fails this test currently.
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe", "bullet-featherstone");
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<NestedModelSelfCollideFeatures>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+    EXPECT_TRUE(engine->GetName().find(this->PhysicsEngineName(name)) !=
+                std::string::npos);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kNestedModelSelfCollideSdf);
+    EXPECT_TRUE(errors.empty()) << errors;
+    const sdf::World *sdfWorld = root.WorldByIndex(0);
+    ASSERT_NE(nullptr, sdfWorld);
+
+    auto world = engine->ConstructWorld(*sdfWorld);
+    ASSERT_NE(nullptr, world);
+
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+
+    // Step simulation for 0.5s (500 steps)
+    const size_t numSteps = 500;
+    for (size_t i = 0; i < numSteps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    // Retrieve models
+    auto case1 = world->GetModel("case1_parent_true_child_true");
+    ASSERT_NE(nullptr, case1);
+    auto case1Child = case1->GetNestedModel("child_model");
+    ASSERT_NE(nullptr, case1Child);
+
+    auto case2 = world->GetModel("case2_parent_true_child_false");
+    ASSERT_NE(nullptr, case2);
+    auto case2Child = case2->GetNestedModel("child_model");
+    ASSERT_NE(nullptr, case2Child);
+
+    auto case3 = world->GetModel("case3_parent_false_child_true");
+    ASSERT_NE(nullptr, case3);
+    auto case3Child = case3->GetNestedModel("child_model");
+    ASSERT_NE(nullptr, case3Child);
+
+    auto case4 = world->GetModel("case4_parent_false_child_false");
+    ASSERT_NE(nullptr, case4);
+    auto case4Child = case4->GetNestedModel("child_model");
+    ASSERT_NE(nullptr, case4Child);
+
+    // Retrieve links
+    auto case1PpPlat = case1->GetLink("parent_platform_pp");
+    auto case1PpDrop = case1->GetLink("parent_dropper_pp");
+    auto case1PcPlat = case1->GetLink("parent_platform_pc");
+    auto case1CcPlat = case1Child->GetLink("child_platform_cc");
+    auto case1CcDrop = case1Child->GetLink("child_dropper_cc");
+    auto case1PcDrop = case1Child->GetLink("child_dropper_pc");
+
+    auto case2PpPlat = case2->GetLink("parent_platform_pp");
+    auto case2PpDrop = case2->GetLink("parent_dropper_pp");
+    auto case2PcPlat = case2->GetLink("parent_platform_pc");
+    auto case2CcPlat = case2Child->GetLink("child_platform_cc");
+    auto case2CcDrop = case2Child->GetLink("child_dropper_cc");
+    auto case2PcDrop = case2Child->GetLink("child_dropper_pc");
+
+    auto case3PpPlat = case3->GetLink("parent_platform_pp");
+    auto case3PpDrop = case3->GetLink("parent_dropper_pp");
+    auto case3PcPlat = case3->GetLink("parent_platform_pc");
+    auto case3CcPlat = case3Child->GetLink("child_platform_cc");
+    auto case3CcDrop = case3Child->GetLink("child_dropper_cc");
+    auto case3PcDrop = case3Child->GetLink("child_dropper_pc");
+
+    auto case4PpPlat = case4->GetLink("parent_platform_pp");
+    auto case4PpDrop = case4->GetLink("parent_dropper_pp");
+    auto case4PcPlat = case4->GetLink("parent_platform_pc");
+    auto case4CcPlat = case4Child->GetLink("child_platform_cc");
+    auto case4CcDrop = case4Child->GetLink("child_dropper_cc");
+    auto case4PcDrop = case4Child->GetLink("child_dropper_pc");
+
+    ASSERT_NE(nullptr, case1PpPlat);
+    ASSERT_NE(nullptr, case1PpDrop);
+    ASSERT_NE(nullptr, case1PcPlat);
+    ASSERT_NE(nullptr, case1CcPlat);
+    ASSERT_NE(nullptr, case1CcDrop);
+    ASSERT_NE(nullptr, case1PcDrop);
+
+    ASSERT_NE(nullptr, case2PpPlat);
+    ASSERT_NE(nullptr, case2PpDrop);
+    ASSERT_NE(nullptr, case2PcPlat);
+    ASSERT_NE(nullptr, case2CcPlat);
+    ASSERT_NE(nullptr, case2CcDrop);
+    ASSERT_NE(nullptr, case2PcDrop);
+
+    ASSERT_NE(nullptr, case3PpPlat);
+    ASSERT_NE(nullptr, case3PpDrop);
+    ASSERT_NE(nullptr, case3PcPlat);
+    ASSERT_NE(nullptr, case3CcPlat);
+    ASSERT_NE(nullptr, case3CcDrop);
+    ASSERT_NE(nullptr, case3PcDrop);
+
+    ASSERT_NE(nullptr, case4PpPlat);
+    ASSERT_NE(nullptr, case4PpDrop);
+    ASSERT_NE(nullptr, case4PcPlat);
+    ASSERT_NE(nullptr, case4CcPlat);
+    ASSERT_NE(nullptr, case4CcDrop);
+    ASSERT_NE(nullptr, case4PcDrop);
+
+    // Helper lambda to check if a dropper collided with a platform.
+    // If it collided, its Z position should be resting on the platform (around 0.7m).
+    // If it did not collide, it falls through to the ground (around 0.15m).
+    auto assertCollide = [](
+        const auto &dropperLink, bool expectedCollision,
+        const std::string &debugName) {
+      double z = dropperLink->FrameDataRelativeToWorld()
+                     .pose.translation()
+                     .z();
+      if (expectedCollision)
+      {
+        EXPECT_GT(z, 0.6) << debugName
+                          << " expected to COLLIDE but fell through (z=" << z
+                          << ")";
+      }
+      else
+      {
+        EXPECT_LT(z, 0.3) << debugName
+                          << " expected to FALL THROUGH but collided (z=" << z
+                          << ")";
+      }
+    };
+
+    // Case 1: Parent: TRUE, Child: TRUE
+    // PP: should collide (parent_platform_pp and parent_dropper_pp are in parent)
+    assertCollide(case1PpDrop, true, "Case 1 PP");
+    // CC: should collide (child_platform_cc and child_dropper_cc are in child)
+    assertCollide(case1CcDrop, true, "Case 1 CC");
+    // PC: should collide (parent_platform_pc is parent, child_dropper_pc is child. They always collide)
+    assertCollide(case1PcDrop, true, "Case 1 PC");
+
+    // Case 2: Parent: TRUE, Child: FALSE
+    // PP: should collide (parent)
+    assertCollide(case2PpDrop, true, "Case 2 PP");
+    // CC: should fall through (child is false)
+    assertCollide(case2CcDrop, false, "Case 2 CC");
+    // PC: should collide (parent-child always collide)
+    assertCollide(case2PcDrop, true, "Case 2 PC");
+
+    // Case 3: Parent: FALSE, Child: TRUE
+    // PP: should fall through (parent is false)
+    assertCollide(case3PpDrop, false, "Case 3 PP");
+    // CC: should collide (child is true)
+    assertCollide(case3CcDrop, true, "Case 3 CC");
+    // PC: should collide (parent-child always collide)
+    assertCollide(case3PcDrop, true, "Case 3 PC");
+
+    // Case 4: Parent: FALSE, Child: FALSE
+    // PP: should fall through (parent is false)
+    assertCollide(case4PpDrop, false, "Case 4 PP");
+    // CC: should fall through (child is false)
+    assertCollide(case4CcDrop, false, "Case 4 CC");
+    // PC: should collide (parent-child always collide)
+    assertCollide(case4PcDrop, true, "Case 4 PC");
+  }
+}
+
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);

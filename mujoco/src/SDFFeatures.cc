@@ -79,7 +79,13 @@ namespace {
 
 /////////////////////////////////////////////////
 /// \brief Resolve the pose of an SDF DOM object with respect to its relative_to
-/// frame. If that fails, return the raw pose
+/// frame. If that fails, return the raw pose.
+/// \details This can be used to resolve the pose of a nested link relative to
+/// the root model frame. Passing the scoped link name as `_resolveTo` to the
+/// root model's semantic pose returns the pose of the root model relative to
+/// the link. Inverting this result yields the link's pose in the root model:
+/// `resolveSdfPose(rootSdfModel.SemanticPose(), linkScopedName).Inverse()`.
+/// where linkScopedName includes the root model name as prefix.
 math::Pose3d resolveSdfPose(const ::sdf::SemanticPose &_semPose,
                             const std::string &_resolveTo = "")
 {
@@ -171,11 +177,11 @@ struct ModelKinematicStructure
 
   std::vector<const ::sdf::Link *> links;
   std::unordered_map<const ::sdf::Link *, std::size_t> linkToIndex;
-  /// \brief For index i, modelInfos[i] is the ModelInfo of the model that
-  /// contains links[i].
+  // For index i, modelInfos[i] is the ModelInfo of the model that
+  // contains links[i].
   std::vector<std::shared_ptr<ModelInfo>> modelInfos;
-  /// \brief For index i, sdfModels[i] is the SDFormat model representation that
-  /// contains links[i].
+  // For index i, sdfModels[i] is the SDFormat model representation that
+  // contains links[i].
   std::vector<const ::sdf::Model *> sdfModels;
   // For index i, parents[i] is the parent link of link[i]
   std::vector<const ::sdf::Link *> parents;
@@ -187,6 +193,9 @@ struct ModelKinematicStructure
   // For index i, jointModelInfos[i] is the ModelInfo of the model that
   // defines childInJoint[i]
   std::vector<std::shared_ptr<ModelInfo>> jointModelInfos;
+  // List of all models in this hierarchy, including the root model.
+  std::vector<std::pair<std::shared_ptr<ModelInfo>,
+                        const ::sdf::Model *>> allModels;
 
   std::optional<std::size_t> FindLinkInModelByName(
       const std::string &_name, const ::sdf::Model *_model)
@@ -231,18 +240,11 @@ struct ModelKinematicStructure
     // collectSdf is a recursive lambda that collects all links, joints, and
     // child models in the model hierarchy. For each nested model, it generates
     // a ModelInfo and registers it under the world.
-    // By default, nested models inherit the parent body of their parent model,
-    // which eventually traces back to the world body.
-    // If the top-level model is programmatically nested (i.e. _parentModelInfo
-    // is non-null), we explicitly override its root's parentBody to the world
-    // body.
-    // This promotes the nested model's free-floating root link to a top-level
-    // link in MuJoCo, allowing it to have a free joint (mjJNT_FREE) rather
-    // than being rigidly welded to the parent model body.
     std::function<void(const ::sdf::Model *, std::shared_ptr<ModelInfo>)>
         collectSdf =
             [&](const ::sdf::Model *model, std::shared_ptr<ModelInfo> mInfo)
     {
+      this->allModels.push_back({mInfo, model});
       for (std::size_t i = 0; i < model->LinkCount(); ++i)
       {
         const auto *link = model->LinkByIndex(i);
@@ -266,6 +268,9 @@ struct ModelKinematicStructure
         auto childModelInfo = _modelInfoGenerator();
         childModelInfo->name = ::sdf::JoinName(mInfo->name, childModel->Name());
         childModelInfo->parentBody = mInfo->parentBody;
+        childModelInfo->initial_model_pose_in_world =
+            mInfo->initial_model_pose_in_world *
+            resolveSdfPose(childModel->SemanticPose());
         childModelInfo->parentModelInfo = mInfo.get();
         mInfo->nestedModelNameToEntityId[childModel->Name()] =
             childModelInfo->entityId;
@@ -279,11 +284,15 @@ struct ModelKinematicStructure
 
     auto rootModelInfo = _modelInfoGenerator();
     rootModelInfo->name = _sdfModel.Name();
+
     if (_parentModelInfo)
     {
       rootModelInfo->name =
           ::sdf::JoinName(_parentModelInfo->name, _sdfModel.Name());
-      rootModelInfo->parentBody = mjs_findBody(_worldInfo->mjSpecObj, "world");
+      rootModelInfo->parentBody = _parentModelInfo->parentBody;
+      rootModelInfo->initial_model_pose_in_world =
+          _parentModelInfo->initial_model_pose_in_world *
+          resolveSdfPose(_sdfModel.SemanticPose());
       rootModelInfo->parentModelInfo = _parentModelInfo;
       _parentModelInfo->nestedModelNameToEntityId[_sdfModel.Name()] =
           rootModelInfo->entityId;
@@ -291,6 +300,8 @@ struct ModelKinematicStructure
     else
     {
       rootModelInfo->parentBody = mjs_findBody(_worldInfo->mjSpecObj, "world");
+      rootModelInfo->initial_model_pose_in_world =
+          resolveSdfPose(_sdfModel.SemanticPose());
     }
     _worldInfo->models.AddEntity(
         rootModelInfo->entityId, rootModelInfo,
@@ -305,9 +316,8 @@ struct ModelKinematicStructure
     this->children.resize(this->links.size(), {});
 
     // Now go through the joints and update parent and children
-    for (std::size_t i = 0; i < allJoints.size(); ++i)
+    for (const auto *joint : allJoints)
     {
-      const auto *joint = allJoints[i];
       std::string childLinkName;
       // TODO(azeey) Handle errors
       joint->ResolveChildLink(childLinkName);
@@ -455,6 +465,7 @@ struct ModelKinematicStructure
     auto worldInfo = _modelInfo->worldInfo;
     if (!sdfJoint)
     {
+      // No joint has this link as a child, so we add a freejoint.
       mjs_addFreeJoint(child);
     }
     else
@@ -667,55 +678,9 @@ struct ModelKinematicStructure
     }
   }
 
-  /// \brief Resolve the pose of a target link (specified by its model name and
-  /// link name) relative to the root model of the kinematic tree.
-  /// \details This resolves the scoped name of the target link relative to the
-  /// root model, and then resolves its pose using the root model's reference
-  /// link as a bridge to correctly handle nested model boundaries.
-  /// \param[in] _rootSdfModel The root SDFormat model of this kinematic tree.
-  /// \param[in] _modelName Name of the model containing the target link.
-  /// \param[in] _linkName Name of the target link.
-  /// \return The resolved pose of the target link relative to the root model.
-  math::Pose3d resolveLinkPoseInRoot(const ::sdf::Model &_rootSdfModel,
-                                     const std::string &_rootModelScopedName,
-                                     const std::string &_modelName,
-                                     const std::string &_linkName)
-  {
-    std::string relativeModelName = _modelName;
-    if (_modelName == _rootModelScopedName)
-    {
-      relativeModelName = "";
-    }
-    else if (_modelName.rfind(_rootModelScopedName + "::", 0) == 0)
-    {
-      relativeModelName = _modelName.substr(_rootModelScopedName.length() + 2);
-    }
-
-    std::string scopedName = ::sdf::JoinName(relativeModelName, _linkName);
-
-    const auto *refLink = _rootSdfModel.LinkByIndex(0);
-    if (!refLink)
-    {
-      gzerr << "Root model " << _rootSdfModel.Name()
-            << " has no links to use as a pose resolution bridge!"
-            << std::endl;
-      return math::Pose3d::Zero;
-    }
-
-    math::Pose3d refInRoot;
-    refLink->SemanticPose().Resolve(refInRoot, "__model__");
-    math::Pose3d refInLink;
-    auto errors = refLink->SemanticPose().Resolve(refInLink, scopedName);
-    if (!errors.empty())
-    {
-      gzerr << "Failed to resolve " << refLink->Name() << " relative to "
-            << scopedName << ": " << errors << std::endl;
-    }
-    return refInRoot * refInLink.Inverse();
-  }
-
   void AddToSpec(Base &_base, const ::sdf::Model &_rootSdfModel,
-                 const std::string &_rootModelScopedName, mjSpec *_spec,
+                 const std::shared_ptr<ModelInfo> &_rootModelInfo,
+                 mjSpec *_spec,
                  std::size_t _index,
                  mjsBody *_parentBody)
   {
@@ -744,38 +709,48 @@ struct ModelKinematicStructure
 
     // Determine the pose of this child body relative to its parent body in
     // MuJoCo.
+
+    // Helper to strip the parent model path prefix from a scoped name.
+    // e.g., if _rootModelInfo->name is "grandparent::nested_model",
+    // this strips "grandparent::" from "grandparent::nested_model::link"
+    // to return "nested_model::link". This matches the parent scope context
+    // used by SDFormat's SemanticPose resolution.
+    auto stripRootModelParentPath =
+        [&](const std::string &_name) -> std::string
+    {
+      std::size_t lastSeparator = _rootModelInfo->name.rfind("::");
+      if (lastSeparator != std::string::npos)
+      {
+        std::string parentModelPrefix =
+            _rootModelInfo->name.substr(0, lastSeparator + 2);
+        if (_name.rfind(parentModelPrefix, 0) == 0)
+        {
+          return _name.substr(parentModelPrefix.length());
+        }
+      }
+      return _name;
+    };
+
     math::Pose3d childPoseInParent;
-    math::Pose3d childPoseInRoot = this->resolveLinkPoseInRoot(
-        _rootSdfModel, _rootModelScopedName, modelInfo->name, link->Name());
+    std::string relativeLinkName = stripRootModelParentPath(body_name);
+    math::Pose3d childPoseInRoot =
+        resolveSdfPose(_rootSdfModel.SemanticPose(), relativeLinkName)
+            .Inverse();
     if (this->parents[_index])
     {
-      std::shared_ptr<ModelInfo> parentModelInfo = nullptr;
-      auto parentIt = this->linkToIndex.find(this->parents[_index]);
-      if (parentIt != this->linkToIndex.end())
-      {
-        parentModelInfo = this->modelInfos[parentIt->second];
-      }
-
-      if (parentModelInfo)
-      {
-        math::Pose3d parentPoseInRoot = this->resolveLinkPoseInRoot(
-            _rootSdfModel, _rootModelScopedName, parentModelInfo->name,
-            this->parents[_index]->Name());
-        childPoseInParent = parentPoseInRoot.Inverse() * childPoseInRoot;
-      }
-      else
-      {
-        gzerr << "Internal error: parent link " << this->parents[_index]->Name()
-              << " of child link " << link->Name()
-              << " was not found in the kinematic tree links. "
-              << "This should never happen." << std::endl;
-        childPoseInParent = sdfModel->RawPose() * link->RawPose();
-      }
+      std::string parentBodyName =
+          mjs_getString(mjs_getName(_parentBody->element));
+      std::string relativeParentLinkName =
+          stripRootModelParentPath(parentBodyName);
+      math::Pose3d rootPoseInParent = resolveSdfPose(
+          _rootSdfModel.SemanticPose(), relativeParentLinkName);
+      childPoseInParent = rootPoseInParent * childPoseInRoot;
     }
     else
     {
       // Parent body is worldbody.
-      childPoseInParent = _rootSdfModel.RawPose() * childPoseInRoot;
+      childPoseInParent =
+          _rootModelInfo->initial_model_pose_in_world * childPoseInRoot;
     }
 
     copyPos(childPoseInParent.Pos(), child->pos);
@@ -962,7 +937,17 @@ struct ModelKinematicStructure
     }
 
     // Add joints
-    if (!sdfModel->Static())
+    if (sdfModel->Static())
+    {
+      if (childInJoint[_index])
+      {
+        gzerr << "Joint [" << childInJoint[_index]->Name()
+              << "] has a link [" << link->Name()
+              << "] in a static model [" << sdfModel->Name()
+              << "] as its child. This is not supported." << std::endl;
+      }
+    }
+    else
     {
       auto jointModelInfo = this->jointModelInfos[_index]
                                 ? this->jointModelInfos[_index]
@@ -974,7 +959,7 @@ struct ModelKinematicStructure
     for (std::size_t i = 0; i < this->children[_index].size(); ++i)
     {
       this->AddToSpec(
-          _base, _rootSdfModel, _rootModelScopedName, _spec,
+          _base, _rootSdfModel, _rootModelInfo, _spec,
           this->children[_index][i], child);
     }
   }
@@ -1046,7 +1031,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     if (!kinTree.parents[i])
     {
       kinTree.AddToSpec(
-          *this, _sdfModel, rootModelInfo->name, worldInfo->mjSpecObj, i,
+          *this, _sdfModel, rootModelInfo, worldInfo->mjSpecObj, i,
           kinTree.modelInfos[i]->parentBody);
     }
   }
@@ -1056,38 +1041,31 @@ Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
     return this->GenerateInvalidId();
   }
 
-  if (!_sdfModel.SelfCollide())
+  for (const auto &[mInfo, model] : kinTree.allModels)
   {
-    // Mujoco requires explicitly declaring contact exclusions for body pairs
-    // in order to implement self-collide. If self collision is disabled, we
-    // need to add exclusions for every body pair in the model.
-    // This includes recursively collecting bodies from any nested child models
-    // to ensure they are also excluded from collision.
-    // Bodies in a parent-child relationship are already excluded, however, if
-    // the parent is attached to worldbody, then we need to explicitly add an
-    // exclusion since the geoms of the parent are considered part of worldbody.
-    // See https://mujoco.readthedocs.io/en/stable/computation/index.html#collision
-    // To avoid the complexity of determining that, we just add exclusions for
-    // every pair
-    std::vector<const mjsBody *> allBodies;
-    std::function<void(const ModelInfo *)> collectBodies =
-        [&](const ModelInfo *m) {
-      for (const auto &[body, id] : m->links.objectToID)
-        allBodies.push_back(body);
-      for (const auto &[name, nestedId] : m->nestedModelNameToEntityId)
-        collectBodies(worldInfo->models.at(nestedId).get());
-    };
-    collectBodies(rootModelInfo.get());
-
-    for (auto it1 = allBodies.begin(); it1 != allBodies.end(); ++it1)
+    if (!model->SelfCollide())
     {
-      for (auto it2 = std::next(it1); it2 != allBodies.end(); ++it2)
+      // Mujoco requires explicitly declaring contact exclusions for body pairs
+      // in order to implement self-collide. If self collision is disabled, we
+      // need to add exclusions for every body pair in the model.
+      // Bodies in a parent-child relationship are already excluded, however, if
+      // the parent is attached to worldbody, then we need to explicitly add an
+      // exclusion since the geoms of the parent are considered part of
+      // worldbody. See the MuJoCo documentation section on collisions:
+      // mujoco.readthedocs.io/en/stable/computation/index.html#collision
+      // To avoid the complexity of determining that, we just add exclusions
+      // for every pair
+      auto &objMap = mInfo->links.objectToID;
+      for (auto it1 = objMap.begin(); it1 != objMap.end(); ++it1)
       {
-        mjsExclude *exclude = mjs_addExclude(worldInfo->mjSpecObj);
-        mjs_setString(exclude->bodyname1,
-                      mjs_getString(mjs_getName((*it1)->element)));
-        mjs_setString(exclude->bodyname2,
-                      mjs_getString(mjs_getName((*it2)->element)));
+        for (auto it2 = std::next(it1); it2 != objMap.end(); ++it2)
+        {
+          mjsExclude *exclude = mjs_addExclude(worldInfo->mjSpecObj);
+          mjs_setString(exclude->bodyname1,
+                        mjs_getString(mjs_getName(it1->first->element)));
+          mjs_setString(exclude->bodyname2,
+                        mjs_getString(mjs_getName(it2->first->element)));
+        }
       }
     }
   }
