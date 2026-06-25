@@ -39,6 +39,7 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -48,6 +49,11 @@
 
 #include <gz/common/Console.hh>
 #include <gz/math/eigen3/Conversions.hh>
+<<<<<<< HEAD
+=======
+#include <gz/math/Pose3.hh>
+#include <gz/math/SemanticVersion.hh>
+>>>>>>> 84c9ba1 (Remove hash map allocation on every update step (#1005))
 #include <gz/physics/Implements.hh>
 
 namespace gz {
@@ -235,6 +241,8 @@ struct LinkInfo
   std::unordered_map<std::string, std::size_t> collisionNameToEntityId = {};
   // Link is either static, fixed to world, or has zero dofs
   bool isStaticOrFixed = false;
+  // Cached pose from the previous physics step for performance optimization
+  mutable std::optional<math::Pose3d> prevPose = std::nullopt;
 };
 
 struct CollisionInfo
