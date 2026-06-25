@@ -675,6 +675,11 @@ struct ModelKinematicStructure
         std::optional<uint16_t> contypeOpt;
 
         ::sdf::ElementPtr elem = collision->Element();
+
+        std::optional<double> mu;
+        std::optional<double> rollingFriction;
+        std::optional<double> spinningFriction;
+
         if (auto surfaceElem = elem->FindElement("surface"))
         {
           if (auto contactElem = surfaceElem->FindElement("contact"))
@@ -693,12 +698,58 @@ struct ModelKinematicStructure
                   collideBitmaskElem->Get<uint32_t>());
             }
           }
+
+          if (auto frictionElem = surfaceElem->FindElement("friction"))
+          {
+            auto bulletElem = frictionElem->FindElement("bullet");
+            // Get mu friction value from <ode>. If it does not exist,
+            // try <bullet>
+            if (auto odeElem = frictionElem->FindElement("ode"))
+            {
+              if (auto muElem = odeElem->FindElement("mu"))
+              {
+                mu = muElem->Get<double>();
+              }
+            }
+            if (!mu.has_value() && bulletElem)
+            {
+              if (auto f1Elem = bulletElem->FindElement("friction"))
+              {
+                mu = f1Elem->Get<double>();
+              }
+            }
+
+            // Get rolling friction from <bullet> as <ode> does not have this
+            // param.
+            if (bulletElem)
+            {
+              if (auto rollingElem =
+                  bulletElem->FindElement("rolling_friction"))
+              {
+                rollingFriction = rollingElem->Get<double>();
+              }
+            }
+
+            // Parse torsional friction value
+            if (auto torsionalElem = frictionElem->FindElement("torsional"))
+            {
+              if (auto coeffElem = torsionalElem->FindElement("coefficient"))
+                spinningFriction = coeffElem->Get<double>();
+            }
+          }
         }
 
-        uint16_t contype = contypeOpt.value_or(conaffinity);
-
+       uint16_t contype = contypeOpt.value_or(conaffinity);
         geom->contype = static_cast<int>(contype);
         geom->conaffinity = static_cast<int>(conaffinity);
+
+        if (mu.has_value())
+          geom->friction[0] = mu.value();
+        if (spinningFriction.has_value())
+          geom->friction[1] = spinningFriction.value();
+        if (rollingFriction.has_value())
+          geom->friction[2] = rollingFriction.value();
+
         mjs_setName(geom->element,
                     ::sdf::JoinName(body_name, collision->Name()).c_str());
         auto shapeInfo =
