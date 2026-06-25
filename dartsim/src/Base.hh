@@ -37,12 +37,7 @@
 #include <gz/common/Console.hh>
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Inertial.hh>
-<<<<<<< HEAD
-=======
 #include <gz/math/Pose3.hh>
-#include <gz/math/SemanticVersion.hh>
-#include <gz/physics/detail/EntityStorage.hh>
->>>>>>> 84c9ba1 (Remove hash map allocation on every update step (#1005))
 #include <gz/physics/Implements.hh>
 #include <gz/physics/dartsim-plugin/Export.hh>
 #include <gz/utils/SuppressWarning.hh>

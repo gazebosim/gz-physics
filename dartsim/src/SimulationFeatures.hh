@@ -123,17 +123,6 @@ class SimulationFeatures :
       const LinearVector3d &_from,
       const LinearVector3d &_end) const override;
 
-<<<<<<< HEAD
-  /// \brief link poses from the most recent pose change/update.
-  /// The key is the link's ID, and the value is the link's pose
-  private: mutable std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses;
-=======
-  public: bool GetBatchRayIntersectionFromLastStep(
-      const Identity &_worldID,
-      const std::vector<BatchRayQuery> &_rays,
-      BatchedRayIntersectionData &_output) const override;
->>>>>>> 84c9ba1 (Remove hash map allocation on every update step (#1005))
-
   private: std::optional<ContactInternal> convertContact(
     const dart::collision::Contact& _contact) const;
 
