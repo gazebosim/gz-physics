@@ -254,7 +254,7 @@ struct ModelInfo
   /// \brief Initial pose of this model relative to the world frame.
   /// \details Used to resolve world pose for programmatically constructed
   /// nested models.
-  math::Pose3d initial_model_pose_in_world;
+  math::Pose3d initialModelPoseInWorld;
   detail::EntityStorage<std::shared_ptr<LinkInfo>, const mjsBody *> links{};
   detail::EntityStorage<std::shared_ptr<JointInfo>, std::string> joints{};
   ModelInfo *parentModelInfo{nullptr};

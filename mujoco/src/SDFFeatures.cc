@@ -268,8 +268,8 @@ struct ModelKinematicStructure
         auto childModelInfo = _modelInfoGenerator();
         childModelInfo->name = ::sdf::JoinName(mInfo->name, childModel->Name());
         childModelInfo->parentBody = mInfo->parentBody;
-        childModelInfo->initial_model_pose_in_world =
-            mInfo->initial_model_pose_in_world *
+        childModelInfo->initialModelPoseInWorld =
+            mInfo->initialModelPoseInWorld *
             resolveSdfPose(childModel->SemanticPose());
         childModelInfo->parentModelInfo = mInfo.get();
         mInfo->nestedModelNameToEntityId[childModel->Name()] =
@@ -290,8 +290,8 @@ struct ModelKinematicStructure
       rootModelInfo->name =
           ::sdf::JoinName(_parentModelInfo->name, _sdfModel.Name());
       rootModelInfo->parentBody = _parentModelInfo->parentBody;
-      rootModelInfo->initial_model_pose_in_world =
-          _parentModelInfo->initial_model_pose_in_world *
+      rootModelInfo->initialModelPoseInWorld =
+          _parentModelInfo->initialModelPoseInWorld *
           resolveSdfPose(_sdfModel.SemanticPose());
       rootModelInfo->parentModelInfo = _parentModelInfo;
       _parentModelInfo->nestedModelNameToEntityId[_sdfModel.Name()] =
@@ -300,7 +300,7 @@ struct ModelKinematicStructure
     else
     {
       rootModelInfo->parentBody = mjs_findBody(_worldInfo->mjSpecObj, "world");
-      rootModelInfo->initial_model_pose_in_world =
+      rootModelInfo->initialModelPoseInWorld =
           resolveSdfPose(_sdfModel.SemanticPose());
     }
     _worldInfo->models.AddEntity(
@@ -750,7 +750,7 @@ struct ModelKinematicStructure
     {
       // Parent body is worldbody.
       childPoseInParent =
-          _rootModelInfo->initial_model_pose_in_world * childPoseInRoot;
+          _rootModelInfo->initialModelPoseInWorld * childPoseInRoot;
     }
 
     copyPos(childPoseInParent.Pos(), child->pos);
