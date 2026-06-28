@@ -57,10 +57,6 @@ class SimulationFeatures :
 
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &_worldID) const override;
-
-  /// \brief link poses from the most recent pose change/update.
-  /// The key is the link's ID, and the value is the link's pose
-  private: mutable std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses;
 };
 
 }  // namespace bullet_featherstone
