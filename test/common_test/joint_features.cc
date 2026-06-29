@@ -3152,12 +3152,18 @@ TYPED_TEST(LoopKinematicChainTest, AnchoredLoopModel)
     ASSERT_TRUE(errors.empty()) << errors.front();
 
     auto world = engine->ConstructWorld(*root.WorldByIndex(0));
-    auto model = world->GetModel("anchored_loop");
+    auto model_revolute = world->GetModel("anchored_loop_revolute");
+    auto model_prismatic = world->GetModel("anchored_loop_prismatic");
 
-    auto joint1 = model->GetJoint("joint1");
-    auto joint2 = model->GetJoint("joint2");
-    auto joint3 = model->GetJoint("joint3");
-    auto joint4 = model->GetJoint("joint4");
+    auto joint1_rev = model_revolute->GetJoint("joint1");
+    auto joint2_rev = model_revolute->GetJoint("joint2");
+    auto joint3_rev = model_revolute->GetJoint("joint3");
+    auto joint4_rev = model_revolute->GetJoint("joint4");
+
+    auto joint1_prismatic = model_prismatic->GetJoint("joint1");
+    auto joint2_prismatic = model_prismatic->GetJoint("joint2");
+    auto joint3_prismatic = model_prismatic->GetJoint("joint3");
+    auto joint4_prismatic = model_prismatic->GetJoint("joint4");
 
     gz::physics::ForwardStep::Output output;
     gz::physics::ForwardStep::State state;
@@ -3170,17 +3176,35 @@ TYPED_TEST(LoopKinematicChainTest, AnchoredLoopModel)
       world->Step(output, state, input);
     }
     
+
+    // check revolute joint position and velocity
     // Should be at rest
-    EXPECT_NEAR(joint1->GetVelocity(0), 0.0, 1e-2);
-    EXPECT_NEAR(joint2->GetVelocity(0), 0.0, 1e-2);
-    EXPECT_NEAR(joint3->GetVelocity(0), 0.0, 1e-2);
-    EXPECT_NEAR(joint4->GetVelocity(0), 0.0, 1e-2);
+    EXPECT_NEAR(joint1_rev->GetVelocity(0), 0.0, 1e-2);
+    EXPECT_NEAR(joint2_rev->GetVelocity(0), 0.0, 1e-2);
+    EXPECT_NEAR(joint3_rev->GetVelocity(0), 0.0, 1e-2);
+    EXPECT_NEAR(joint4_rev->GetVelocity(0), 0.0, 1e-2);
   
     // Approximate expected configuration
-    EXPECT_NEAR(joint1->GetPosition(0), 0.61, 0.1);
-    EXPECT_NEAR(joint2->GetPosition(0), -1.25, 0.1);
-    EXPECT_NEAR(joint3->GetPosition(0), 0.82, 0.1);
-    EXPECT_NEAR(joint4->GetPosition(0), 0.19, 0.1);
+    EXPECT_NEAR(joint1_rev->GetPosition(0), 0.61, 0.1);
+    EXPECT_NEAR(joint2_rev->GetPosition(0), -1.25, 0.1);
+    EXPECT_NEAR(joint3_rev->GetPosition(0), 0.82, 0.1);
+    EXPECT_NEAR(joint4_rev->GetPosition(0), 0.19, 0.1);
+    
+    // check for prismatic joint position and velocity
+    // Should be at rest
+    EXPECT_NEAR(joint1_prismatic->GetVelocity(0), 0.0, 1e-2);
+    EXPECT_NEAR(joint2_prismatic->GetVelocity(0), 0.0, 1e-2);
+    EXPECT_NEAR(joint3_prismatic->GetVelocity(0), 0.0, 1e-2);
+    EXPECT_NEAR(joint4_prismatic->GetVelocity(0), 0.0, 1e-2);
+
+
+    // Approximate expected configuration
+    EXPECT_NEAR(joint1_prismatic->GetPosition(0), 0.63, 0.1);
+    EXPECT_NEAR(joint2_prismatic->GetPosition(0), -1.17, 0.1);
+    EXPECT_NEAR(joint3_prismatic->GetPosition(0), 0.54, 0.1);
+    EXPECT_NEAR(joint4_prismatic->GetPosition(0), 0.106, 0.1);
+
+
   }
 }
 
