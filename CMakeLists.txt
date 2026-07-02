@@ -73,31 +73,23 @@ gz_find_package(sdformat
 
 #--------------------------------------
 # Find dartsim for the dartsim plugin wrapper
+set(_dart_components 
+      collision-bullet 
+      collision-ode 
+      utils)
+
+if(BUILD_TESTING)
+  list(APPEND _dart_components utils-urdf)
+endif()
+
 gz_find_package(DART
   COMPONENTS
-    collision-bullet
-    collision-ode
-    utils
+    ${_dart_components}
   CONFIG
   VERSION 6.10
   REQUIRED_BY dartsim
   PKGCONFIG dart
   PKGCONFIG_VER_COMPARISON >=)
-
-if(BUILD_TESTING)
-  gz_find_package(DART
-    COMPONENTS
-    utils-urdf
-    CONFIG
-    VERSION 6.10
-    REQUIRED_BY dartsim
-    PKGCONFIG dart
-    PKGCONFIG_VER_COMPARISON >=)
-
-  if(DART_utils-urdf_FOUND)
-    set(DART_HAS_UTILS_URDF TRUE)
-  endif()
-endif()
 
 #--------------------------------------
 # Find bullet for the bullet plugin wrapper
