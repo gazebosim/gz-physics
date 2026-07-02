@@ -1,4 +1,4 @@
-if (DART_FOUND)
+if (DART_FOUND AND DART_HAS_UTILS_URDF)
   add_library(MockDoublePendulum SHARED DARTDoublePendulum.cc)
   target_link_libraries(MockDoublePendulum PRIVATE gz-common::core)
 endif()
@@ -10,7 +10,7 @@ list(APPEND plugins
     MockEntities
     MockFrames
     MockJoints)
-if (DART_FOUND)
+if (DART_FOUND AND DART_HAS_UTILS_URDF)
   list(APPEND plugins MockDoublePendulum)
 endif()
 
@@ -21,7 +21,7 @@ foreach(plugin IN LISTS plugins)
       ${PROJECT_LIBRARY_TARGET_NAME})
 endforeach()
 
-if (DART_FOUND)
+if (DART_FOUND AND DART_HAS_UTILS_URDF)
   # Linking against libdart-collision-bullet causes a segfault on macOS for
   # some reason. We'll remove it since MockDoublePendulum doesn't use bullet
   # for collision checking.

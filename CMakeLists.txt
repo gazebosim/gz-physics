@@ -93,6 +93,10 @@ if(BUILD_TESTING)
     REQUIRED_BY dartsim
     PKGCONFIG dart
     PKGCONFIG_VER_COMPARISON >=)
+
+  if(DART_utils-urdf_FOUND)
+    set(DART_HAS_UTILS_URDF TRUE)
+  endif()
 endif()
 
 #--------------------------------------
