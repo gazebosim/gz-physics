@@ -319,7 +319,7 @@ bool GzOdeCollisionDetector::raycast(
   auto odeGroup = static_cast<GzOdeCollisionGroup *>(group);
   const dSpaceID spaceId = odeGroup->getOdeSpaceId();
 
-  const dGeomID rayId = dCreateRay(spaceId, 1.0);
+  const dGeomID rayId = dCreateRay(nullptr, 1.0);
   dGeomRaySetClosestHit(rayId, 1);
 
   doSingleRaycastODE(from, to, result, rayId, spaceId);
@@ -338,7 +338,7 @@ bool GzOdeCollisionDetector::BatchRaycast(
   auto odeGroup = static_cast<GzOdeCollisionGroup *>(_group);
   const dSpaceID spaceId = odeGroup->getOdeSpaceId();
 
-  const dGeomID rayId = dCreateRay(spaceId, 1.0);
+  const dGeomID rayId = dCreateRay(nullptr, 1.0);
   dGeomRaySetClosestHit(rayId, 1);
 
   _results.clear();
