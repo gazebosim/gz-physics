@@ -146,6 +146,7 @@ void SimulationFeatures::WorldForwardStep(
 
 void SimulationFeatures::Write(WorldPoses &_worldPoses) const
 {
+  GZ_PROFILE("SimulationFeatures::Write");
   // remove link poses from the previous iteration
   _worldPoses.entries.clear();
   _worldPoses.entries.reserve(this->links.size());
@@ -162,6 +163,7 @@ void SimulationFeatures::Write(WorldPoses &_worldPoses) const
 
 void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 {
+  GZ_PROFILE("SimulationFeatures::Write(Changed)");
   // remove link poses from the previous iteration
   _changedPoses.entries.clear();
   _changedPoses.entries.reserve(this->links.size());
@@ -195,6 +197,7 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
   const LinearVector3d &_from,
   const LinearVector3d &_to) const
 {
+  GZ_PROFILE("SimulationFeatures::GetRayIntersectionFromLastStep");
   auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
   auto collisionDetector = world->getConstraintSolver()->getCollisionDetector();
   auto collisionGroup = world->getConstraintSolver()->getCollisionGroup().get();
@@ -231,6 +234,7 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
 std::vector<SimulationFeatures::ContactInternal>
 SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 {
+  GZ_PROFILE("SimulationFeatures::GetContactsFromLastStep");
   std::vector<SimulationFeatures::ContactInternal> outContacts;
   auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
   const auto colResult = world->getLastCollisionResult();
@@ -249,6 +253,7 @@ std::optional<SimulationFeatures::ContactInternal>
 SimulationFeatures::convertContact(
   const dart::collision::Contact& _contact) const
 {
+  GZ_PROFILE("SimulationFeatures::convertContact");
   auto *dtCollObj1 = _contact.collisionObject1;
   auto *dtCollObj2 = _contact.collisionObject2;
 
@@ -288,6 +293,7 @@ void SimulationFeatures::AddContactPropertiesCallback(
   const Identity& _worldID, const std::string& _callbackID,
   SurfaceParamsCallback _callback)
 {
+  GZ_PROFILE("SimulationFeatures::AddContactPropertiesCallback");
   auto *world = this->ReferenceInterface<DartWorld>(_worldID);
 
   auto handler = std::make_shared<GzContactSurfaceHandler>();
@@ -303,6 +309,7 @@ void SimulationFeatures::AddContactPropertiesCallback(
 bool SimulationFeatures::RemoveContactPropertiesCallback(
   const Identity& _worldID, const std::string& _callbackID)
 {
+  GZ_PROFILE("SimulationFeatures::RemoveContactPropertiesCallback");
   auto *world = this->ReferenceInterface<DartWorld>(_worldID);
 
   if (this->contactSurfaceHandlers.find(_callbackID) !=
@@ -324,6 +331,7 @@ dart::constraint::ContactSurfaceParams GzContactSurfaceHandler::createParams(
   const dart::collision::Contact& _contact,
   const size_t _numContactsOnCollisionObject) const
 {
+  GZ_PROFILE("GzContactSurfaceHandler::createParams");
   auto pDart = ContactSurfaceHandler::createParams(
     _contact, _numContactsOnCollisionObject);
 
@@ -434,6 +442,7 @@ GzContactSurfaceHandler::createConstraint(
   const size_t _numContactsOnCollisionObject,
   const double _timeStep) const
 {
+  GZ_PROFILE("GzContactSurfaceHandler::createConstraint");
   // this call sets this->lastGzParams
   auto constraint = dart::constraint::ContactSurfaceHandler::createConstraint(
     _contact, _numContactsOnCollisionObject, _timeStep);

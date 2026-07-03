@@ -18,6 +18,7 @@
 #include <dart/dynamics/Frame.hpp>
 
 #include <gz/common/Console.hh>
+#include <gz/common/Profiler.hh>
 #include "KinematicsFeatures.hh"
 
 namespace gz {
@@ -28,6 +29,7 @@ namespace dartsim {
 FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     const FrameID &_id) const
 {
+  GZ_PROFILE("KinematicsFeatures::FrameDataRelativeToWorld");
   FrameData3d data;
 
   // The feature system should never send us the world ID.
@@ -64,6 +66,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
 const dart::dynamics::Frame *KinematicsFeatures::SelectFrame(
     const FrameID &_id) const
 {
+  GZ_PROFILE("KinematicsFeatures::SelectFrame");
   auto framesIt = this->frames.find(_id.ID());
   if (framesIt == this->frames.end())
   {

@@ -39,6 +39,7 @@ DETAIL_GZ_UTILS_WARN_RESUME
 #include <dart/simulation/World.hpp>
 
 #include <gz/common/Console.hh>
+#include <gz/common/Profiler.hh>
 
 #include "GzCollisionDetector.hh"
 #include "WorldFeatures.hh"
@@ -52,6 +53,7 @@ namespace dartsim {
 void WorldFeatures::SetWorldCollisionDetector(
     const Identity &_id, const std::string &_collisionDetector)
 {
+  GZ_PROFILE("WorldFeatures::SetWorldCollisionDetector");
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
   auto collisionDetector =
        world->getConstraintSolver()->getCollisionDetector();
@@ -104,6 +106,7 @@ void WorldFeatures::SetWorldGravity(
 WorldFeatures::LinearVectorType WorldFeatures::GetWorldGravity(
     const Identity &_id) const
 {
+  GZ_PROFILE("WorldFeatures::GetWorldGravity");
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
   return world->getGravity();
 }
@@ -112,6 +115,7 @@ WorldFeatures::LinearVectorType WorldFeatures::GetWorldGravity(
 void WorldFeatures::SetWorldCollisionPairMaxContacts(
     const Identity &_id, std::size_t _maxContacts)
 {
+  GZ_PROFILE("WorldFeatures::SetWorldCollisionPairMaxContacts");
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
   auto collisionDetector =
     world->getConstraintSolver()->getCollisionDetector();
@@ -134,6 +138,7 @@ void WorldFeatures::SetWorldCollisionPairMaxContacts(
 std::size_t WorldFeatures::GetWorldCollisionPairMaxContacts(
     const Identity &_id) const
 {
+  GZ_PROFILE("WorldFeatures::GetWorldCollisionPairMaxContacts");
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
   auto collisionDetector =
     world->getConstraintSolver()->getCollisionDetector();
@@ -158,6 +163,7 @@ std::size_t WorldFeatures::GetWorldCollisionPairMaxContacts(
 void WorldFeatures::SetWorldSolver(const Identity &_id,
     const std::string &_solver)
 {
+  GZ_PROFILE("WorldFeatures::SetWorldSolver");
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
 
   auto solver =
@@ -217,6 +223,7 @@ const std::string &WorldFeatures::GetWorldSolver(const Identity &_id) const
 void WorldFeatures::SetWorldSolverIterations(const Identity &_id,
     std::size_t _iterations)
 {
+  GZ_PROFILE("WorldFeatures::SetWorldSolverIterations");
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
 
   auto solver =
@@ -256,6 +263,7 @@ void WorldFeatures::SetWorldSolverIterations(const Identity &_id,
 /////////////////////////////////////////////////
 std::size_t WorldFeatures::GetWorldSolverIterations(const Identity &_id) const
 {
+  GZ_PROFILE("WorldFeatures::GetWorldSolverIterations");
   auto world = this->ReferenceInterface<dart::simulation::World>(_id);
 
   auto solver =
