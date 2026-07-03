@@ -124,7 +124,6 @@ bool GzCollisionDetector::BatchRaycast(
 GzOdeCollisionDetector::GzOdeCollisionDetector()
   : OdeCollisionDetector(), GzCollisionDetector()
 {
-
 }
 
 /////////////////////////////////////////////////
@@ -186,6 +185,13 @@ bool GzOdeCollisionDetector::collide(
   return ret;
 }
 
+struct ODERayCastData
+{
+  RaycastResult* result;
+  const Eigen::Vector3d *origin;
+  double curContactDistSqr = std::numeric_limits<double>::max();
+};
+
 void NearCallbackODE(void *_data, dGeomID _o1, dGeomID _o2)
 {
   // Check space
@@ -218,10 +224,11 @@ void NearCallbackODE(void *_data, dGeomID _o1, dGeomID _o2)
 
   dContactGeom contact;
 
-  RaycastResult* result = static_cast<RaycastResult*>(_data);
+  ODERayCastData* data = static_cast<ODERayCastData*>(_data);
 
   auto setResult = [&](dart::collision::RayHit &rayHit)
   {
+
       auto geomData = dGeomGetData(other);
       rayHit.mNormal = Eigen::Vector3d(contact.normal);
       rayHit.mPoint = Eigen::Vector3d(contact.pos);
@@ -232,13 +239,23 @@ void NearCallbackODE(void *_data, dGeomID _o1, dGeomID _o2)
   // param 3 makes sure that we only generate one collision per call
   if(dCollide(ray, other, 1, &contact, sizeof(dContactGeom)) > 0)
   {
-    if(result->mRayHits.empty())
+    Eigen::Vector3d contactPoint(contact.pos);
+
+    const double sqrDist = (*data->origin - contactPoint).squaredNorm();
+    if(sqrDist > data->curContactDistSqr)
     {
-      setResult(result->mRayHits.emplace_back());
+      // ignore nearer contacts
+      return;
+    }
+
+    if(data->result->mRayHits.empty())
+    {
+      setResult(data->result->mRayHits.emplace_back());
+
     }
     else
     {
-      setResult(result->mRayHits.front());
+      setResult(data->result->mRayHits.front());
     }
   }
 }
@@ -263,9 +280,13 @@ static void doSingleRaycastODE(const Eigen::Vector3d& origin,
               dir.x(), dir.y(), dir.z());
   dGeomRaySetLength(rayId, length);
 
+  ODERayCastData data;
+  data.result = result;
+  data.origin = &origin;
+
   dSpaceCollide2(rayId,
                   reinterpret_cast<dGeomID>(spaceId),
-                  result, &NearCallbackODE);
+                  &data, &NearCallbackODE);
 
   if(!result->mRayHits.empty())
   {
