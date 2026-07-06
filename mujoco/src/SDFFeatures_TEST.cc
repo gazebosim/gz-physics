@@ -461,6 +461,9 @@ TEST_P(SDFFeatures_TEST, ModelRemoval)
   ModelPtr model = world->GetModel(modelName);
   ASSERT_NE(nullptr, model);
 
+  // Try to remove a model with an out-of-bounds index, should return false
+  EXPECT_FALSE(world->RemoveModel(modelCount));
+
   EXPECT_TRUE(world->RemoveModel(model));
 
   // The model should be removed from the world's model list immediately

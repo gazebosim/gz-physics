@@ -267,6 +267,7 @@ struct ModelKinematicStructure
 
         auto childModelInfo = _modelInfoGenerator();
         childModelInfo->name = ::sdf::JoinName(mInfo->name, childModel->Name());
+        childModelInfo->localName = childModel->Name();
         childModelInfo->parentBody = mInfo->parentBody;
         childModelInfo->initialModelPoseInWorld =
             mInfo->initialModelPoseInWorld *
@@ -277,14 +278,15 @@ struct ModelKinematicStructure
         _worldInfo->models.AddEntity(
             childModelInfo->entityId, childModelInfo,
             Base::JoinNames(_worldInfo->name, childModelInfo->name),
-            _worldInfo->entityId);
+            mInfo->entityId);
         collectSdf(childModel, childModelInfo);
       }
     };
 
     auto rootModelInfo = _modelInfoGenerator();
+    rootModelInfo->localName = _sdfModel.Name();
     rootModelInfo->name = _sdfModel.Name();
-
+    
     if (_parentModelInfo)
     {
       rootModelInfo->name =
@@ -306,7 +308,7 @@ struct ModelKinematicStructure
     _worldInfo->models.AddEntity(
         rootModelInfo->entityId, rootModelInfo,
         Base::JoinNames(_worldInfo->name, rootModelInfo->name),
-        _worldInfo->entityId);
+        _parentModelInfo ? _parentModelInfo->entityId : _worldInfo->entityId);
 
     collectSdf(&_sdfModel, rootModelInfo);
 

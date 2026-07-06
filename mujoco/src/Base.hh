@@ -250,7 +250,10 @@ struct ModelInfo
   /// joint. Top-level models and free-floating nested models will default to
   /// having this set to the world body in the spec.
   mjsBody *parentBody{nullptr};
+  /// \brief Scoped name of the model.
   std::string name;
+  /// \brief Local name (short name) of the model.
+  std::string localName;
   /// \brief Initial pose of this model relative to the world frame.
   /// \details Used to resolve world pose for programmatically constructed
   /// nested models.

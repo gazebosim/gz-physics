@@ -117,7 +117,15 @@ std::size_t EntityManagementFeatures::GetModelCount(
     const Identity &_worldID) const
 {
   const auto *worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
-  return worldInfo->models.size();
+  // GetModelCount should only return the number of top-level models that are
+  // direct children of the world. So, we cannot simply return
+  // worldInfo->models.size(), because that returns the total count of all
+  // models (including recursively nested submodels).
+  if (worldInfo->models.size() == 0)
+  {
+    return 0u;
+  }
+  return worldInfo->models.indexInContainerToID.at(_worldID).size();
 }
 
 /////////////////////////////////////////////////
@@ -153,7 +161,7 @@ Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
 const std::string &EntityManagementFeatures::GetModelName(
     const Identity &_modelID) const
 {
-  return this->ReferenceInterface<ModelInfo>(_modelID)->name;
+  return this->ReferenceInterface<ModelInfo>(_modelID)->localName;
 }
 
 /////////////////////////////////////////////////
@@ -521,13 +529,14 @@ bool EntityManagementFeatures::RemoveModelByIndex(
     const Identity &_worldID, std::size_t _modelIndex)
 {
   const auto *worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
-  if (_modelIndex >= worldInfo->models.size())
+  auto it = worldInfo->models.indexInContainerToID.find(_worldID);
+  if (it == worldInfo->models.indexInContainerToID.end() ||
+      _modelIndex >= it->second.size())
   {
     return false;
   }
 
-  const std::size_t modelId =
-      worldInfo->models.indexInContainerToID.at(_worldID)[_modelIndex];
+  const std::size_t modelId = it->second[_modelIndex];
   return this->RemoveModelImpl(_worldID, modelId);
 }
 
@@ -573,6 +582,7 @@ bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
   // Copy entity IDs to a vector to avoid iterator invalidation when nested
   // models erase themselves from parentModelInfo->nestedModelNameToEntityId.
   std::vector<std::size_t> nestedEntityIds;
+  nestedEntityIds.reserve(modelInfo->nestedModelNameToEntityId.size());
   for (const auto &[nestedName, nestedEntityId] :
        modelInfo->nestedModelNameToEntityId)
   {
@@ -588,7 +598,7 @@ bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
   // If this is a nested model, remove it from its parent model's nested map
   if (modelInfo->parentModelInfo)
   {
-    auto [_, shortName] = ::sdf::SplitName(modelInfo->name);
+    auto shortName = ::sdf::SplitName(modelInfo->name).second;
     modelInfo->parentModelInfo->nestedModelNameToEntityId.erase(shortName);
   }
 

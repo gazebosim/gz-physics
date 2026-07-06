@@ -569,7 +569,9 @@ TYPED_TEST(NestedModelRemovalTest, RemoveNestedModelCollisions)
     auto parentModel = world->GetModel("parent_model");
     ASSERT_NE(nullptr, parentModel);
 
-    // Remove the parent model (which contains the nested model)
+    // Verify only the top-level models (parent_model and parent_model2) are
+    // returned by GetModelCount.
+    EXPECT_EQ(2u, world->GetModelCount());
     EXPECT_TRUE(parentModel->Remove());
     EXPECT_TRUE(parentModel->Removed());
 
@@ -664,6 +666,7 @@ TYPED_TEST(NestedModelResetTest, ResetNestedModel)
 
     auto nestedModel = world->GetModel("parent_model::nested_model");
     ASSERT_NE(nullptr, nestedModel);
+    EXPECT_EQ("nested_model", nestedModel->GetName());
 
     auto parentLink = parentModel->GetLink("link1");
     ASSERT_NE(nullptr, parentLink);
