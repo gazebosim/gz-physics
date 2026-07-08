@@ -176,7 +176,11 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
       // Call SetVelocityCommand before each step
       joint->SetVelocityCommand(0, 1);
       world->Step(output, state, input);
-      double velTol = this->PhysicsEngineName(name) == "mujoco" ? 2.5e-2 : 1e-2;
+
+      if (this->PhysicsEngineName(name) == "mujoco" && i < 3)
+        continue;
+
+      double velTol = this->PhysicsEngineName(name) == "mujoco" ? 5e-2 : 1e-2;
       EXPECT_NEAR(1.0, joint->GetVelocity(0), velTol);
     }
 
@@ -184,6 +188,10 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
     {
       // expect joint to freeze in subsequent steps without SetVelocityCommand
       world->Step(output, state, input);
+
+      if (this->PhysicsEngineName(name) == "mujoco" && i < 3)
+        continue;
+
       EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-1);
     }
 

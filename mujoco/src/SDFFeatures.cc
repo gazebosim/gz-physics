@@ -607,6 +607,7 @@ struct ModelKinematicStructure
         mjs_setName(joint->element, mjJointName.c_str());
         actuator = mjs_addActuator(_spec, nullptr);
         actuator->trntype = mjtTrn::mjTRN_JOINT;
+        actuator->dyntype = mjDYN_INTEGRATOR;
 
         mjs_setString(actuator->target, mjJointName.c_str());
 
@@ -631,6 +632,7 @@ struct ModelKinematicStructure
           mjs_setName(joint2->element, mjJointName2.c_str());
           mjsActuator *actuator2 = mjs_addActuator(_spec, nullptr);
           actuator2->trntype = mjtTrn::mjTRN_JOINT;
+          actuator2->dyntype = mjDYN_INTEGRATOR;
           mjs_setString(actuator2->target, mjJointName2.c_str());
 
           const auto *sdfAxis2 = sdfJoint->Axis(1);

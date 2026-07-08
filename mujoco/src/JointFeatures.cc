@@ -38,10 +38,13 @@ namespace mujoco {
 
 namespace  {
 
-void setActuatorMode(mjModel *m, int actuatorId, bool isVelocity)
+void setActuatorMode(mjModel *m, mjData *d, int actuatorId, bool isVelocity, double initialPos = 0.0)
 {
   const int targetBias = isVelocity ? mjBIAS_AFFINE : mjBIAS_NONE;
-  if (m->actuator_biastype[actuatorId] == targetBias)
+  const int targetDyn = isVelocity ? mjDYN_INTEGRATOR : mjDYN_NONE;
+
+  if (m->actuator_biastype[actuatorId] == targetBias &&
+      m->actuator_dyntype[actuatorId] == targetDyn)
   {
     return;
   }
@@ -52,14 +55,31 @@ void setActuatorMode(mjModel *m, int actuatorId, bool isVelocity)
   mju_zero(m->actuator_gainprm + actuatorId * mjNGAIN, mjNGAIN);
   mju_zero(m->actuator_biasprm + actuatorId * mjNBIAS, mjNBIAS);
 
-  if (!isVelocity)
+  if (isVelocity)
   {
+    m->actuator_dyntype[actuatorId] = mjDYN_INTEGRATOR;
+
+    // Use a high static Kp position gain and a small flat Kd damping gain.
+    constexpr double kp = 1e7;
+    constexpr double kv = 1e4;
+
+    m->actuator_gainprm[actuatorId * mjNGAIN] = kp;
+    m->actuator_biasprm[actuatorId * mjNBIAS + 1] = -kp;
+    m->actuator_biasprm[actuatorId * mjNBIAS + 2] = -kv;
+
+    const int act_adr = m->actuator_actadr[actuatorId];
+    if (act_adr >= 0 && act_adr < m->na)
+    {
+      d->act[act_adr] = initialPos;
+    }
+  }
+  else
+  {
+    m->actuator_dyntype[actuatorId] = mjDYN_NONE;
     // In force control/passive mode (mjBIAS_NONE):
     // - gainprm[0] is set to 1.0 so the output force matches the ctrl input.
     m->actuator_gainprm[actuatorId * mjNGAIN] = 1.0;
   }
-  // The gain parameters for velocity mode are set in
-  // SimulationFeatures::WorldStep
 }
 
 Eigen::Vector3d *getBallJointPositionImpl(JointInfo *jointInfo)
@@ -327,8 +347,26 @@ double JointFeatures::GetJointForce(
   {
     return math::NAN_D;
   }
-  return jointInfo->worldInfo->mjDataObj
-      ->qfrc_actuator[jointInfo->nv_index + _dof];
+
+  auto *m = jointInfo->worldInfo->mjModelObj;
+  auto *d = jointInfo->worldInfo->mjDataObj;
+  if (jointInfo->actuator)
+  {
+    const int ctrlIndex = mjs_getId(jointInfo->actuator->element);
+    if (ctrlIndex >= 0)
+    {
+      const int actuatorId = ctrlIndex + static_cast<int>(_dof);
+      if (m->actuator_biastype[actuatorId] == mjBIAS_NONE)
+      {
+        if (d->ctrl[actuatorId] != 0.0)
+        {
+          return d->ctrl[actuatorId];
+        }
+      }
+    }
+  }
+
+  return d->qfrc_actuator[jointInfo->nv_index + _dof];
 }
 
 /////////////////////////////////////////////////
@@ -488,8 +526,9 @@ void JointFeatures::SetJointForce(
   }
 
   auto *m = jointInfo->worldInfo->mjModelObj;
+  auto *d = jointInfo->worldInfo->mjDataObj;
   const int actuatorId = ctrlIndex + static_cast<int>(_dof);
-  setActuatorMode(m, actuatorId, false);
+  setActuatorMode(m, d, actuatorId, false);
 
   jointInfo->worldInfo->mjDataObj->ctrl[ctrlIndex + _dof] = _value;
 }
@@ -534,8 +573,10 @@ void JointFeatures::SetJointVelocityCommand(
   }
 
   auto *m = jointInfo->worldInfo->mjModelObj;
+  auto *d = jointInfo->worldInfo->mjDataObj;
   const int actuatorId = ctrlIndex + static_cast<int>(_dof);
-  setActuatorMode(m, actuatorId, true);
+  const double initialPos = getJointPositionImpl(jointInfo, _dof);
+  setActuatorMode(m, d, actuatorId, true, initialPos);
 
   jointInfo->worldInfo->mjDataObj->ctrl[ctrlIndex + _dof] = _value;
 }
