@@ -598,8 +598,8 @@ bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
   // If this is a nested model, remove it from its parent model's nested map
   if (modelInfo->parentModelInfo)
   {
-    auto shortName = ::sdf::SplitName(modelInfo->name).second;
-    modelInfo->parentModelInfo->nestedModelNameToEntityId.erase(shortName);
+    modelInfo->parentModelInfo->nestedModelNameToEntityId.erase(
+        modelInfo->localName);
   }
 
   for (const auto &[linkId, linkInfo] : modelInfo->links.idToObject)

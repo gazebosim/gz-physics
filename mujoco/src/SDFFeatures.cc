@@ -286,7 +286,7 @@ struct ModelKinematicStructure
     auto rootModelInfo = _modelInfoGenerator();
     rootModelInfo->localName = _sdfModel.Name();
     rootModelInfo->name = _sdfModel.Name();
-    
+
     if (_parentModelInfo)
     {
       rootModelInfo->name =
