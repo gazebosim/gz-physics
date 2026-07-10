@@ -244,7 +244,7 @@ void NearCallbackODE(void *_data, dGeomID _o1, dGeomID _o2)
     const double sqrDist = (*data->origin - contactPoint).squaredNorm();
     if(sqrDist > data->curContactDistSqr)
     {
-      // ignore nearer contacts
+      // ignore farther contacts
       return;
     }
 
@@ -257,6 +257,7 @@ void NearCallbackODE(void *_data, dGeomID _o1, dGeomID _o2)
     {
       setResult(data->result->mRayHits.front());
     }
+    data->curContactDistSqr = sqrDist;
   }
 }
 
