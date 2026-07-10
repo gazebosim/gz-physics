@@ -2347,6 +2347,52 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
   }
 }
 
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesRayIntersectionTest, ClosestRayIntersection)
+{
+  std::vector<std::string> supportedCollisionDetectors = {"ode"};
+
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
+
+    for (const std::string &collisionDetector : supportedCollisionDetectors) {
+      auto world = LoadPluginAndWorld<FeaturesRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kMultipleObjectsComplexSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput = StepWorld<FeaturesRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+
+      // Test ray along X axis, should hit closest sphere at x=1
+      // Objects are at different Y positions to confuse spatial traversal
+      gzerr << "[TEST DEBUG] About to call GetRayIntersectionFromLastStep" << std::endl;
+      auto result =
+        world->GetRayIntersectionFromLastStep(
+            Eigen::Vector3d(-2, 0, 0), Eigen::Vector3d(10, 0, 0));
+      gzerr << "[TEST DEBUG] GetRayIntersectionFromLastStep returned" << std::endl;
+
+      auto rayIntersection =
+          result.template
+            Get<gz::physics::World3d<FeaturesRayIntersections>::RayIntersection>();
+
+      gzerr << "[TEST DEBUG] Ray intersection point: " << rayIntersection.point.transpose() << std::endl;
+      gzerr << "[TEST DEBUG] Ray intersection fraction: " << rayIntersection.fraction << std::endl;
+      gzerr << "[TEST DEBUG] Ray intersection normal: " << rayIntersection.normal.transpose() << std::endl;
+
+      double epsilon = 1e-3;
+
+      // The sphere at x=1 has radius 0.3, so the ray should hit at x=0.7
+      // Ray goes from -2 to 10, total length = 12
+      // Hit point at x=0.7 is 2.7 units from start, fraction = 2.7/12 = 0.225
+      EXPECT_TRUE(
+          rayIntersection.point.isApprox(Eigen::Vector3d(0.7, 0, 0), epsilon));
+      EXPECT_NEAR(rayIntersection.fraction, 0.225, epsilon);
+    }
+  }
+}
+
 // The features that an engine must have to be loaded by this loader.
 struct FeaturesBatchRayIntersections : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,

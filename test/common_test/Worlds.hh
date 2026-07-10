@@ -71,5 +71,7 @@ const auto kWorldWithNestedModelSdf =
   CommonTestWorld("world_with_nested_model.sdf");
 const auto kNestedModelSelfCollideSdf =
   CommonTestWorld("nested_model_self_collide.sdf");
+const auto kMultipleObjectsComplexSdf =
+  CommonTestWorld("multiple_objects_complex.sdf");
 }  // namespace common_test::worlds
 #endif  // COMMON_TEST_WORLDS_WORLDS_HH_
