@@ -2350,11 +2350,11 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
 /////////////////////////////////////////////////
 TYPED_TEST(SimulationFeaturesRayIntersectionTest, ClosestRayIntersection)
 {
-  std::vector<std::string> supportedCollisionDetectors = {"ode"};
+  std::vector<std::string> supportedCollisionDetectors = {"ode", "bullet"};
 
   for (const std::string &name : this->pluginNames)
   {
-    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone", "tpe")
 
     for (const std::string &collisionDetector : supportedCollisionDetectors) {
       auto world = LoadPluginAndWorld<FeaturesRayIntersections>(
