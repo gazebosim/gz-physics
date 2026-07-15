@@ -2367,19 +2367,13 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, ClosestRayIntersection)
 
       // Test ray along X axis, should hit closest sphere at x=1
       // Objects are at different Y positions to confuse spatial traversal
-      gzerr << "[TEST DEBUG] About to call GetRayIntersectionFromLastStep" << std::endl;
       auto result =
         world->GetRayIntersectionFromLastStep(
             Eigen::Vector3d(-2, 0, 0), Eigen::Vector3d(10, 0, 0));
-      gzerr << "[TEST DEBUG] GetRayIntersectionFromLastStep returned" << std::endl;
 
       auto rayIntersection =
           result.template
             Get<gz::physics::World3d<FeaturesRayIntersections>::RayIntersection>();
-
-      gzerr << "[TEST DEBUG] Ray intersection point: " << rayIntersection.point.transpose() << std::endl;
-      gzerr << "[TEST DEBUG] Ray intersection fraction: " << rayIntersection.fraction << std::endl;
-      gzerr << "[TEST DEBUG] Ray intersection normal: " << rayIntersection.normal.transpose() << std::endl;
 
       double epsilon = 1e-3;
 
