@@ -43,6 +43,16 @@ void resolveJointIndices(WorldInfo &_worldInfo)
       if (!jointInfo->joint)
       {
         // Fixed joint
+        // Resolve weld constraint compiled ID
+        jointInfo->weldEqIndex = std::nullopt;
+        if (jointInfo->weldConstraintSpec)
+        {
+          int eqId = mjs_getId(jointInfo->weldConstraintSpec->element);
+          if (eqId >= 0 && eqId < m->neq)
+          {
+            jointInfo->weldEqIndex = eqId;
+          }
+        }
         continue;
       }
       // Reset in case we encounter errors

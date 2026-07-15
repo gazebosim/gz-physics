@@ -22,6 +22,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <gz/physics/Entity.hh>
 #include <sdf/Types.hh>
@@ -99,6 +100,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   worldInfo->mjSpecObj->option.timestep = 0.001;
   // The Mujoco docs recommend the implicitfast integrator
   worldInfo->mjSpecObj->option.integrator = mjtIntegrator::mjINT_IMPLICITFAST;
+  worldInfo->mjSpecObj->compiler.degree = false;
   worldInfo->mjModelObj = mj_compile(spec, nullptr);
   worldInfo->mjDataObj = mj_makeData(worldInfo->mjModelObj);
   worldInfo->body = mjs_findBody(spec, "world");
@@ -115,7 +117,15 @@ std::size_t EntityManagementFeatures::GetModelCount(
     const Identity &_worldID) const
 {
   const auto *worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
-  return worldInfo->models.size();
+  // GetModelCount should only return the number of top-level models that are
+  // direct children of the world. So, we cannot simply return
+  // worldInfo->models.size(), because that returns the total count of all
+  // models (including recursively nested submodels).
+  if (worldInfo->models.size() == 0)
+  {
+    return 0u;
+  }
+  return worldInfo->models.indexInContainerToID.at(_worldID).size();
 }
 
 /////////////////////////////////////////////////
@@ -151,7 +161,7 @@ Identity EntityManagementFeatures::GetModel(const Identity &_worldID,
 const std::string &EntityManagementFeatures::GetModelName(
     const Identity &_modelID) const
 {
-  return this->ReferenceInterface<ModelInfo>(_modelID)->name;
+  return this->ReferenceInterface<ModelInfo>(_modelID)->localName;
 }
 
 /////////////////////////////////////////////////
@@ -519,13 +529,14 @@ bool EntityManagementFeatures::RemoveModelByIndex(
     const Identity &_worldID, std::size_t _modelIndex)
 {
   const auto *worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
-  if (_modelIndex >= worldInfo->models.size())
+  auto it = worldInfo->models.indexInContainerToID.find(_worldID);
+  if (it == worldInfo->models.indexInContainerToID.end() ||
+      _modelIndex >= it->second.size())
   {
     return false;
   }
 
-  const std::size_t modelId =
-      worldInfo->models.indexInContainerToID.at(_worldID)[_modelIndex];
+  const std::size_t modelId = it->second[_modelIndex];
   return this->RemoveModelImpl(_worldID, modelId);
 }
 
@@ -567,7 +578,29 @@ bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
   const std::string scopedName =
       this->JoinNames(worldInfo->name, modelInfo->name);
 
-  // \todo(iche033) Remove nested models once supported.
+  // Recursively remove nested models first.
+  // Copy entity IDs to a vector to avoid iterator invalidation when nested
+  // models erase themselves from parentModelInfo->nestedModelNameToEntityId.
+  std::vector<std::size_t> nestedEntityIds;
+  nestedEntityIds.reserve(modelInfo->nestedModelNameToEntityId.size());
+  for (const auto &[nestedName, nestedEntityId] :
+       modelInfo->nestedModelNameToEntityId)
+  {
+    nestedEntityIds.push_back(nestedEntityId);
+  }
+
+  for (std::size_t nestedEntityId : nestedEntityIds)
+  {
+    this->RemoveModelImpl(_worldID, nestedEntityId);
+  }
+  modelInfo->nestedModelNameToEntityId.clear();
+
+  // If this is a nested model, remove it from its parent model's nested map
+  if (modelInfo->parentModelInfo)
+  {
+    modelInfo->parentModelInfo->nestedModelNameToEntityId.erase(
+        modelInfo->localName);
+  }
 
   for (const auto &[linkId, linkInfo] : modelInfo->links.idToObject)
   {
@@ -576,6 +609,11 @@ bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
       this->frames.erase(shapeId);
     }
     this->frames.erase(linkId);
+  }
+
+  for (const auto &[jointId, jointInfo] : modelInfo->joints.idToObject)
+  {
+    this->frames.erase(jointId);
   }
 
   this->frames.erase(_modelID);

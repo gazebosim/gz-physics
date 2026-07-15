@@ -228,6 +228,10 @@ struct JointInfo
   // 2. O(num_followers) keyframe updates, avoiding expensive
   //    O(total_joints) global searches across the entire model.
   std::vector<MimicConstraintInfo> mimicConstraints;
+  // Pointer to the weld joint equality constraint in the spec
+  mjsEquality* weldConstraintSpec{nullptr};
+  // Compiled weld joint equality constraint index in mjModel (max 1)
+  std::optional<int> weldEqIndex{std::nullopt};
 };
 
 
@@ -240,10 +244,24 @@ struct ModelInfo
   std::size_t entityId;
   mjsBody *body{nullptr};
   WorldInfo *worldInfo;
+  /// \brief Default parent body in MuJoCo for this model's root link.
+  /// \details This is used as a fallback if the root link of this model (or
+  /// any of its nested submodels) is not connected to a parent link via a
+  /// joint. Top-level models and free-floating nested models will default to
+  /// having this set to the world body in the spec.
   mjsBody *parentBody{nullptr};
+  /// \brief Scoped name of the model.
   std::string name;
+  /// \brief Local name (short name) of the model.
+  std::string localName;
+  /// \brief Initial pose of this model relative to the world frame.
+  /// \details Used to resolve world pose for programmatically constructed
+  /// nested models.
+  math::Pose3d initialModelPoseInWorld;
   detail::EntityStorage<std::shared_ptr<LinkInfo>, const mjsBody *> links{};
   detail::EntityStorage<std::shared_ptr<JointInfo>, std::string> joints{};
+  ModelInfo *parentModelInfo{nullptr};
+  std::unordered_map<std::string, std::size_t> nestedModelNameToEntityId{};
 };
 
 struct FrameInfo
