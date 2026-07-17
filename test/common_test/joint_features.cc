@@ -146,6 +146,13 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
 
     // Expect negative joint velocity after 1 step without joint command
     world->Step(output, state, input);
+    if (this->PhysicsEngineName(name) == "mujoco")
+    {
+      // An extra step is necessary for MuJoCo to stabilize the initial
+      // contact constraints between the base link and the ground plane
+      // before gravity correctly accelerates the pendulum.
+      world->Step(output, state, input);
+    }
     EXPECT_LT(joint->GetVelocity(0), 0.0);
 
     auto base_link = model->GetLink("base");
@@ -176,22 +183,21 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
       // Call SetVelocityCommand before each step
       joint->SetVelocityCommand(0, 1);
       world->Step(output, state, input);
-
-      if (this->PhysicsEngineName(name) == "mujoco" && i < 3)
-        continue;
-
-      double velTol = this->PhysicsEngineName(name) == "mujoco" ? 5e-2 : 1e-2;
-      EXPECT_NEAR(1.0, joint->GetVelocity(0), velTol);
+      if (this->PhysicsEngineName(name) == "mujoco" && i < 1)
+      {
+        // MuJoCo needs some time to reach the commanded velocity
+        EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-1);
+      }
+      else
+      {
+        EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-2);
+      }
     }
 
     for (std::size_t i = 0; i < numSteps; ++i)
     {
       // expect joint to freeze in subsequent steps without SetVelocityCommand
       world->Step(output, state, input);
-
-      if (this->PhysicsEngineName(name) == "mujoco" && i < 3)
-        continue;
-
       EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-1);
     }
 
@@ -204,11 +210,21 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
       EXPECT_LT(0.0, std::fabs(joint->GetVelocity(0)));
     }
 
-    // Let the base link settle back to the ground after the velocity
-    // servo kick
-    for (std::size_t i = 0; i < 1000; ++i)
+    if (this->PhysicsEngineName(name) == "mujoco")
     {
-      world->Step(output, state, input);
+      // Due to the way SetVelocityCommand is implemented in MuJoCo, a step
+      // command such as the one given above (0 -> 1) causes a large force to
+      // be applied on the joint by the internal velocity servo. Unlike the
+      // velocity constraint based method used in DART and bullet-featherstone,
+      // this does not take into account the dynamics of the lower link
+      // connected to a passive revolute joint. The large force causes a large
+      // angular velocity on the lower link which acts like a whipping action
+      // that moves the entire pendulum. Therefore, we have to wait for a few
+      // iterations for the base link to settle back to the ground.
+      for (std::size_t i = 0; i < 1000; ++i)
+      {
+        world->Step(output, state, input);
+      }
     }
 
     // Check that invalid velocity commands don't cause collisions to fail
@@ -231,7 +247,6 @@ TYPED_TEST(JointFeaturesTest, JointSetPositionWithContact)
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
-    CHECK_UNSUPPORTED_ENGINE(name, "mujoco")
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
     auto engine = gz::physics::RequestEngine3d<JointFeatureList>::From(plugin);

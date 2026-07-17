@@ -182,9 +182,9 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
       worldBody, Base::JoinNames("double_pendulum_with_base", "base").c_str());
   EXPECT_EQ(3, getNumNodesInTree(doublePendulum));
 
-  auto verify = [spec](const mjsJoint *joint, double damping, double friction,
-                       double springRest, double stiffness, double lower,
-                       double upper, double maxForce)
+  auto verify = [](const mjsJoint *joint, double damping, double friction,
+                   double springRest, double stiffness, double lower,
+                   double upper, double maxForce)
   {
     EXPECT_DOUBLE_EQ(damping, joint->damping);
     EXPECT_DOUBLE_EQ(friction, joint->frictionloss);
@@ -192,29 +192,8 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
     EXPECT_DOUBLE_EQ(stiffness, joint->stiffness);
     EXPECT_DOUBLE_EQ(lower, joint->range[0]);
     EXPECT_DOUBLE_EQ(upper, joint->range[1]);
-    EXPECT_DOUBLE_EQ(0.0, joint->actfrcrange[0]);
-    EXPECT_DOUBLE_EQ(0.0, joint->actfrcrange[1]);
-
-    mjString *mjName = mjs_getName(joint->element);
-    const char *jointName = mjName ? mjs_getString(mjName) : nullptr;
-    ASSERT_NE(nullptr, jointName);
-
-    mjsActuator *actuator = nullptr;
-    mjsElement *elem = mjs_firstElement(spec, mjtObj::mjOBJ_ACTUATOR);
-    while (elem)
-    {
-      mjsActuator *act = mjs_asActuator(elem);
-      const char *actTarget = act->target ? mjs_getString(act->target) : nullptr;
-      if (actTarget && std::strcmp(actTarget, jointName) == 0)
-      {
-        actuator = act;
-        break;
-      }
-      elem = mjs_nextElement(spec, elem);
-    }
-    ASSERT_NE(nullptr, actuator);
-    EXPECT_DOUBLE_EQ(-maxForce, actuator->forcerange[0]);
-    EXPECT_DOUBLE_EQ(maxForce, actuator->forcerange[1]);
+    EXPECT_DOUBLE_EQ(-maxForce, joint->actfrcrange[0]);
+    EXPECT_DOUBLE_EQ(maxForce, joint->actfrcrange[1]);
   };
   // Test that things were parsed correctly. These values are either stated or
   // implied in the test.world SDF file.
@@ -423,9 +402,9 @@ TEST_P(SDFFeatures_TEST, UniversalJoint)
     return m->tree_bodynum[treeId];
   };
 
-  auto verify = [spec](const mjsJoint *joint, double damping, double friction,
-                       double springRest, double stiffness, double lower,
-                       double upper, double maxForce)
+  auto verify = [](const mjsJoint *joint, double damping, double friction,
+                   double springRest, double stiffness, double lower,
+                   double upper, double maxForce)
   {
     EXPECT_DOUBLE_EQ(damping, joint->damping);
     EXPECT_DOUBLE_EQ(friction, joint->frictionloss);
@@ -433,29 +412,8 @@ TEST_P(SDFFeatures_TEST, UniversalJoint)
     EXPECT_DOUBLE_EQ(stiffness, joint->stiffness);
     EXPECT_DOUBLE_EQ(lower, joint->range[0]);
     EXPECT_DOUBLE_EQ(upper, joint->range[1]);
-    EXPECT_DOUBLE_EQ(0.0, joint->actfrcrange[0]);
-    EXPECT_DOUBLE_EQ(0.0, joint->actfrcrange[1]);
-
-    mjString *mjName = mjs_getName(joint->element);
-    const char *jointName = mjName ? mjs_getString(mjName) : nullptr;
-    ASSERT_NE(nullptr, jointName);
-
-    mjsActuator *actuator = nullptr;
-    mjsElement *elem = mjs_firstElement(spec, mjtObj::mjOBJ_ACTUATOR);
-    while (elem)
-    {
-      mjsActuator *act = mjs_asActuator(elem);
-      const char *actTarget = act->target ? mjs_getString(act->target) : nullptr;
-      if (actTarget && std::strcmp(actTarget, jointName) == 0)
-      {
-        actuator = act;
-        break;
-      }
-      elem = mjs_nextElement(spec, elem);
-    }
-    ASSERT_NE(nullptr, actuator);
-    EXPECT_DOUBLE_EQ(-maxForce, actuator->forcerange[0]);
-    EXPECT_DOUBLE_EQ(maxForce, actuator->forcerange[1]);
+    EXPECT_DOUBLE_EQ(-maxForce, joint->actfrcrange[0]);
+    EXPECT_DOUBLE_EQ(maxForce, joint->actfrcrange[1]);
   };
 
   auto universalJointTestLink = mjs_findChild(

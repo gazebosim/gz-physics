@@ -146,7 +146,11 @@ void copyStandardJointAxisProperties(
   _joint->range[0] = _sdfAxis->Lower();
   _joint->range[1] = _sdfAxis->Upper();
 
-  // Joint effort limits are enforced on the actuator instead.
+  _joint->actfrclimited =
+      static_cast<int>(!std::isinf(infIfNeg(_sdfAxis->Effort())));
+
+  _joint->actfrcrange[0] = -infIfNeg(_sdfAxis->Effort());
+  _joint->actfrcrange[1] = infIfNeg(_sdfAxis->Effort());
 
   // TODO(azeey) MuJoCo does not natively support velocity limits.
   // See https://github.com/google-deepmind/mujoco/discussions/2367
@@ -607,18 +611,8 @@ struct ModelKinematicStructure
         mjs_setName(joint->element, mjJointName.c_str());
         actuator = mjs_addActuator(_spec, nullptr);
         actuator->trntype = mjtTrn::mjTRN_JOINT;
-        actuator->dyntype = mjDYN_INTEGRATOR;
 
         mjs_setString(actuator->target, mjJointName.c_str());
-
-        const auto *sdfAxis1 = sdfJoint->Axis(0);
-        if (sdfAxis1)
-        {
-          actuator->forcelimited =
-              static_cast<int>(!std::isinf(infIfNeg(sdfAxis1->Effort())));
-          actuator->forcerange[0] = -infIfNeg(sdfAxis1->Effort());
-          actuator->forcerange[1] = infIfNeg(sdfAxis1->Effort());
-        }
 
         copyPos(jointPose.Pos(), joint->pos);
 
@@ -632,17 +626,7 @@ struct ModelKinematicStructure
           mjs_setName(joint2->element, mjJointName2.c_str());
           mjsActuator *actuator2 = mjs_addActuator(_spec, nullptr);
           actuator2->trntype = mjtTrn::mjTRN_JOINT;
-          actuator2->dyntype = mjDYN_INTEGRATOR;
           mjs_setString(actuator2->target, mjJointName2.c_str());
-
-          const auto *sdfAxis2 = sdfJoint->Axis(1);
-          if (sdfAxis2)
-          {
-            actuator2->forcelimited =
-                static_cast<int>(!std::isinf(infIfNeg(sdfAxis2->Effort())));
-            actuator2->forcerange[0] = -infIfNeg(sdfAxis2->Effort());
-            actuator2->forcerange[1] = infIfNeg(sdfAxis2->Effort());
-          }
 
           copyPos(jointPose.Pos(), joint2->pos);
 
