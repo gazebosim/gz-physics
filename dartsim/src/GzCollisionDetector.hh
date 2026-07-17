@@ -104,8 +104,31 @@ class GzOdeCollisionDetector :
       const CollisionOption& option = CollisionOption(false, 1u, nullptr),
       CollisionResult* result = nullptr) override;
 
+  /// Performs raycast to a collision group.
+  ///
+  /// \param[in] group The collision group the ray will be casted onto.
+  /// \param[in] from The start point of the ray in world coordinates.
+  /// \param[in] to The end point of the ray in world coordinates.
+  /// \param[in] option The raycast option.
+  /// \param[in] result The raycast result.
+  /// \return True if the ray hit an collision object.
+  public: bool raycast(
+      CollisionGroup* group,
+      const Eigen::Vector3d& from,
+      const Eigen::Vector3d& to,
+      const RaycastOption& option = RaycastOption(),
+      RaycastResult* result = nullptr) override;
+
+  public: virtual bool BatchRaycast(
+      CollisionGroup *_group,
+      const std::vector<GzRay> &_rays,
+      std::vector<GzRayResult> &_results) const override;
+
   /// \brief Create the GzOdeCollisionDetector
   public: static std::shared_ptr<GzOdeCollisionDetector> create();
+
+  // Documentation inherited
+  public: std::unique_ptr<CollisionGroup> createCollisionGroup() override;
 
   /// Constructor
   protected: GzOdeCollisionDetector();
