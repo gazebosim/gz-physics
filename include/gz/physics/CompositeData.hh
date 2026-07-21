@@ -21,6 +21,7 @@
 #include <string>
 #include <map>
 #include <set>
+#include <typeindex>
 
 #include <gz/utils/SuppressWarning.hh>
 
@@ -963,7 +964,7 @@ namespace gz
 
       // We make this typedef public so that helper functions can use it without
       // being friends of the class.
-      public: using MapOfData = std::map<std::string, DataEntry>;
+      public: using MapOfData = std::map<std::type_index, DataEntry>;
 
       GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
       /// \brief Map from the label of a data object type to its entry

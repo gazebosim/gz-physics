@@ -16,6 +16,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <set>
 
 #include <gz/common/Console.hh>
 #include <gz/physics/GetEntities.hh>
@@ -23,6 +24,7 @@
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
+#include <gz/physics/sdf/ConstructNestedModel.hh>
 #include <gz/plugin/Loader.hh>
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
@@ -41,6 +43,7 @@ struct TestFeatureList : physics::FeatureList<
     physics::GetModelFromWorld,
     physics::sdf::ConstructSdfModel,
     physics::sdf::ConstructSdfWorld,
+    physics::sdf::ConstructSdfNestedModel,
     physics::RemoveEntities
 > { };
 
@@ -298,6 +301,58 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
 }
 
 /////////////////////////////////////////////////
+TEST_P(SDFFeatures_TEST, TopLevelModelWithNonZeroRootLinkPose)
+{
+  std::string worldStr = R"(
+  <sdf version="1.10">
+    <world name="test_world">
+      <model name="my_model">
+        <pose>1 2 3  0 0 1.57079632679</pose>
+        <link name="my_root_link">
+          <pose>0 1 0  1.57079632679 0 0</pose>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+
+  EXPECT_EQ(1u, worldInfo->models.size());
+
+  using gz::physics::mujoco::Base;
+  auto worldBody = worldInfo->body;
+
+  auto rootLink = mjs_findChild(
+      worldBody, Base::JoinNames("my_model", "my_root_link").c_str());
+  ASSERT_NE(nullptr, rootLink);
+
+  gz::math::Pose3d modelPose(1, 2, 3, 0, 0, GZ_PI/2);
+  gz::math::Pose3d linkPose(0, 1, 0, GZ_PI/2, 0, 0);
+
+  gz::math::Pose3d expectedLinkPoseInWorld = modelPose * linkPose;
+
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Pos().X(), rootLink->pos[0], 1e-6);
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Pos().Y(), rootLink->pos[1], 1e-6);
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Pos().Z(), rootLink->pos[2], 1e-6);
+
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Rot().W(), rootLink->quat[0], 1e-6);
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Rot().X(), rootLink->quat[1], 1e-6);
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Rot().Y(), rootLink->quat[2], 1e-6);
+  EXPECT_NEAR(
+      expectedLinkPoseInWorld.Rot().Z(), rootLink->quat[3], 1e-6);
+}
+
+/////////////////////////////////////////////////
 TEST_P(SDFFeatures_TEST, UniversalJoint)
 {
   common::Console::SetVerbosity(4);
@@ -406,6 +461,9 @@ TEST_P(SDFFeatures_TEST, ModelRemoval)
   ModelPtr model = world->GetModel(modelName);
   ASSERT_NE(nullptr, model);
 
+  // Try to remove a model with an out-of-bounds index, should return false
+  EXPECT_FALSE(world->RemoveModel(modelCount));
+
   EXPECT_TRUE(world->RemoveModel(model));
 
   // The model should be removed from the world's model list immediately
@@ -417,6 +475,548 @@ TEST_P(SDFFeatures_TEST, ModelRemoval)
   // Try to remove it again, should return false
   EXPECT_FALSE(world->RemoveModel(modelName));
 }
+
+/////////////////////////////////////////////////
+// Test that we can construct a nested model.
+TEST_P(SDFFeatures_TEST, ConstructSdfNestedModel)
+{
+  std::string worldStr = R"(
+  <sdf version="1.10">
+    <world name="test_world">
+      <model name="parent_model">
+        <pose>1 2 3  0 0 1.57079632679</pose>
+        <link name="parent_link"/>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto parentModel = world->GetModel("parent_model");
+  ASSERT_NE(nullptr, parentModel);
+
+  std::string nestedSdfStr = R"(
+  <sdf version="1.10">
+    <model name="nested_model">
+      <pose>1 0 0  0 0 -1.57079632679</pose>
+      <link name="nested_link"/>
+    </model>
+  </sdf>)";
+  sdf::Root root;
+  const sdf::Errors &errors = root.LoadSdfString(nestedSdfStr);
+  EXPECT_EQ(0u, errors.size());
+
+  const sdf::Model *nestedSdf = root.Model();
+  ASSERT_NE(nullptr, nestedSdf);
+
+  auto nestedModelId = parentModel->ConstructNestedModel(*nestedSdf);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+
+  // ModelInfo size should increase (1 for parent_model, 1 for nested_model)
+  EXPECT_EQ(2u, worldInfo->models.size());
+
+  using gz::physics::mujoco::Base;
+  auto parentModelInfo = worldInfo->models.at(
+      Base::JoinNames("test_world", "parent_model"));
+  ASSERT_NE(nullptr, parentModelInfo);
+
+  auto nestedModelInfo = worldInfo->models.at(
+      Base::JoinNames("test_world", "parent_model::nested_model"));
+  ASSERT_NE(nullptr, nestedModelInfo);
+
+  EXPECT_EQ(nullptr, parentModelInfo->parentModelInfo);
+  EXPECT_EQ(parentModelInfo.get(), nestedModelInfo->parentModelInfo);
+
+  auto worldBody = worldInfo->body;
+  auto nestedLinkBody = mjs_findChild(
+      worldBody,
+      Base::JoinNames("parent_model::nested_model", "nested_link").c_str());
+  ASSERT_NE(nullptr, nestedLinkBody);
+
+  // Verify that nestedLinkBody is a direct child of the world body.
+  auto parentBody = mjs_getParent(nestedLinkBody->element);
+  ASSERT_NE(nullptr, parentBody);
+  EXPECT_STREQ("world", mjs_getString(mjs_getName(parentBody->element)));
+
+  // Verify that it has a free joint.
+  auto firstChildElement =
+      mjs_firstChild(nestedLinkBody, mjtObj::mjOBJ_JOINT, 0);
+  ASSERT_NE(nullptr, firstChildElement);
+  auto firstJoint = mjs_asJoint(firstChildElement);
+  ASSERT_NE(nullptr, firstJoint);
+  EXPECT_EQ(mjJNT_FREE, firstJoint->type);
+
+  // Verify absolute pose of the nested link body.
+  // parent_model absolute pose: [1, 2, 3, 0, 0, pi/2]
+  // nested_model relative pose: [1, 0, 0, 0, 0, -pi/2]
+  // expected absolute pose: [1, 3, 3, 0, 0, 0]
+  EXPECT_NEAR(1.0, nestedLinkBody->pos[0], 1e-6);
+  EXPECT_NEAR(3.0, nestedLinkBody->pos[1], 1e-6);
+  EXPECT_NEAR(3.0, nestedLinkBody->pos[2], 1e-6);
+
+  EXPECT_NEAR(1.0, nestedLinkBody->quat[0], 1e-6);
+  EXPECT_NEAR(0.0, nestedLinkBody->quat[1], 1e-6);
+  EXPECT_NEAR(0.0, nestedLinkBody->quat[2], 1e-6);
+  EXPECT_NEAR(0.0, nestedLinkBody->quat[3], 1e-6);
+}
+
+/////////////////////////////////////////////////
+// Test nested model construction with joints and collisions.
+TEST_P(SDFFeatures_TEST, NestedModelsJointsAndCollisions)
+{
+  std::string worldStr = R"(
+  <sdf version="1.10">
+    <world name="test_world">
+      <model name="parent_model">
+        <link name="parent_link">
+          <collision name="c1"><geometry><box><size>1 1 1</size></box></geometry></collision>
+        </link>
+        <model name="nested_model_1">
+          <link name="nested_link_1">
+            <collision name="c2"><geometry><box><size>1 1 1</size></box></geometry></collision>
+          </link>
+          <link name="nested_link_2">
+            <collision name="c3"><geometry><box><size>1 1 1</size></box></geometry></collision>
+          </link>
+          <joint name="revolute_joint" type="revolute">
+            <parent>nested_link_1</parent>
+            <child>nested_link_2</child>
+            <axis><xyz>0 0 1</xyz></axis>
+          </joint>
+
+          <model name="nested_model_2">
+            <link name="nested_link_3">
+              <collision name="c4"><geometry><box><size>1 1 1</size></box></geometry></collision>
+            </link>
+            <link name="nested_link_4">
+              <collision name="c5"><geometry><box><size>1 1 1</size></box></geometry></collision>
+            </link>
+            <link name="nested_link_5">
+              <collision name="c6"><geometry><box><size>1 1 1</size></box></geometry></collision>
+            </link>
+            <joint name="ball_joint" type="ball">
+              <parent>nested_link_3</parent>
+              <child>nested_link_4</child>
+            </joint>
+            <joint name="fixed_joint" type="fixed">
+              <parent>nested_link_4</parent>
+              <child>nested_link_5</child>
+            </joint>
+          </model>
+        </model>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+
+  // Parent + nested_model_1 + nested_model_2 = 3 models
+  EXPECT_EQ(3u, worldInfo->models.size());
+
+  auto *spec = worldInfo->mjSpecObj;
+  ASSERT_NE(nullptr, spec);
+
+  // Expect 6 links total. Since they are all under the parent_model,
+  // we check the body tree recursively.
+  using gz::physics::mujoco::Base;
+  auto worldBody = worldInfo->body;
+
+  auto parentLink = mjs_findChild(
+      worldBody, Base::JoinNames("parent_model", "parent_link").c_str());
+  ASSERT_NE(nullptr, parentLink);
+
+  auto nestedLink1 = mjs_findChild(
+      worldBody,
+      Base::JoinNames(
+          "parent_model::nested_model_1", "nested_link_1").c_str());
+  ASSERT_NE(nullptr, nestedLink1);
+
+  auto nestedLink5 = mjs_findChild(
+      worldBody,
+      Base::JoinNames(
+          "parent_model::nested_model_1::nested_model_2",
+          "nested_link_5").c_str());
+  ASSERT_NE(nullptr, nestedLink5);
+
+  // Verify joints
+  auto revJoint = mjs_asJoint(mjs_findElement(
+      spec, mjtObj::mjOBJ_JOINT,
+      Base::JoinNames(
+          "parent_model::nested_model_1", "revolute_joint").c_str()));
+  ASSERT_NE(nullptr, revJoint);
+  EXPECT_EQ(mjtJoint::mjJNT_HINGE, revJoint->type);
+
+  auto ballJoint = mjs_asJoint(mjs_findElement(
+      spec, mjtObj::mjOBJ_JOINT,
+      Base::JoinNames(
+          "parent_model::nested_model_1::nested_model_2",
+          "ball_joint").c_str()));
+  ASSERT_NE(nullptr, ballJoint);
+  EXPECT_EQ(mjtJoint::mjJNT_BALL, ballJoint->type);
+
+  // Verify contact exclusions (self-collision disabled by default)
+  // Exclusions only apply between links within the same model:
+  // - parent_model (1 link) -> 0 exclusions
+  // - nested_model_1 (2 links) -> 1 exclusion
+  // - nested_model_2 (3 links) -> 3 exclusions
+  // Total = 4 exclusions
+  std::set<std::pair<std::string, std::string>> exclusions;
+  for (mjsElement *elem = mjs_firstElement(spec, mjOBJ_EXCLUDE); elem;
+       elem = mjs_nextElement(spec, elem))
+  {
+    mjsExclude *exclude = mjs_asExclude(elem);
+    ASSERT_NE(nullptr, exclude);
+    std::string b1 = mjs_getString(exclude->bodyname1);
+    std::string b2 = mjs_getString(exclude->bodyname2);
+    if (b1 < b2)
+    {
+      exclusions.insert({b1, b2});
+    }
+    else
+    {
+      exclusions.insert({b2, b1});
+    }
+  }
+
+  EXPECT_EQ(4u, exclusions.size());
+
+  auto hasExclusion = [&](const std::string &b1, const std::string &b2) {
+    if (b1 < b2)
+      return exclusions.find({b1, b2}) != exclusions.end();
+    else
+      return exclusions.find({b2, b1}) != exclusions.end();
+  };
+
+  // Exclusions within nested_model_1
+  EXPECT_TRUE(hasExclusion(
+      "parent_model::nested_model_1::nested_link_1",
+      "parent_model::nested_model_1::nested_link_2"));
+
+  // Exclusions within nested_model_2
+  EXPECT_TRUE(hasExclusion(
+      "parent_model::nested_model_1::nested_model_2::nested_link_3",
+      "parent_model::nested_model_1::nested_model_2::nested_link_4"));
+  EXPECT_TRUE(hasExclusion(
+      "parent_model::nested_model_1::nested_model_2::nested_link_3",
+      "parent_model::nested_model_1::nested_model_2::nested_link_5"));
+  EXPECT_TRUE(hasExclusion(
+      "parent_model::nested_model_1::nested_model_2::nested_link_4",
+      "parent_model::nested_model_1::nested_model_2::nested_link_5"));
+
+  // No exclusions between parent and child models
+  EXPECT_FALSE(hasExclusion(
+      "parent_model::parent_link",
+      "parent_model::nested_model_1::nested_link_1"));
+  EXPECT_FALSE(hasExclusion(
+      "parent_model::nested_model_1::nested_link_1",
+      "parent_model::nested_model_1::nested_model_2::nested_link_5"));
+}
+
+/////////////////////////////////////////////////
+// Test nested models with cross-boundary joints.
+TEST_P(SDFFeatures_TEST, CrossBoundaryJoints)
+{
+  std::string worldStr = R"(
+  <sdf version="1.10">
+    <world name="test_world">
+      <model name="parent_model">
+        <pose>1 2 3  0 0 1.57079632679</pose>
+        <link name="parent_link">
+          <pose>0 1 0  1.57079632679 0 0</pose>
+        </link>
+        <model name="nested_model">
+          <pose>1 0 0  0 0 -1.57079632679</pose>
+          <link name="nested_link">
+            <pose>0 0 2  0 1.57079632679 0</pose>
+          </link>
+        </model>
+        <joint name="parent_to_nested_joint" type="revolute">
+          <parent>parent_link</parent>
+          <child>nested_model::nested_link</child>
+          <axis><xyz>0 0 1</xyz></axis>
+        </joint>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+
+  EXPECT_EQ(2u, worldInfo->models.size());
+
+  auto *spec = worldInfo->mjSpecObj;
+  ASSERT_NE(nullptr, spec);
+
+  using gz::physics::mujoco::Base;
+  auto worldBody = worldInfo->body;
+
+  auto parentLink = mjs_findChild(
+      worldBody, Base::JoinNames("parent_model", "parent_link").c_str());
+  ASSERT_NE(nullptr, parentLink);
+
+  auto nestedLink = mjs_findChild(
+      worldBody,
+      Base::JoinNames("parent_model::nested_model", "nested_link").c_str());
+  ASSERT_NE(nullptr, nestedLink);
+
+  gz::math::Pose3d parentModelPose(1, 2, 3, 0, 0, GZ_PI/2);
+  gz::math::Pose3d parentLinkPose(0, 1, 0, GZ_PI/2, 0, 0);
+  gz::math::Pose3d expectedParentLinkPoseInWorld =
+      parentModelPose * parentLinkPose;
+
+  EXPECT_NEAR(
+      expectedParentLinkPoseInWorld.Pos().X(), parentLink->pos[0], 1e-6);
+  EXPECT_NEAR(
+      expectedParentLinkPoseInWorld.Pos().Y(), parentLink->pos[1], 1e-6);
+  EXPECT_NEAR(
+      expectedParentLinkPoseInWorld.Pos().Z(), parentLink->pos[2], 1e-6);
+
+  EXPECT_NEAR(
+      expectedParentLinkPoseInWorld.Rot().W(), parentLink->quat[0], 1e-6);
+  EXPECT_NEAR(
+      expectedParentLinkPoseInWorld.Rot().X(), parentLink->quat[1], 1e-6);
+  EXPECT_NEAR(
+      expectedParentLinkPoseInWorld.Rot().Y(), parentLink->quat[2], 1e-6);
+  EXPECT_NEAR(
+      expectedParentLinkPoseInWorld.Rot().Z(), parentLink->quat[3], 1e-6);
+
+  gz::math::Pose3d nestedModelPose(1, 0, 0, 0, 0, -GZ_PI/2);
+  gz::math::Pose3d nestedLinkPose(0, 0, 2, 0, GZ_PI/2, 0);
+  gz::math::Pose3d expectedNestedLinkPoseInParent =
+      parentLinkPose.Inverse() * nestedModelPose * nestedLinkPose;
+
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInParent.Pos().X(), nestedLink->pos[0], 1e-6);
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInParent.Pos().Y(), nestedLink->pos[1], 1e-6);
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInParent.Pos().Z(), nestedLink->pos[2], 1e-6);
+
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInParent.Rot().W(), nestedLink->quat[0], 1e-6);
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInParent.Rot().X(), nestedLink->quat[1], 1e-6);
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInParent.Rot().Y(), nestedLink->quat[2], 1e-6);
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInParent.Rot().Z(), nestedLink->quat[3], 1e-6);
+
+  // Verify the joint was added
+  auto revJoint = mjs_asJoint(mjs_findElement(
+      spec, mjtObj::mjOBJ_JOINT,
+      Base::JoinNames("parent_model", "parent_to_nested_joint").c_str()));
+  ASSERT_NE(nullptr, revJoint);
+  EXPECT_EQ(mjtJoint::mjJNT_HINGE, revJoint->type);
+}
+
+/////////////////////////////////////////////////
+// Test nested models with cross-boundary joints, where parent is in
+// nested model and child is in top level model.
+TEST_P(SDFFeatures_TEST, CrossBoundaryJointsInverted)
+{
+  std::string worldStr = R"(
+  <sdf version="1.10">
+    <world name="test_world">
+      <model name="parent_model">
+        <pose>1 2 3  0 0 1.57079632679</pose>
+        <link name="parent_link">
+          <pose>0 1 0  1.57079632679 0 0</pose>
+        </link>
+        <model name="nested_model">
+          <pose>1 0 0  0 0 -1.57079632679</pose>
+          <link name="nested_link">
+            <pose>0 0 2  0 1.57079632679 0</pose>
+          </link>
+        </model>
+        <joint name="nested_to_parent_joint" type="revolute">
+          <parent>nested_model::nested_link</parent>
+          <child>parent_link</child>
+          <axis><xyz>0 0 1</xyz></axis>
+        </joint>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+
+  EXPECT_EQ(2u, worldInfo->models.size());
+
+  auto *spec = worldInfo->mjSpecObj;
+  ASSERT_NE(nullptr, spec);
+
+  using gz::physics::mujoco::Base;
+  auto worldBody = worldInfo->body;
+
+  auto parentLink = mjs_findChild(
+      worldBody, Base::JoinNames("parent_model", "parent_link").c_str());
+  ASSERT_NE(nullptr, parentLink);
+
+  auto nestedLink = mjs_findChild(
+      worldBody,
+      Base::JoinNames("parent_model::nested_model", "nested_link").c_str());
+  ASSERT_NE(nullptr, nestedLink);
+
+  gz::math::Pose3d parentModelPose(1, 2, 3, 0, 0, GZ_PI/2);
+  gz::math::Pose3d parentLinkPose(0, 1, 0, GZ_PI/2, 0, 0);
+  gz::math::Pose3d nestedModelPose(1, 0, 0, 0, 0, -GZ_PI/2);
+  gz::math::Pose3d nestedLinkPose(0, 0, 2, 0, GZ_PI/2, 0);
+
+  gz::math::Pose3d expectedNestedLinkPoseInWorld =
+      parentModelPose * nestedModelPose * nestedLinkPose;
+
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInWorld.Pos().X(), nestedLink->pos[0], 1e-6);
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInWorld.Pos().Y(), nestedLink->pos[1], 1e-6);
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInWorld.Pos().Z(), nestedLink->pos[2], 1e-6);
+
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInWorld.Rot().W(), nestedLink->quat[0], 1e-6);
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInWorld.Rot().X(), nestedLink->quat[1], 1e-6);
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInWorld.Rot().Y(), nestedLink->quat[2], 1e-6);
+  EXPECT_NEAR(
+      expectedNestedLinkPoseInWorld.Rot().Z(), nestedLink->quat[3], 1e-6);
+
+  gz::math::Pose3d expectedParentLinkPoseInWorld =
+      parentModelPose * parentLinkPose;
+  gz::math::Pose3d expectedParentLinkPoseInParent =
+      expectedNestedLinkPoseInWorld.Inverse() * expectedParentLinkPoseInWorld;
+
+  EXPECT_NEAR(
+      expectedParentLinkPoseInParent.Pos().X(), parentLink->pos[0], 1e-6);
+  EXPECT_NEAR(
+      expectedParentLinkPoseInParent.Pos().Y(), parentLink->pos[1], 1e-6);
+  EXPECT_NEAR(
+      expectedParentLinkPoseInParent.Pos().Z(), parentLink->pos[2], 1e-6);
+
+  EXPECT_NEAR(
+      expectedParentLinkPoseInParent.Rot().W(), parentLink->quat[0], 1e-6);
+  EXPECT_NEAR(
+      expectedParentLinkPoseInParent.Rot().X(), parentLink->quat[1], 1e-6);
+  EXPECT_NEAR(
+      expectedParentLinkPoseInParent.Rot().Y(), parentLink->quat[2], 1e-6);
+  EXPECT_NEAR(
+      expectedParentLinkPoseInParent.Rot().Z(), parentLink->quat[3], 1e-6);
+
+  // Verify the joint was added
+  auto revJoint = mjs_asJoint(mjs_findElement(
+      spec, mjtObj::mjOBJ_JOINT,
+      Base::JoinNames("parent_model", "nested_to_parent_joint").c_str()));
+  ASSERT_NE(nullptr, revJoint);
+  EXPECT_EQ(mjtJoint::mjJNT_HINGE, revJoint->type);
+}
+
+
+/////////////////////////////////////////////////
+// Test self-collision exclusions count and presence for nested models.
+TEST_P(SDFFeatures_TEST, NestedModelSelfCollideExclusions)
+{
+  WorldPtr world = this->LoadWorld(
+      common_test::worlds::kNestedModelSelfCollideSdf);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  auto *spec = worldInfo->mjSpecObj;
+  ASSERT_NE(nullptr, spec);
+
+  std::set<std::pair<std::string, std::string>> exclusions;
+  for (mjsElement *elem = mjs_firstElement(spec, mjOBJ_EXCLUDE); elem;
+       elem = mjs_nextElement(spec, elem))
+  {
+    mjsExclude *exclude = mjs_asExclude(elem);
+    ASSERT_NE(nullptr, exclude);
+    std::string b1 = mjs_getString(exclude->bodyname1);
+    std::string b2 = mjs_getString(exclude->bodyname2);
+    if (b1 < b2)
+    {
+      exclusions.insert({b1, b2});
+    }
+    else
+    {
+      exclusions.insert({b2, b1});
+    }
+  }
+
+  // Expect 12 exclusions total:
+  // Case 1: 0 (parent) + 0 (child) = 0
+  // Case 2: 0 (parent) + 3 (child: CC platform, CC dropper, PC dropper) = 3
+  // Case 3: 3 (parent: platform_pp, dropper_pp, platform_pc) + 0 (child) = 3
+  // Case 4: 3 (parent: platform_pp, dropper_pp, platform_pc) +
+  //         3 (child: CC platform, CC dropper, PC dropper) = 6
+  // Total = 0 + 3 + 3 + 6 = 12
+  EXPECT_EQ(12u, exclusions.size());
+
+  auto hasExclusion = [&](const std::string &b1, const std::string &b2) {
+    if (b1 < b2)
+      return exclusions.find({b1, b2}) != exclusions.end();
+    else
+      return exclusions.find({b2, b1}) != exclusions.end();
+  };
+
+  // Case 2 exclusions (only 1 within child_model)
+  EXPECT_TRUE(hasExclusion(
+      "case2_parent_true_child_false::child_model::child_platform_cc",
+      "case2_parent_true_child_false::child_model::child_dropper_cc"));
+
+  // Case 3 exclusions (only within parent)
+  EXPECT_TRUE(hasExclusion(
+      "case3_parent_false_child_true::parent_platform_pp",
+      "case3_parent_false_child_true::parent_dropper_pp"));
+  EXPECT_TRUE(hasExclusion(
+      "case3_parent_false_child_true::parent_platform_pp",
+      "case3_parent_false_child_true::parent_platform_pc"));
+  EXPECT_TRUE(hasExclusion(
+      "case3_parent_false_child_true::parent_dropper_pp",
+      "case3_parent_false_child_true::parent_platform_pc"));
+
+  // Case 4 exclusions (within parent)
+  EXPECT_TRUE(hasExclusion(
+      "case4_parent_false_child_false::parent_platform_pp",
+      "case4_parent_false_child_false::parent_dropper_pp"));
+  EXPECT_TRUE(hasExclusion(
+      "case4_parent_false_child_false::parent_platform_pp",
+      "case4_parent_false_child_false::parent_platform_pc"));
+  EXPECT_TRUE(hasExclusion(
+      "case4_parent_false_child_false::parent_dropper_pp",
+      "case4_parent_false_child_false::parent_platform_pc"));
+  // Case 4 exclusions (within child_model)
+  EXPECT_TRUE(hasExclusion(
+      "case4_parent_false_child_false::child_model::child_platform_cc",
+      "case4_parent_false_child_false::child_model::child_dropper_cc"));
+  EXPECT_TRUE(hasExclusion(
+      "case4_parent_false_child_false::child_model::child_platform_cc",
+      "case4_parent_false_child_false::child_model::child_dropper_pc"));
+  EXPECT_TRUE(hasExclusion(
+      "case4_parent_false_child_false::child_model::child_dropper_cc",
+      "case4_parent_false_child_false::child_model::child_dropper_pc"));
+
+  // NO cross-boundary exclusions should exist!
+  EXPECT_FALSE(hasExclusion(
+      "case3_parent_false_child_true::parent_platform_pc",
+      "case3_parent_false_child_true::child_model::child_dropper_pc"));
+}
+
+
+
+
 
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
                         ::testing::Values(LoaderType::Whole));

@@ -17,6 +17,7 @@
 
 #include <cassert>
 #include <utility>
+#include <typeindex>
 
 #include "gz/physics/CompositeData.hh"
 
@@ -336,7 +337,7 @@ namespace gz
       for (const auto &entry : dataMap)
       {
         if (entry.second.data)
-          entries.insert(entries.end(), entry.first);
+          entries.insert(entries.end(), entry.first.name());
       }
 
       return entries;
@@ -353,7 +354,7 @@ namespace gz
       for (const auto &entry : dataMap)
       {
         if (entry.second.data && !entry.second.queried)
-          unqueried.insert(unqueried.end(), entry.first);
+          unqueried.insert(unqueried.end(), entry.first.name());
       }
 
       return unqueried;

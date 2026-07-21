@@ -1,0 +1,510 @@
+<sdf version="1.9">
+  <world name="nested_self_collide_test">
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <!-- Ground Plane -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Sun -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- ========================================== -->
+    <!-- CASE 1: Parent: TRUE, Child: TRUE         -->
+    <!-- ========================================== -->
+    <model name="case1_parent_true_child_true">
+      <pose>-4.5 0 0 0 0 0</pose>
+      <self_collide>true</self_collide>
+
+      <!-- PP Test (Parent-Parent) -->
+      <link name="parent_platform_pp">
+        <pose>0 -1.5 0.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <link name="parent_dropper_pp">
+        <pose>0 -1.5 1.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><sphere><radius>0.15</radius></sphere></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><sphere><radius>0.15</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.4 0.4 1</ambient>
+            <diffuse>1.0 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <joint name="parent_joint_pp" type="fixed">
+        <parent>world</parent>
+        <child>parent_platform_pp</child>
+      </joint>
+
+      <!-- PC Test (Parent-Child - Parent Platform) -->
+      <link name="parent_platform_pc">
+        <pose>0 1.5 0.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <joint name="parent_joint_pc" type="fixed">
+        <parent>world</parent>
+        <child>parent_platform_pc</child>
+      </joint>
+
+      <!-- Nested Child Model -->
+      <model name="child_model">
+        <self_collide>true</self_collide>
+
+        <!-- CC Test (Child-Child) -->
+        <link name="child_platform_cc">
+          <pose>0 0 0.5 0 0 0</pose>
+          <collision name="col">
+            <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+          </collision>
+          <visual name="vis">
+            <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+            <material>
+              <ambient>0.2 0.2 0.8 1</ambient>
+              <diffuse>0.2 0.2 0.8 1</diffuse>
+            </material>
+          </visual>
+        </link>
+
+        <link name="child_dropper_cc">
+          <pose>0 0 1.5 0 0 0</pose>
+          <collision name="col">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+          </collision>
+          <visual name="vis">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+            <material>
+              <ambient>0.4 0.4 1.0 1</ambient>
+              <diffuse>0.4 0.4 1.0 1</diffuse>
+            </material>
+          </visual>
+        </link>
+
+        <!-- PC Test (Parent-Child - Child Dropper) -->
+        <link name="child_dropper_pc">
+          <pose>0 1.5 1.5 0 0 0</pose>
+          <collision name="col">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+          </collision>
+          <visual name="vis">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+            <material>
+              <ambient>0.4 0.4 1.0 1</ambient>
+              <diffuse>0.4 0.4 1.0 1</diffuse>
+            </material>
+          </visual>
+        </link>
+      </model>
+
+      <joint name="child_joint_cc" type="fixed">
+        <parent>world</parent>
+        <child>child_model::child_platform_cc</child>
+      </joint>
+    </model>
+
+    <!-- ========================================== -->
+    <!-- CASE 2: Parent: TRUE, Child: FALSE        -->
+    <!-- ========================================== -->
+    <model name="case2_parent_true_child_false">
+      <pose>-1.5 0 0 0 0 0</pose>
+      <self_collide>true</self_collide>
+
+      <!-- PP Test (Parent-Parent) -->
+      <link name="parent_platform_pp">
+        <pose>0 -1.5 0.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <link name="parent_dropper_pp">
+        <pose>0 -1.5 1.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><sphere><radius>0.15</radius></sphere></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><sphere><radius>0.15</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.4 0.4 1</ambient>
+            <diffuse>1.0 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <joint name="parent_joint_pp" type="fixed">
+        <parent>world</parent>
+        <child>parent_platform_pp</child>
+      </joint>
+
+      <!-- PC Test (Parent-Child - Parent Platform) -->
+      <link name="parent_platform_pc">
+        <pose>0 1.5 0.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <joint name="parent_joint_pc" type="fixed">
+        <parent>world</parent>
+        <child>parent_platform_pc</child>
+      </joint>
+
+      <!-- Nested Child Model -->
+      <model name="child_model">
+        <self_collide>false</self_collide>
+
+        <!-- CC Test (Child-Child) -->
+        <link name="child_platform_cc">
+          <pose>0 0 0.5 0 0 0</pose>
+          <collision name="col">
+            <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+          </collision>
+          <visual name="vis">
+            <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+            <material>
+              <ambient>0.2 0.2 0.8 1</ambient>
+              <diffuse>0.2 0.2 0.8 1</diffuse>
+            </material>
+          </visual>
+        </link>
+
+        <link name="child_dropper_cc">
+          <pose>0 0 1.5 0 0 0</pose>
+          <collision name="col">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+          </collision>
+          <visual name="vis">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+            <material>
+              <ambient>0.4 0.4 1.0 1</ambient>
+              <diffuse>0.4 0.4 1.0 1</diffuse>
+            </material>
+          </visual>
+        </link>
+
+        <!-- PC Test (Parent-Child - Child Dropper) -->
+        <link name="child_dropper_pc">
+          <pose>0 1.5 1.5 0 0 0</pose>
+          <collision name="col">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+          </collision>
+          <visual name="vis">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+            <material>
+              <ambient>0.4 0.4 1.0 1</ambient>
+              <diffuse>0.4 0.4 1.0 1</diffuse>
+            </material>
+          </visual>
+        </link>
+      </model>
+
+      <joint name="child_joint_cc" type="fixed">
+        <parent>world</parent>
+        <child>child_model::child_platform_cc</child>
+      </joint>
+    </model>
+
+    <!-- ========================================== -->
+    <!-- CASE 3: Parent: FALSE, Child: TRUE        -->
+    <!-- ========================================== -->
+    <model name="case3_parent_false_child_true">
+      <pose>1.5 0 0 0 0 0</pose>
+      <self_collide>false</self_collide>
+
+      <!-- PP Test (Parent-Parent) -->
+      <link name="parent_platform_pp">
+        <pose>0 -1.5 0.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <link name="parent_dropper_pp">
+        <pose>0 -1.5 1.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><sphere><radius>0.15</radius></sphere></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><sphere><radius>0.15</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.4 0.4 1</ambient>
+            <diffuse>1.0 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <joint name="parent_joint_pp" type="fixed">
+        <parent>world</parent>
+        <child>parent_platform_pp</child>
+      </joint>
+
+      <!-- PC Test (Parent-Child - Parent Platform) -->
+      <link name="parent_platform_pc">
+        <pose>0 1.5 0.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <joint name="parent_joint_pc" type="fixed">
+        <parent>world</parent>
+        <child>parent_platform_pc</child>
+      </joint>
+
+      <!-- Nested Child Model -->
+      <model name="child_model">
+        <self_collide>true</self_collide>
+
+        <!-- CC Test (Child-Child) -->
+        <link name="child_platform_cc">
+          <pose>0 0 0.5 0 0 0</pose>
+          <collision name="col">
+            <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+          </collision>
+          <visual name="vis">
+            <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+            <material>
+              <ambient>0.2 0.2 0.8 1</ambient>
+              <diffuse>0.2 0.2 0.8 1</diffuse>
+            </material>
+          </visual>
+        </link>
+
+        <link name="child_dropper_cc">
+          <pose>0 0 1.5 0 0 0</pose>
+          <collision name="col">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+          </collision>
+          <visual name="vis">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+            <material>
+              <ambient>0.4 0.4 1.0 1</ambient>
+              <diffuse>0.4 0.4 1.0 1</diffuse>
+            </material>
+          </visual>
+        </link>
+
+        <!-- PC Test (Parent-Child - Child Dropper) -->
+        <link name="child_dropper_pc">
+          <pose>0 1.5 1.5 0 0 0</pose>
+          <collision name="col">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+          </collision>
+          <visual name="vis">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+            <material>
+              <ambient>0.4 0.4 1.0 1</ambient>
+              <diffuse>0.4 0.4 1.0 1</diffuse>
+            </material>
+          </visual>
+        </link>
+      </model>
+
+      <joint name="child_joint_cc" type="fixed">
+        <parent>world</parent>
+        <child>child_model::child_platform_cc</child>
+      </joint>
+    </model>
+
+    <!-- ========================================== -->
+    <!-- CASE 4: Parent: FALSE, Child: FALSE       -->
+    <!-- ========================================== -->
+    <model name="case4_parent_false_child_false">
+      <pose>4.5 0 0 0 0 0</pose>
+      <self_collide>false</self_collide>
+
+      <!-- PP Test (Parent-Parent) -->
+      <link name="parent_platform_pp">
+        <pose>0 -1.5 0.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <link name="parent_dropper_pp">
+        <pose>0 -1.5 1.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><sphere><radius>0.15</radius></sphere></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><sphere><radius>0.15</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.4 0.4 1</ambient>
+            <diffuse>1.0 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <joint name="parent_joint_pp" type="fixed">
+        <parent>world</parent>
+        <child>parent_platform_pp</child>
+      </joint>
+
+      <!-- PC Test (Parent-Child - Parent Platform) -->
+      <link name="parent_platform_pc">
+        <pose>0 1.5 0.5 0 0 0</pose>
+        <collision name="col">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <joint name="parent_joint_pc" type="fixed">
+        <parent>world</parent>
+        <child>parent_platform_pc</child>
+      </joint>
+
+      <!-- Nested Child Model -->
+      <model name="child_model">
+        <self_collide>false</self_collide>
+
+        <!-- CC Test (Child-Child) -->
+        <link name="child_platform_cc">
+          <pose>0 0 0.5 0 0 0</pose>
+          <collision name="col">
+            <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+          </collision>
+          <visual name="vis">
+            <geometry><box><size>0.5 0.5 0.1</size></box></geometry>
+            <material>
+              <ambient>0.2 0.2 0.8 1</ambient>
+              <diffuse>0.2 0.2 0.8 1</diffuse>
+            </material>
+          </visual>
+        </link>
+
+        <link name="child_dropper_cc">
+          <pose>0 0 1.5 0 0 0</pose>
+          <collision name="col">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+          </collision>
+          <visual name="vis">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+            <material>
+              <ambient>0.4 0.4 1.0 1</ambient>
+              <diffuse>0.4 0.4 1.0 1</diffuse>
+            </material>
+          </visual>
+        </link>
+
+        <!-- PC Test (Parent-Child - Child Dropper) -->
+        <link name="child_dropper_pc">
+          <pose>0 1.5 1.5 0 0 0</pose>
+          <collision name="col">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+          </collision>
+          <visual name="vis">
+            <geometry><sphere><radius>0.15</radius></sphere></geometry>
+            <material>
+              <ambient>0.4 0.4 1.0 1</ambient>
+              <diffuse>0.4 0.4 1.0 1</diffuse>
+            </material>
+          </visual>
+        </link>
+      </model>
+
+      <joint name="child_joint_cc" type="fixed">
+        <parent>world</parent>
+        <child>child_model::child_platform_cc</child>
+      </joint>
+    </model>
+
+  </world>
+</sdf>
