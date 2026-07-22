@@ -220,7 +220,9 @@ SimulationFeatures::GetRayIntersectionFromLastStep(
   }
   else
   {
-    // Set invalid measurements to NaN according to REP-117
+    // Miss: NaN fraction/point/normal. Kept as NaN (gz-physics10 switched the
+    // miss value to +INF per REP-117) to preserve gz-physics9's released
+    // behavior on this branch. See RayIntersectionT::IsHit().
     constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
     intersection.point = Eigen::Vector3d::Constant(kNaN);
     intersection.normal = Eigen::Vector3d::Constant(kNaN);
@@ -256,7 +258,9 @@ bool SimulationFeatures::GetBatchRayIntersectionFromLastStep(
           solver->getCollisionGroup().get(), _rays, results))
     return true;
 
-  // Unsupported detector: fill with NaN fraction, NaN point/normal.
+  // Unsupported detector: fill with NaN fraction, NaN point/normal. NaN (not
+  // +INF as on gz-physics10 per REP-117) preserves gz-physics9's released
+  // miss value on this branch.
   constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
   const Eigen::Vector3d kNaNVec = Eigen::Vector3d::Constant(kNaN);
   results.assign(_rays.size(),

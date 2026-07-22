@@ -358,6 +358,8 @@ bool GzOdeCollisionDetector::BatchRaycast(
     }
     else
     {
+      // No hit: NaN fraction/point/normal. NaN (not +INF as on gz-physics10
+      // per REP-117) preserves gz-physics9's released miss value on this branch.
       _results.emplace_back(GzRayResult{
           Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN()),
           std::numeric_limits<double>::quiet_NaN(),
@@ -489,8 +491,9 @@ bool GzBulletCollisionDetector::BatchRaycast(
     }
     else
     {
-      // No object in range: fraction is NaN.
-      // point and normal are undefined (NaN) when there is no hit.
+      // No object in range: NaN fraction; point/normal undefined (NaN).
+      // NaN (not +INF as on gz-physics10 per REP-117) preserves gz-physics9's
+      // released miss value on this branch.
       constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
       result.point = Eigen::Vector3d::Constant(kNaN);
       result.fraction = kNaN;
