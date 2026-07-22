@@ -2368,6 +2368,11 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
       {
         const auto &miss = results[1];
         EXPECT_FALSE(miss.IsHit());
+        // gz-physics9 preserves NaN-on-miss for the batch API; +INF is a
+        // gz-physics10 change. This assertion blocks a future cherry-pick from
+        // main silently reintroducing the breaking change.
+        EXPECT_TRUE(std::isnan(miss.fraction))
+            << "gz-physics9 batch raycast must return NaN on miss, not +INF";
         EXPECT_TRUE(miss.point.array().isNaN().all())
           << "miss point should be NaN: " << miss.point.transpose();
         EXPECT_TRUE(miss.normal.array().isNaN().all())
