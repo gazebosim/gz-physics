@@ -1,5 +1,19 @@
 ## Gazebo Physics 9.x
 
+### Gazebo Physics 9.4.0 (2026-07-20)
+
+1. [bazel] Bump default bazel version to 9.1.1 and bump CI workflow version
+    * [Pull request #1023](https://github.com/gazebosim/gz-physics/pull/1023)
+
+1. Remove hash map allocation on every update step
+    * [Pull request #1013](https://github.com/gazebosim/gz-physics/pull/1013)
+
+1. Fix building tests when using a custom install location
+    * [Pull request #1016](https://github.com/gazebosim/gz-physics/pull/1016)
+
+1. Enable/Disable collisions at runtime
+    * [Pull request #995](https://github.com/gazebosim/gz-physics/pull/995)
+
 ### Gazebo Physics 9.3.0 (2026-05-13)
 
 1. Model: Enable/disable: gravity and static
