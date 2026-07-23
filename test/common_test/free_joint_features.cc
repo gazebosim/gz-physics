@@ -38,24 +38,31 @@
 #include "gz/physics/sdf/ConstructNestedModel.hh"
 #include "gz/physics/sdf/ConstructWorld.hh"
 
-struct TestFeatureList : gz::physics::FeatureList<
+struct BaseTestFeatureList : gz::physics::FeatureList<
     gz::physics::GetEngineInfo,
     gz::physics::sdf::ConstructSdfWorld,
     gz::physics::sdf::ConstructSdfModel,
-    gz::physics::sdf::ConstructSdfNestedModel,
     gz::physics::GetWorldFromEngine,
     gz::physics::GetModelFromWorld,
-    gz::physics::GetNestedModelFromModel,
     gz::physics::GetLinkFromModel,
     gz::physics::LinkFrameSemantics,
     gz::physics::FindFreeGroupFeature,
     gz::physics::SetFreeGroupWorldPose > { };
 
-using World = gz::physics::World3d<TestFeatureList>;
-using WorldPtr = gz::physics::World3dPtr<TestFeatureList>;
-using ModelPtr = gz::physics::Model3dPtr<TestFeatureList>;
-using LinkPtr = gz::physics::Link3dPtr<TestFeatureList>;
+struct NestedTestFeatureList : gz::physics::FeatureList<
+    BaseTestFeatureList,
+    gz::physics::sdf::ConstructSdfNestedModel,
+    gz::physics::GetNestedModelFromModel > { };
 
+using BaseWorldPtr = gz::physics::World3dPtr<BaseTestFeatureList>;
+using BaseModelPtr = gz::physics::Model3dPtr<BaseTestFeatureList>;
+using BaseLinkPtr = gz::physics::Link3dPtr<BaseTestFeatureList>;
+
+using NestedWorldPtr = gz::physics::World3dPtr<NestedTestFeatureList>;
+using NestedModelPtr = gz::physics::Model3dPtr<NestedTestFeatureList>;
+using NestedLinkPtr = gz::physics::Link3dPtr<NestedTestFeatureList>;
+
+template<typename Features>
 class FreeGroupFeaturesTest:
   public testing::Test, public gz::physics::TestLibLoader
 {
@@ -68,7 +75,7 @@ class FreeGroupFeaturesTest:
 
     // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
     // FindFeatures
-    pluginNames = gz::physics::FindFeatures3d<TestFeatureList>::From(loader);
+    pluginNames = gz::physics::FindFeatures3d<Features>::From(loader);
     if (pluginNames.empty())
     {
       std::cerr << "No plugins with required features found in "
@@ -81,8 +88,12 @@ class FreeGroupFeaturesTest:
   public: gz::plugin::Loader loader;
 };
 
-ModelPtr GetModelFromAbsoluteName(const WorldPtr &_world,
-                                  const std::string &_absoluteName)
+using BaseFreeGroupFeaturesTest = FreeGroupFeaturesTest<BaseTestFeatureList>;
+using NestedFreeGroupFeaturesTest =
+    FreeGroupFeaturesTest<NestedTestFeatureList>;
+
+NestedModelPtr GetModelFromAbsoluteName(const NestedWorldPtr &_world,
+                                        const std::string &_absoluteName)
 {
   std::vector<std::string> names =
       gz::common::split(_absoluteName, std::string(sdf::kScopeDelimiter));
@@ -101,7 +112,7 @@ ModelPtr GetModelFromAbsoluteName(const WorldPtr &_world,
   return currentModel;
 }
 
-TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
+TEST_F(NestedFreeGroupFeaturesTest, NestedFreeGroup)
 {
   for (const std::string &name : pluginNames)
   {
@@ -113,7 +124,7 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+    auto engine = gz::physics::RequestEngine3d<NestedTestFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -159,7 +170,7 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroup)
   }
 }
 
-TEST_F(FreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
+TEST_F(NestedFreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
 {
   for (const std::string &name : pluginNames)
   {
@@ -171,7 +182,7 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+    auto engine = gz::physics::RequestEngine3d<NestedTestFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -240,7 +251,7 @@ TEST_F(FreeGroupFeaturesTest, NestedFreeGroupSetWorldPose)
   }
 }
 
-TEST_F(FreeGroupFeaturesTest, FreeGroupNestedNoLink)
+TEST_F(NestedFreeGroupFeaturesTest, FreeGroupNestedNoLink)
 {
   const std::string modelStr = R"(
     <sdf version="1.11">
@@ -258,7 +269,7 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupNestedNoLink)
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+    auto engine = gz::physics::RequestEngine3d<NestedTestFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -297,7 +308,7 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupNestedNoLink)
   }
 }
 
-TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPosePrincipalAxesOffset)
+TEST_F(BaseFreeGroupFeaturesTest, FreeGroupSetWorldPosePrincipalAxesOffset)
 {
   const std::string modelStr = R"(
     <sdf version="1.11">
@@ -329,10 +340,11 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPosePrincipalAxesOffset)
 
   for (const std::string &name : pluginNames)
   {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+    auto engine = gz::physics::RequestEngine3d<BaseTestFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -373,7 +385,7 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPosePrincipalAxesOffset)
   }
 }
 
-TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticAndFixedModel)
+TEST_F(BaseFreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticAndFixedModel)
 {
   const std::string modelStaticStr = R"(
     <sdf version="1.11">
@@ -415,10 +427,11 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticAndFixedModel)
 
   for (const std::string &name : pluginNames)
   {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = loader.Instantiate(name);
 
-    auto engine = gz::physics::RequestEngine3d<TestFeatureList>::From(plugin);
+    auto engine = gz::physics::RequestEngine3d<BaseTestFeatureList>::From(plugin);
     ASSERT_NE(nullptr, engine);
 
     sdf::Root root;
@@ -464,6 +477,11 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticAndFixedModel)
     ASSERT_NE(nullptr, root.Model());
     world->ConstructModel(*root.Model());
 
+    // Verify static model pose is preserved after a new model is constructed
+    EXPECT_EQ(newPose,
+              gz::math::eigen3::convert(
+                  modelStatic->GetLink("link")->FrameDataRelativeToWorld().pose));
+
     auto modelFixed = world->GetModel("sphere_world_fixed");
     ASSERT_NE(nullptr, modelFixed);
     link = modelFixed->GetLink("link");
@@ -491,6 +509,7 @@ TEST_F(FreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticAndFixedModel)
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-  FreeGroupFeaturesTest::init(argc, argv);
+  BaseFreeGroupFeaturesTest::init(argc, argv);
+  NestedFreeGroupFeaturesTest::init(argc, argv);
   return RUN_ALL_TESTS();
 }

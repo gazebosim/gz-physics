@@ -118,13 +118,31 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   auto *m = worldInfo->mjModelObj;
   const auto bodyId = mjs_getId(modelInfo->body->element);
   const auto jntadr = m->body_jntadr[bodyId];
-  if (jntadr < 0)
-    return;
-  const auto qposadr = m->jnt_qposadr[jntadr];
   const Eigen::Quaterniond quat(_pose.rotation());
   const double quatCoeffs[] = {quat.w(), quat.x(), quat.y(), quat.z()};
-  mju_copy3(&d->qpos[qposadr], _pose.translation().data());
-  mju_copy4(&d->qpos[qposadr]+3, quatCoeffs);
+
+  // Bodies in static models have no joints, so their jntadr will be -1. Instead
+  // of modifying a 6DOF joint, we'll set the body's pose directly.
+  if (jntadr < 0)
+  {
+    if (!modelInfo->joints.idToObject.empty())
+      return;
+
+    mju_copy3(&m->body_pos[3 * bodyId], _pose.translation().data());
+    mju_copy4(&m->body_quat[4 * bodyId], quatCoeffs);
+    if (modelInfo->body)
+    {
+      // Also update the spec so we don't lose the new pose after a recompile.
+      mju_copy3(modelInfo->body->pos, _pose.translation().data());
+      mju_copy4(modelInfo->body->quat, quatCoeffs);
+    }
+  }
+  else
+  {
+    const auto qposadr = m->jnt_qposadr[jntadr];
+    mju_copy3(&d->qpos[qposadr], _pose.translation().data());
+    mju_copy4(&d->qpos[qposadr]+3, quatCoeffs);
+  }
   mj_forward(m, d);
 }
 }  // namespace mujoco
