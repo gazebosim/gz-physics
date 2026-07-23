@@ -29,14 +29,12 @@
 1. bullet-featherstone: Fix ghost collisions from nested model removal and add test
     * [Pull request #939](https://github.com/gazebosim/gz-physics/pull/939)
 
-1. bullet-featherstone: Use Bullet shape type enum instead of dynamic_cast in CastTo*Shape
+1. bullet-featherstone: Use Bullet shape type enum instead of dynamic_cast in CastToShape
     * [Pull request #941](https://github.com/gazebosim/gz-physics/pull/941)
 
-1. bullet: Add missing Bazel deps for layering_check on macOS
-    * [Pull request #942](https://github.com/gazebosim/gz-physics/pull/942)
-
 1. Use portable shebang (#!/usr/bin/env bash) for bash scripts
-    * [Pull request #933](https://github.com/gazebosim/gz-physics/pull/933)
+    * [Pull request #933](https://github.com/gazebosim/gz-physics/pull/933)i
+
 1. Fix bullet version warning message
     * [Pull request #924](https://github.com/gazebosim/gz-physics/pull/924)
 
@@ -64,20 +62,11 @@
 1. bullet-featherstone: Fix get contacts
     * [Pull request #838](https://github.com/gazebosim/gz-physics/pull/838)
 
-1. [bazel/infra] Add manual BCR release workflow (#826)
-    * [Pull request #826](https://github.com/gazebosim/gz-physics/pull/826)
-
-1. Manual backport of: Bazel updates: prep for BCR release automation
-    * [Pull request #817](https://github.com/gazebosim/gz-physics/pull/817)
-
 1. bullet-featherstone: Support joint spring stiffness
     * [Pull request #805](https://github.com/gazebosim/gz-physics/pull/805)
 
 1. Relax tolerances for failing tests on arm64
     * [Pull request #806](https://github.com/gazebosim/gz-physics/pull/806)
-
-1. Bazel maintenance updates
-    * [Pull request #801](https://github.com/gazebosim/gz-physics/pull/801)
 
 1. bullet-featherstone: Support ball joint damping
     * [Pull request #797](https://github.com/gazebosim/gz-physics/pull/797)
@@ -92,7 +81,7 @@
     * [Pull request #777](https://github.com/gazebosim/gz-physics/pull/777)
 
 1. Fix crash when recursively deleting nested models (#781)
-    * [Pull request #781) (#784](https://github.com/gazebosim/gz-physics/pull/781)
+    * [Pull request #781](https://github.com/gazebosim/gz-physics/pull/781)
 
 1.  Fix model frame data
     * [Pull request #651](https://github.com/gazebosim/gz-physics/pull/651)
@@ -118,6 +107,11 @@
 1. bullet-featherstone: Fix finding free group for a body with fixed base
     * [Pull request #700](https://github.com/gazebosim/gz-physics/pull/700)
 
+1. Bazel maintenance updates
+    * [Pull request #801](https://github.com/gazebosim/gz-physics/pull/801)
+    * [Pull request #817](https://github.com/gazebosim/gz-physics/pull/817)
+    * [Pull request #826](https://github.com/gazebosim/gz-physics/pull/826)
+    * [Pull request #942](https://github.com/gazebosim/gz-physics/pull/942)
 
 ### Gazebo Physics 8.3.0 (2025-07-25)
 
