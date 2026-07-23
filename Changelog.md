@@ -3,13 +3,13 @@
 ## Gazebo Physics 8.4.0
 
 1. Remove hash map allocation on every update step (backport #1005)
-    * [Pull request #1005) (#1012](https://github.com/gazebosim/gz-physics/pull/1005) (#1012)
+    * [Pull request #1005](https://github.com/gazebosim/gz-physics/pull/1005)
 
 1. Fix building tests when using a custom install location (backport #999)
-    * [Pull request #999) (#1015](https://github.com/gazebosim/gz-physics/pull/999) (#1015)
+    * [Pull request #999](https://github.com/gazebosim/gz-physics/pull/999)
 
-1. Enable/Disable collisions at runtime  (#991)
-    * [Pull request #991) (#994](https://github.com/gazebosim/gz-physics/pull/991) (#994)
+1. Enable/Disable collisions at runtime
+    * [Pull request #991](https://github.com/gazebosim/gz-physics/pull/991)
 
 1. Model: Enable/disable: gravity and static
     * [Pull request #919](https://github.com/gazebosim/gz-physics/pull/919)
@@ -36,8 +36,7 @@
     * [Pull request #942](https://github.com/gazebosim/gz-physics/pull/942)
 
 1. Use portable shebang (#!/usr/bin/env bash) for bash scripts
-    * [Pull request #933](https://github.com/gazebosim/gz-physics/pull/933) #!/usr/bin/env bash for bash scripts (#933)
-
+    * [Pull request #933](https://github.com/gazebosim/gz-physics/pull/933)
 1. Fix bullet version warning message
     * [Pull request #924](https://github.com/gazebosim/gz-physics/pull/924)
 
@@ -66,10 +65,10 @@
     * [Pull request #838](https://github.com/gazebosim/gz-physics/pull/838)
 
 1. [bazel/infra] Add manual BCR release workflow (#826)
-    * [Pull request #826) (#829](https://github.com/gazebosim/gz-physics/pull/826) (#829)
+    * [Pull request #826](https://github.com/gazebosim/gz-physics/pull/826)
 
-1. Manual backport of: Bazel updates: prep for BCR release automation (#817)
-    * [Pull request #817) (#825](https://github.com/gazebosim/gz-physics/pull/817) (#825)
+1. Manual backport of: Bazel updates: prep for BCR release automation
+    * [Pull request #817](https://github.com/gazebosim/gz-physics/pull/817)
 
 1. bullet-featherstone: Support joint spring stiffness
     * [Pull request #805](https://github.com/gazebosim/gz-physics/pull/805)
@@ -93,7 +92,7 @@
     * [Pull request #777](https://github.com/gazebosim/gz-physics/pull/777)
 
 1. Fix crash when recursively deleting nested models (#781)
-    * [Pull request #781) (#784](https://github.com/gazebosim/gz-physics/pull/781) (#784)
+    * [Pull request #781) (#784](https://github.com/gazebosim/gz-physics/pull/781)
 
 1.  Fix model frame data
     * [Pull request #651](https://github.com/gazebosim/gz-physics/pull/651)
@@ -119,8 +118,6 @@
 1. bullet-featherstone: Fix finding free group for a body with fixed base
     * [Pull request #700](https://github.com/gazebosim/gz-physics/pull/700)
 
-1. Update Windows badges in README.md [skip ci]
-    * [Pull request #Update Windows badges in README.md [skip ci]](https://github.com/gazebosim/gz-physics/pull/Update Windows badges in README.md [skip ci])
 
 ### Gazebo Physics 8.3.0 (2025-07-25)
 
