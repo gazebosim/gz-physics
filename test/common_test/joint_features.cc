@@ -1429,16 +1429,11 @@ struct JointFeatureAttachDetachList : gz::physics::FeatureList<
     gz::physics::AttachFixedJointFeature,
     gz::physics::DetachJointFeature,
     gz::physics::ForwardStep,
-    gz::physics::GetBasicJointProperties,
-    gz::physics::GetBasicJointState,
     gz::physics::GetEngineInfo,
-    gz::physics::GetJointFromModel,
     gz::physics::GetLinkFromModel,
     gz::physics::GetModelFromWorld,
     gz::physics::LinkFrameSemantics,
-    gz::physics::SetBasicJointState,
     gz::physics::SetJointTransformFromParentFeature,
-    gz::physics::SetJointVelocityCommandFeature,
     gz::physics::sdf::ConstructSdfModel,
     gz::physics::sdf::ConstructSdfWorld
 > { };
