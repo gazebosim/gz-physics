@@ -1,5 +1,118 @@
 ## Gazebo Physics 8.x
 
+## Gazebo Physics 8.4.0
+
+1. Remove hash map allocation on every update step (backport #1005)
+    * [Pull request #1005](https://github.com/gazebosim/gz-physics/pull/1005)
+
+1. Fix building tests when using a custom install location (backport #999)
+    * [Pull request #999](https://github.com/gazebosim/gz-physics/pull/999)
+
+1. Enable/Disable collisions at runtime
+    * [Pull request #991](https://github.com/gazebosim/gz-physics/pull/991)
+
+1. Model: Enable/disable: gravity and static
+    * [Pull request #919](https://github.com/gazebosim/gz-physics/pull/919)
+
+1. Extract EntityStorage to a shared location so it can be used by other physics engines
+    * [Pull request #894](https://github.com/gazebosim/gz-physics/pull/894)
+
+1. Optimize build: Reduce compiler memory usage by introducing TypeList (Part 2)
+    * [Pull request #953](https://github.com/gazebosim/gz-physics/pull/953)
+
+1. Create BCR PRs as ready for review and automatically when a tag is pushed
+    * [Pull request #962](https://github.com/gazebosim/gz-physics/pull/962)
+
+1. Disable Whole Program Optimization on MSVC
+    * [Pull request #915](https://github.com/gazebosim/gz-physics/pull/915)
+
+1. bullet-featherstone: Fix ghost collisions from nested model removal and add test
+    * [Pull request #939](https://github.com/gazebosim/gz-physics/pull/939)
+
+1. bullet-featherstone: Use Bullet shape type enum instead of dynamic_cast in CastToShape
+    * [Pull request #941](https://github.com/gazebosim/gz-physics/pull/941)
+
+1. Use portable shebang (#!/usr/bin/env bash) for bash scripts
+    * [Pull request #933](https://github.com/gazebosim/gz-physics/pull/933)i
+
+1. Fix bullet version warning message
+    * [Pull request #924](https://github.com/gazebosim/gz-physics/pull/924)
+
+1. Optimize build: Modernize codebase with fold expressions and `std::void_t` (Part 1)
+    * [Pull request #916](https://github.com/gazebosim/gz-physics/pull/916)
+
+1. bullet-featherstone: Fix contact force and depth data
+    * [Pull request #890](https://github.com/gazebosim/gz-physics/pull/890)
+
+1. dartsim: Add support for category bitmask
+    * [Pull request #885](https://github.com/gazebosim/gz-physics/pull/885)
+
+1. bullet-featherstone: Add support for category bitmask
+    * [Pull request #884](https://github.com/gazebosim/gz-physics/pull/884)
+
+1. bullet-feathersone: Add support for collision filtering based on collide bitmasks
+    * [Pull request #804](https://github.com/gazebosim/gz-physics/pull/804)
+
+1. Fix Bullet Featherstone model removal with mimic gear constraints
+    * [Pull request #872](https://github.com/gazebosim/gz-physics/pull/872)
+
+1. Fix segfault in Bullet Featherstone plugin when loading ball joint
+    * [Pull request #868](https://github.com/gazebosim/gz-physics/pull/868)
+
+1. bullet-featherstone: Fix get contacts
+    * [Pull request #838](https://github.com/gazebosim/gz-physics/pull/838)
+
+1. bullet-featherstone: Support joint spring stiffness
+    * [Pull request #805](https://github.com/gazebosim/gz-physics/pull/805)
+
+1. Relax tolerances for failing tests on arm64
+    * [Pull request #806](https://github.com/gazebosim/gz-physics/pull/806)
+
+1. bullet-featherstone: Support ball joint damping
+    * [Pull request #797](https://github.com/gazebosim/gz-physics/pull/797)
+
+1. Update 09_use_custom_engine.md build commands
+    * [Pull request #780](https://github.com/gazebosim/gz-physics/pull/780)
+
+1. Fix spelling in simulation concepts tutorial
+    * [Pull request #778](https://github.com/gazebosim/gz-physics/pull/778)
+
+1. Fix path in physics plugin implementation tutorial
+    * [Pull request #777](https://github.com/gazebosim/gz-physics/pull/777)
+
+1. Fix crash when recursively deleting nested models (#781)
+    * [Pull request #781](https://github.com/gazebosim/gz-physics/pull/781)
+
+1.  Fix model frame data
+    * [Pull request #651](https://github.com/gazebosim/gz-physics/pull/651)
+
+1. bullet-featherstone: Fix joint frame data pose
+    * [Pull request #650](https://github.com/gazebosim/gz-physics/pull/650)
+
+1. bullet-featherstone: Fix model frame data pose
+    * [Pull request #649](https://github.com/gazebosim/gz-physics/pull/649)
+
+1. Add check for valid freegroup link in dartsim
+    * [Pull request #765](https://github.com/gazebosim/gz-physics/pull/765)
+
+1. Add joint damping support in bullet-featherstone plugin
+    * [Pull request #738](https://github.com/gazebosim/gz-physics/pull/738)
+
+1. Suppress -Wreturn-type warning from octomap
+    * [Pull request #728](https://github.com/gazebosim/gz-physics/pull/728)
+
+1. Fix collision checking issues in bullet-featherstone
+    * [Pull request #727](https://github.com/gazebosim/gz-physics/pull/727)
+
+1. bullet-featherstone: Fix finding free group for a body with fixed base
+    * [Pull request #700](https://github.com/gazebosim/gz-physics/pull/700)
+
+1. Bazel maintenance updates
+    * [Pull request #801](https://github.com/gazebosim/gz-physics/pull/801)
+    * [Pull request #817](https://github.com/gazebosim/gz-physics/pull/817)
+    * [Pull request #826](https://github.com/gazebosim/gz-physics/pull/826)
+    * [Pull request #942](https://github.com/gazebosim/gz-physics/pull/942)
+
 ### Gazebo Physics 8.3.0 (2025-07-25)
 
 1. Add support for static physics engine plugins libs
