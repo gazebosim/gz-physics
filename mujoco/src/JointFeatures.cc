@@ -1045,6 +1045,19 @@ Identity JointFeatures::AttachFixedJoint(
   if (requireRecompile)
   {
     worldInfo->specDirty = true;
+    if (worldInfo->mjModelObj)
+    {
+      int b1 = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, childBodyName);
+      int b2 = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, parentBodyName);
+      if (b1 > 0 && b2 > 0 && b1 < worldInfo->mjModelObj->nbody &&
+          b2 < worldInfo->mjModelObj->nbody)
+      {
+        int w1 = worldInfo->mjModelObj->body_weldid[b1];
+        int w2 = worldInfo->mjModelObj->body_weldid[b2];
+        worldInfo->dynamicWeldClusterMap = ComputeWeldExclusions(
+            worldInfo->mjModelObj, worldInfo->mjDataObj, {{w1, w2}});
+      }
+    }
   }
   else
   {
@@ -1122,11 +1135,13 @@ struct Graph
 }  // namespace
 
 /////////////////////////////////////////////////
-std::vector<int> ComputeWeldExclusions(const mjModel *m, const mjData *d)
+std::vector<int> ComputeWeldExclusions(
+    const mjModel *_m, const mjData *_d,
+    const std::vector<std::pair<int, int>> &_extraEdges)
 {
-  std::vector<int> clusterMap(m->nbody, -1);
+  std::vector<int> clusterMap(_m->nbody, -1);
 
-  Graph weldGraph(m->nbody);
+  Graph weldGraph(_m->nbody);
 
   // --------------------------------------------------------------------------
   // Step 1: Build the Weld Graph (Add edges for every welded connection)
@@ -1139,22 +1154,34 @@ std::vector<int> ComputeWeldExclusions(const mjModel *m, const mjData *d)
   // MuJoCo's broadphase inherently drops collisions where weld1 == weld2.
   // Our graph's nodes will represent these `body_weldid`s, not raw body IDs.
 
-  for (int eqId = 0; eqId < m->neq; ++eqId)
+  if (_m && _d)
   {
-    if (m->eq_type[eqId] == mjEQ_WELD && d->eq_active[eqId] == 1)
+    for (int eqId = 0; eqId < _m->neq; ++eqId)
     {
-      int b1 = m->eq_obj1id[eqId];
-      int b2 = m->eq_obj2id[eqId];
-      if (b1 > 0 && b2 > 0 && b1 < m->nbody && b2 < m->nbody)
+      if (_m->eq_type[eqId] == mjEQ_WELD && _d->eq_active[eqId] == 1)
       {
-        int w1 = m->body_weldid[b1];
-        int w2 = m->body_weldid[b2];
-        // Only add edge if they are in different kinematic trees (weld groups)
-        if (w1 != w2)
+        int b1 = _m->eq_obj1id[eqId];
+        int b2 = _m->eq_obj2id[eqId];
+        if (b1 > 0 && b2 > 0 && b1 < _m->nbody && b2 < _m->nbody)
         {
-          weldGraph.AddEdge(w1, w2);
+          int w1 = _m->body_weldid[b1];
+          int w2 = _m->body_weldid[b2];
+          // Only add edge if they are in different kinematic trees
+          // (weld groups)
+          if (w1 != w2)
+          {
+            weldGraph.AddEdge(w1, w2);
+          }
         }
       }
+    }
+  }
+
+  for (const auto &[w1, w2] : _extraEdges)
+  {
+    if (w1 != w2)
+    {
+      weldGraph.AddEdge(w1, w2);
     }
   }
 
