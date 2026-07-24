@@ -20,6 +20,8 @@
 #include <cstddef>
 #include <memory>
 #include <string_view>
+#include <utility>
+#include <vector>
 #include <Eigen/Geometry>
 #include <gz/common/Console.hh>
 #include <gz/math/Helpers.hh>
@@ -878,6 +880,8 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
     this->frames.erase(jointInfo->entityId);
 
     modelInfo->joints.RemoveEntity(jointInfo->name);
+
+    worldInfo->UpdateWeldExclusions();
   }
 }
 
@@ -937,11 +941,11 @@ Identity JointFeatures::AttachFixedJoint(
     gzerr << "Invalid worldInfo or modelInfo when attaching fixed joint.\n";
     return this->GenerateInvalidId();
   }
-  if (modelInfo->joints.HasEntity(_name))
+  std::string uniqueName = _name;
+  std::size_t counter = 1;
+  while (modelInfo->joints.HasEntity(uniqueName))
   {
-    gzerr << "There's already a joint with the same name [ " << _name
-          << " ].\n";
-    return this->GenerateInvalidId();
+    uniqueName = _name + "_" + std::to_string(counter++);
   }
 
   const char *childBodyName
@@ -951,7 +955,7 @@ Identity JointFeatures::AttachFixedJoint(
             ? mjs_getString(mjs_getName(parentLinkInfo->body->element))
             : "";
 
-  const std::string mjJointName = ::sdf::JoinName(modelInfo->name, _name);
+  const std::string mjJointName = ::sdf::JoinName(modelInfo->name, uniqueName);
 
   mjsEquality *eqSpec = mjs_asEquality(mjs_findElement(
       worldInfo->mjSpecObj, mjOBJ_EQUALITY, mjJointName.c_str()));
@@ -1012,7 +1016,7 @@ Identity JointFeatures::AttachFixedJoint(
 
   auto jointInfo =
     std::make_shared<JointInfo>(this->GetNextEntity(), modelInfo);
-  jointInfo->name = _name;
+  jointInfo->name = uniqueName;
   jointInfo->childBody = childLinkInfo->body;
   jointInfo->worldInfo = worldInfo;
   jointInfo->weldConstraintSpec = eqSpec;
@@ -1036,14 +1040,149 @@ Identity JointFeatures::AttachFixedJoint(
   }
 
   modelInfo->joints.AddEntity(
-    jointInfo->entityId, jointInfo, jointInfo->name, modelInfo->entityId);
+    jointInfo->entityId, jointInfo, uniqueName, modelInfo->entityId);
 
   if (requireRecompile)
   {
     worldInfo->specDirty = true;
   }
+  else
+  {
+    worldInfo->UpdateWeldExclusions();
+  }
 
   return this->GenerateIdentity(jointInfo->entityId, jointInfo);
+}
+
+namespace {
+/// \brief A simple graph data structure to encapsulate adjacency lists
+/// and connected component extraction using contiguous memory vectors.
+struct Graph
+{
+  std::vector<std::vector<int>> adj;
+
+  /// \brief Constructor.
+  /// \param[in] _numNodes The number of nodes in the graph.
+  explicit Graph(int _numNodes) : adj(_numNodes)
+  {
+  }
+
+  /// \brief Add an undirected edge between two nodes.
+  /// \param[in] _u First node.
+  /// \param[in] _v Second node.
+  void AddEdge(int _u, int _v)
+  {
+    this->adj[_u].push_back(_v);
+    this->adj[_v].push_back(_u);
+  }
+
+  /// \brief Extract all connected components (clusters) from the graph.
+  /// \return A list of connected components, where each component is a
+  /// vector of node IDs. Isolated nodes are ignored.
+  std::vector<std::vector<int>> GetConnectedComponents() const
+  {
+    std::vector<std::vector<int>> components;
+    std::vector<bool> visited(this->adj.size(), false);
+
+    for (std::size_t i = 1; i < this->adj.size(); ++i)
+    {
+      if (visited[i] || this->adj[i].empty())
+        continue;
+
+      std::vector<int> cluster;
+      std::vector<int> q;
+      q.push_back(i);
+      visited[i] = true;
+
+      std::size_t head = 0;
+      while (head < q.size())
+      {
+        int curr = q[head++];
+        cluster.push_back(curr);
+
+        for (int neighbor : this->adj[curr])
+        {
+          if (!visited[neighbor])
+          {
+            visited[neighbor] = true;
+            q.push_back(neighbor);
+          }
+        }
+      }
+
+      // Only keep clusters with at least 2 bodies to form an excluded pair
+      if (cluster.size() > 1)
+      {
+        components.push_back(std::move(cluster));
+      }
+    }
+    return components;
+  }
+};
+}  // namespace
+
+/////////////////////////////////////////////////
+std::vector<int> ComputeWeldExclusions(const mjModel *m, const mjData *d)
+{
+  std::vector<int> clusterMap(m->nbody, -1);
+
+  Graph weldGraph(m->nbody);
+
+  // --------------------------------------------------------------------------
+  // Step 1: Build the Weld Graph (Add edges for every welded connection)
+  // --------------------------------------------------------------------------
+
+  // We only add edges for dynamic active fixed joints.
+  // We do NOT need to manually traverse kinematic trees because MuJoCo
+  // natively computes them and assigns rigidly connected bodies the exact
+  // same `body_weldid`.
+  // MuJoCo's broadphase inherently drops collisions where weld1 == weld2.
+  // Our graph's nodes will represent these `body_weldid`s, not raw body IDs.
+
+  for (int eqId = 0; eqId < m->neq; ++eqId)
+  {
+    if (m->eq_type[eqId] == mjEQ_WELD && d->eq_active[eqId] == 1)
+    {
+      int b1 = m->eq_obj1id[eqId];
+      int b2 = m->eq_obj2id[eqId];
+      if (b1 > 0 && b2 > 0 && b1 < m->nbody && b2 < m->nbody)
+      {
+        int w1 = m->body_weldid[b1];
+        int w2 = m->body_weldid[b2];
+        // Only add edge if they are in different kinematic trees (weld groups)
+        if (w1 != w2)
+        {
+          weldGraph.AddEdge(w1, w2);
+        }
+      }
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Step 2: Extract Connected Components & Assign Cluster IDs
+  // --------------------------------------------------------------------------
+
+  const auto clusters = weldGraph.GetConnectedComponents();
+
+  for (std::size_t clusterId = 0; clusterId < clusters.size(); ++clusterId)
+  {
+    for (int w : clusters[clusterId])
+    {
+      clusterMap[w] = static_cast<int>(clusterId);
+    }
+  }
+
+  return clusterMap;
+}
+
+/////////////////////////////////////////////////
+void WorldInfo::UpdateWeldExclusions()
+{
+  if (!this->mjModelObj)
+    return;
+
+  this->dynamicWeldClusterMap =
+      ComputeWeldExclusions(this->mjModelObj, this->mjDataObj);
 }
 
 }  // namespace mujoco
