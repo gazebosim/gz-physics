@@ -862,11 +862,11 @@ Identity JointFeatures::AttachFixedJoint(
     gzerr << "Invalid worldInfo or modelInfo when attaching fixed joint.\n";
     return this->GenerateInvalidId();
   }
-  if (modelInfo->joints.HasEntity(_name))
+  std::string uniqueName = _name;
+  std::size_t counter = 1;
+  while (modelInfo->joints.HasEntity(uniqueName))
   {
-    gzerr << "There's already a joint with the same name [ " << _name
-          << " ].\n";
-    return this->GenerateInvalidId();
+    uniqueName = _name + "_" + std::to_string(counter++);
   }
 
   const char *childBodyName
@@ -876,7 +876,7 @@ Identity JointFeatures::AttachFixedJoint(
             ? mjs_getString(mjs_getName(parentLinkInfo->body->element))
             : "";
 
-  const std::string mjJointName = ::sdf::JoinName(modelInfo->name, _name);
+  const std::string mjJointName = ::sdf::JoinName(modelInfo->name, uniqueName);
 
   mjsEquality *eqSpec = mjs_asEquality(mjs_findElement(
       worldInfo->mjSpecObj, mjOBJ_EQUALITY, mjJointName.c_str()));
@@ -937,7 +937,7 @@ Identity JointFeatures::AttachFixedJoint(
 
   auto jointInfo =
     std::make_shared<JointInfo>(this->GetNextEntity(), modelInfo);
-  jointInfo->name = _name;
+  jointInfo->name = uniqueName;
   jointInfo->childBody = childLinkInfo->body;
   jointInfo->worldInfo = worldInfo;
   jointInfo->weldConstraintSpec = eqSpec;
@@ -961,7 +961,7 @@ Identity JointFeatures::AttachFixedJoint(
   }
 
   modelInfo->joints.AddEntity(
-    jointInfo->entityId, jointInfo, jointInfo->name, modelInfo->entityId);
+    jointInfo->entityId, jointInfo, uniqueName, modelInfo->entityId);
 
   if (requireRecompile)
   {
