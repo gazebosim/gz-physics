@@ -26,6 +26,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <gz/math/AxisAlignedBox.hh>
@@ -36,6 +37,7 @@
 #include <gz/physics/Geometry.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
+#include <gz/physics/mujoco-plugin/Export.hh>
 
 namespace gz
 {
@@ -337,12 +339,14 @@ struct WorldInfo
 
 /// \brief Compute the mapping from body_weldid to dynamic cluster ID based
 /// on current dynamic weld constraints.
-/// \param[in] m The MuJoCo model
-/// \param[in] d The MuJoCo data (used to check which equality constraints are
-/// active)
+/// \param[in] extraEdges Optional list of additional (weld1, weld2) edges
 /// \return Vector of size m->nbody mapping body_weldid to dynamic cluster ID
 /// (-1 if none)
-std::vector<int> ComputeWeldExclusions(const mjModel *m, const mjData *d);
+// Make the symbol visible so that it can be called from a unit test.
+GZ_PHYSICS_MUJOCO_PLUGIN_VISIBLE
+std::vector<int> ComputeWeldExclusions(
+    const mjModel *_m, const mjData *_d,
+    const std::vector<std::pair<int, int>> &_extraEdges = {});
 
 class Base
 {

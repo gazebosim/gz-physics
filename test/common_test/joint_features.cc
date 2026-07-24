@@ -2552,7 +2552,6 @@ using FixedJointFreeGroupFeatureList = gz::physics::FeatureList<
     gz::physics::LinkFrameSemantics,
     gz::physics::SetBasicJointState,
     gz::physics::SetJointTransformFromParentFeature,
-    gz::physics::SetJointVelocityCommandFeature,
     gz::physics::sdf::ConstructSdfModel,
     gz::physics::sdf::ConstructSdfWorld
 >;
@@ -2671,7 +2670,6 @@ using FixedJointWeldFeatureList = gz::physics::FeatureList<
     gz::physics::SetBasicJointState,
     gz::physics::SetFixedJointWeldChildToParentFeature,
     gz::physics::SetJointTransformFromParentFeature,
-    gz::physics::SetJointVelocityCommandFeature,
     gz::physics::sdf::ConstructSdfModel,
     gz::physics::sdf::ConstructSdfWorld
 >;
