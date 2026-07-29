@@ -68,12 +68,32 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   // In MuJoCo, the numerical integrator in mj_step (Stage 24) advances the
   // joint space variables (qpos/qvel) to the new state, but does not recompute
   // the corresponding Cartesian kinematic and frame variables (e.g. xpos,
-  // xipos, site_xpos, cvel, xvel). These are normally computed lazily at the
-  // start of the next step. Synchronizing them here ensures that immediate
-  // downstream state queries (like Link::FrameDataRelativeToWorld) return
-  // accurate, lag-free results for the current timestep.
-  mj_fwdPosition(m, d);
-  mj_fwdVelocity(m, d);
+  // xipos, site_xpos, cvel). These are normally computed lazily at the start of
+  // the next step. Synchronizing them here ensures that immediate downstream
+  // state queries (like Link::FrameDataRelativeToWorld) return accurate,
+  // lag-free results for the current timestep.
+  //
+  // Only these three stages are needed, and calling them directly rather than
+  // mj_fwdPosition/mj_fwdVelocity matters for two reasons:
+  //
+  // 1. Cost. mj_fwdPosition also runs collision detection, builds and
+  //    factorizes the mass matrix, and constructs the constraint set; all of
+  //    that is discarded and recomputed by the next mj_step, so it is pure
+  //    waste. Skipping it removes most of the plugin's per-step overhead.
+  //
+  // 2. Contact consistency. mj_fwdPosition rebuilds the efc arrays through
+  //    mj_makeConstraint, which allocates them on the arena without solving
+  //    them, so GetContactsFromLastStep ended up pairing contacts with
+  //    whatever the arena happened to hold. That surfaces as reported normal
+  //    forces that are negative, which a solved contact can never be.
+  //    Leaving d->contact as mj_step solved it keeps every reported contact
+  //    paired with the force that produced it. The trade-off is that contacts
+  //    now describe the pose the solver used, at the start of the step,
+  //    rather than the pose reached after integration, so contact sets change
+  //    one step later than before both on touchdown and on separation.
+  mj_kinematics(m, d);  // xpos, xquat, xipos, ximat, geom_xpos, site_xpos/xmat
+  mj_comPos(m, d);      // subtree_com, cdof, cinert
+  mj_comVel(m, d);      // cvel, needed by mj_objectVelocity
 
   // Clear joint control forces so that they are not applied in the next
   // timestep, which is the expected behavior in Gazebo.
