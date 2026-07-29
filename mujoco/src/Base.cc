@@ -17,6 +17,11 @@
 
 #include "Base.hh"
 
+#include <charconv>
+#include <cstdlib>
+#include <string_view>
+#include <system_error>
+
 #include <gz/common/Console.hh>
 #include <gz/physics/Implements.hh>
 #include <sdf/Types.hh>
@@ -117,20 +122,64 @@ void resolveJointIndices(WorldInfo &_worldInfo)
 }
 }
 
+int ReadThreadPoolSizeFromEnv()
+{
+  const char *envValue = std::getenv("GZ_PHYSICS_MUJOCO_THREADS");
+  if (nullptr == envValue || '\0' == envValue[0])
+    return 0;
+
+  const std::string_view text{envValue};
+  int parsed = 0;
+  const auto result =
+      std::from_chars(text.data(), text.data() + text.size(), parsed);
+
+  // from_chars reports overflow and non-numeric input through ec; a ptr short
+  // of the end means trailing junk such as "4x".
+  if (std::errc{} != result.ec || result.ptr != text.data() + text.size() ||
+      parsed < 0)
+  {
+    gzwarn << "Ignoring GZ_PHYSICS_MUJOCO_THREADS='" << envValue
+           << "'. Expected a non-negative integer. MuJoCo threading is "
+              "disabled.\n";
+    return 0;
+  }
+
+  return parsed;
+}
+
+void SetThreadPool(WorldInfo &_worldInfo, int _nthread)
+{
+  if (nullptr == _worldInfo.mjDataObj)
+    return;
+
+  // mju_threadpool already treats 0 as "destroy the pool" and a request for
+  // the current size as a no-op, so no extra bookkeeping is needed here.
+  mju_threadpool(_worldInfo.mjDataObj, _nthread);
+}
+
 bool Base::RecompileSpec(WorldInfo &_worldInfo) const
 {
   if (!_worldInfo.specDirty)
     return true;
+
+  // mj_recompile reallocates mjData through mj_makeRawData, which zeroes
+  // mjData::threadpool without destroying the pool. Tear the pool down first
+  // so its worker threads are joined instead of orphaned.
+  SetThreadPool(_worldInfo, 0);
 
   int rc = mj_recompile(_worldInfo.mjSpecObj, nullptr, _worldInfo.mjModelObj,
                         _worldInfo.mjDataObj);
   _worldInfo.specDirty = false;
 
   if (rc != 0) {
+    // On failure mj_recompile has already deleted mjDataObj, so there is
+    // nothing to reinstall the pool onto.
     std::cerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj)
               << "\n";
     return false;
   }
+
+  SetThreadPool(_worldInfo, _worldInfo.threadPoolSize);
 
   // Ensure prevBodyPoses is sized correctly for the new model
   _worldInfo.prevBodyPoses.clear();

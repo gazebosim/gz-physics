@@ -313,7 +313,31 @@ struct WorldInfo
   /// The cache is invalidated right before mj_step in
   /// SimulationFeatures::WorldForwardStep
   std::vector<std::optional<Eigen::Vector3d>> ballJointPositionsCache{};
+
+  /// \brief Number of MuJoCo worker threads used by this world. 0 disables
+  /// threading, which is the default. Set once at world construction from
+  /// the GZ_PHYSICS_MUJOCO_THREADS environment variable.
+  int threadPoolSize{0};
 };
+
+/// \brief Read the requested MuJoCo worker thread count from the
+/// GZ_PHYSICS_MUJOCO_THREADS environment variable.
+/// \return The requested thread count, or 0 if the variable is unset, empty
+/// or cannot be parsed as a non-negative integer. Unparseable values produce
+/// a warning.
+int ReadThreadPoolSizeFromEnv();
+
+/// \brief Install or tear down the MuJoCo thread pool on a world's mjData.
+/// \param[in, out] _worldInfo World whose mjData is targeted. Does nothing if
+/// the world has no mjData.
+/// \param[in] _nthread Number of worker threads. 0 tears the pool down.
+///
+/// mj_makeRawData, which mj_recompile reaches through mjCModel::MakeData,
+/// zeroes mjData::threadpool without destroying the pool it points at. The
+/// pool must therefore be torn down before a recompile and reinstalled
+/// afterwards, otherwise its worker threads are orphaned and stepping
+/// silently falls back to a single thread.
+void SetThreadPool(WorldInfo &_worldInfo, int _nthread);
 
 class Base
 {

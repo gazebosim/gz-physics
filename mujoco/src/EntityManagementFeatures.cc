@@ -105,6 +105,12 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
   worldInfo->mjDataObj = mj_makeData(worldInfo->mjModelObj);
   worldInfo->body = mjs_findBody(spec, "world");
 
+  // Opt-in MuJoCo threading. Unset or 0 leaves the pool uncreated, which is
+  // the default and matches the unthreaded behavior exactly. The pool is
+  // reinstalled after every recompile; see SetThreadPool.
+  worldInfo->threadPoolSize = ReadThreadPoolSizeFromEnv();
+  SetThreadPool(*worldInfo, worldInfo->threadPoolSize);
+
   // We record the name of the world, but we don't change the name in the
   // worldbody so that it is easy to find it with mjs_findBody(s, "world")
   // elsewhere.
