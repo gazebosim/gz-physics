@@ -103,8 +103,20 @@ void SimulationFeatures::UpdateVelocityServoGains(WorldInfo &_worldInfo)
       const int jointId = m->actuator_trnid[i * 2];
       const int dofIndex = m->jnt_dofadr[jointId];
 
-      // Extract effective inertia for this DOF
-      const double J = d->qM[m->dof_Madr[dofIndex]];
+      // Extract effective diagonal inertia for this DOF.
+      // The Matrix M in MuJoCo is represented in a compressed sparse row (CSR)
+      // format.
+      double J = 0.0;
+      const int rowStart = m->M_rowadr[dofIndex];
+      const int rowNnz = m->M_rownnz[dofIndex];
+      for (int k = 0; k < rowNnz; ++k)
+      {
+        if (m->M_colind[rowStart + k] == dofIndex)
+        {
+          J = d->M[rowStart + k];
+          break;
+        }
+      }
 
       // The time constant for the velocity servo controller as a fraction of
       // the timestep (5%).
