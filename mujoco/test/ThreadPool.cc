@@ -375,9 +375,8 @@ TEST(ThreadPoolBenchmark, ReportSpeedup)
               << ratio(rawBaseline, rawElapsed) << "x\n";
   }
 
-  std::cout << "\n  The gap between the two speedup columns is gz-physics"
-               " per-step overhead:\n"
-               "  mj_fwdPosition/mj_fwdVelocity plus a per-link pose sweep,"
-               " all serial.\n"
+  std::cout << "\n  The gap between the two columns is gz-physics per-step"
+               " overhead: the post-step\n"
+               "  kinematics sync plus a per-link pose sweep, all serial.\n"
             << std::endl;
 }
