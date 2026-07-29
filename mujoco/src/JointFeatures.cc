@@ -38,7 +38,7 @@ namespace mujoco {
 
 namespace  {
 
-void setActuatorMode(mjModel *_m, mjData *_d, int _actuatorId, bool _isVelocity)
+void setActuatorMode(mjModel *_m, int _actuatorId, bool _isVelocity)
 {
   const mjtBias targetBias = _isVelocity ? mjBIAS_AFFINE : mjBIAS_NONE;
 
@@ -503,10 +503,8 @@ void JointFeatures::SetJointForce(
     return;
   }
 
-  auto *m = jointInfo->worldInfo->mjModelObj;
-  auto *d = jointInfo->worldInfo->mjDataObj;
   const int actuatorId = ctrlIndex + static_cast<int>(_dof);
-  setActuatorMode(m, d, actuatorId, false);
+  setActuatorMode(jointInfo->worldInfo->mjModelObj, actuatorId, false);
 
   jointInfo->worldInfo->mjDataObj->ctrl[ctrlIndex + _dof] = _value;
 }
@@ -550,11 +548,8 @@ void JointFeatures::SetJointVelocityCommand(
     return;
   }
 
-  auto *m = jointInfo->worldInfo->mjModelObj;
-  auto *d = jointInfo->worldInfo->mjDataObj;
   const int actuatorId = ctrlIndex + static_cast<int>(_dof);
-
-  setActuatorMode(m, d, actuatorId, true);
+  setActuatorMode(jointInfo->worldInfo->mjModelObj, actuatorId, true);
 
   jointInfo->worldInfo->mjDataObj->ctrl[actuatorId] = _value;
 }
