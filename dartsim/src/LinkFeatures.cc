@@ -18,6 +18,8 @@
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 
+#include <gz/common/Profiler.hh>
+
 #include "LinkFeatures.hh"
 
 namespace gz {
@@ -29,6 +31,7 @@ void LinkFeatures::AddLinkExternalForceInWorld(
     const Identity &_id, const LinearVectorType &_force,
     const LinearVectorType &_position)
 {
+  GZ_PROFILE("LinkFeatures::AddLinkExternalForceInWorld");
   auto bn = this->ReferenceInterface<LinkInfo>(_id)->link;
   bn->addExtForce(_force, _position, false, false);
 }
@@ -37,6 +40,7 @@ void LinkFeatures::AddLinkExternalForceInWorld(
 void LinkFeatures::AddLinkExternalTorqueInWorld(
     const Identity &_id, const AngularVectorType &_torque)
 {
+  GZ_PROFILE("LinkFeatures::AddLinkExternalTorqueInWorld");
   auto bn = this->ReferenceInterface<LinkInfo>(_id)->link;
   bn->addExtTorque(_torque, false);
 }
@@ -44,6 +48,7 @@ void LinkFeatures::AddLinkExternalTorqueInWorld(
 /////////////////////////////////////////////////
 void LinkFeatures::SetLinkGravityEnabled(const Identity &_id, bool _enabled)
 {
+  GZ_PROFILE("LinkFeatures::SetLinkGravityEnabled");
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_id);
   this->SetLinkGravityMode(linkInfo, _enabled);
 }
@@ -51,6 +56,7 @@ void LinkFeatures::SetLinkGravityEnabled(const Identity &_id, bool _enabled)
 /////////////////////////////////////////////////
 bool LinkFeatures::GetLinkGravityEnabled(const Identity &_id) const
 {
+  GZ_PROFILE("LinkFeatures::GetLinkGravityEnabled");
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_id);
   return this->GetLinkGravityMode(linkInfo);
 }
