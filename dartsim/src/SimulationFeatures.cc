@@ -166,8 +166,6 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
   _changedPoses.entries.clear();
   _changedPoses.entries.reserve(this->links.size());
 
-  std::unordered_map<std::size_t, math::Pose3d> newPoses;
-
   for (const auto &[id, info] : this->links.idToObject)
   {
     // make sure the link exists
@@ -180,23 +178,15 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 
       // If the link's pose is new or has changed, save this new pose and
       // add it to the output poses. Otherwise, keep the existing link pose
-      auto iter = this->prevLinkPoses.find(id);
-      if ((iter == this->prevLinkPoses.end()) ||
-          !iter->second.Pos().Equal(wp.pose.Pos(), 1e-6) ||
-          !iter->second.Rot().Equal(wp.pose.Rot(), 1e-6))
+      if (!info->prevPose.has_value() ||
+          !info->prevPose->Pos().Equal(wp.pose.Pos(), 1e-6) ||
+          !info->prevPose->Rot().Equal(wp.pose.Rot(), 1e-6))
       {
         _changedPoses.entries.push_back(wp);
-        newPoses[id] = wp.pose;
+        info->prevPose = wp.pose;
       }
-      else
-        newPoses[id] = iter->second;
     }
   }
-
-  // Save the new poses so that they can be used to check for updates in the
-  // next iteration. Re-setting this->prevLinkPoses with the contents of
-  // newPoses ensures that we aren't caching data for links that were removed
-  this->prevLinkPoses = std::move(newPoses);
 }
 
 SimulationFeatures::RayIntersection
