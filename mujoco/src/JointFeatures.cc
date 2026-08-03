@@ -1068,7 +1068,7 @@ std::vector<int> ComputeWeldExclusions(
   DisjointSet dsu(_m->nbody);
 
   auto addEdge = [&](int b1, int b2) {
-    if (b1 > 0 && b2 > 0 && b1 < _m->nbody && b2 < _m->nbody)
+    if (b1 >= 0 && b2 >= 0 && b1 < _m->nbody && b2 < _m->nbody)
     {
       int w1 = _m->body_weldid[b1];
       int w2 = _m->body_weldid[b2];
@@ -1089,7 +1089,7 @@ std::vector<int> ComputeWeldExclusions(
 
   for (const auto &[w1, w2] : _extraEdges)
   {
-    if (w1 > 0 && w2 > 0 && w1 < _m->nbody && w2 < _m->nbody && w1 != w2)
+    if (w1 >= 0 && w2 >= 0 && w1 < _m->nbody && w2 < _m->nbody && w1 != w2)
     {
       dsu.Union(w1, w2);
     }
@@ -1107,7 +1107,7 @@ std::vector<int> ComputeWeldExclusions(
   int nextClusterId = 0;
 
   auto assignCluster = [&](int b) {
-    if (b > 0 && b < _m->nbody)
+    if (b >= 0 && b < _m->nbody)
     {
       int w = _m->body_weldid[b];
       if (dsu.WeldCount(w) > 1)

@@ -49,7 +49,74 @@ struct TestFeatures: public gz::physics::FeatureList<
 using WorldPtr = gz::physics::World3dPtr<TestFeatures>;
 
 /////////////////////////////////////////////////
-TEST(WeldExclusionsTest, DynamicWeldConnectedComponents)
+class WeldExclusionsTest : public ::testing::Test
+{
+  protected: void SetUp() override
+  {
+    this->loader.LoadLib(mujoco_plugin_LIB);
+    this->plugin = this->loader.Instantiate("gz::physics::mujoco::Plugin");
+    ASSERT_TRUE(this->plugin);
+    this->engine =
+        gz::physics::RequestEngine3d<TestFeatures>::From(this->plugin);
+    ASSERT_TRUE(this->engine);
+  }
+
+  protected: WorldPtr LoadWorld(const std::string &_sdfString,
+                                WorldInfo **_worldInfo)
+  {
+    sdf::Root root;
+    if (!root.LoadSdfString(_sdfString).empty())
+      return nullptr;
+
+    const sdf::World *sdfWorld = root.WorldByIndex(0);
+    if (!sdfWorld)
+      return nullptr;
+
+    WorldPtr world = this->engine->ConstructWorld(*sdfWorld);
+    if (!world)
+      return nullptr;
+
+    if (_worldInfo)
+    {
+      *_worldInfo =
+          static_cast<WorldInfo *>(world->FullIdentity().ref.get());
+    }
+    return world;
+  }
+
+  protected: gz::physics::Link3dPtr<TestFeatures> GetLink(
+      const WorldPtr &_world, const std::string &_scopedName)
+  {
+    std::size_t pos = _scopedName.find("::");
+    if (pos == std::string::npos)
+      return nullptr;
+    auto model = _world->GetModel(_scopedName.substr(0, pos));
+    if (!model)
+      return nullptr;
+    return model->GetLink(_scopedName.substr(pos + 2));
+  }
+
+  protected: int GetWeldId(WorldInfo *_worldInfo, const std::string &_bodyName)
+  {
+    int b = mj_name2id(_worldInfo->mjModelObj, mjOBJ_BODY, _bodyName.c_str());
+    if (b < 0 || b >= _worldInfo->mjModelObj->nbody)
+      return -1;
+    return _worldInfo->mjModelObj->body_weldid[b];
+  }
+
+  protected: void Recompile(WorldInfo *_worldInfo)
+  {
+    mj_recompile(_worldInfo->mjSpecObj, nullptr, _worldInfo->mjModelObj,
+                 _worldInfo->mjDataObj);
+  }
+
+  private: gz::plugin::Loader loader;
+  private: gz::plugin::PluginPtr plugin;
+  private: gz::physics::Engine3dPtr<TestFeatures> engine;
+};
+
+/////////////////////////////////////////////////
+TEST_F(WeldExclusionsTest, DynamicWeldConnectedComponents)
 {
   const std::string sdfString = R"(
 <?xml version="1.0" ?>
@@ -104,59 +171,24 @@ TEST(WeldExclusionsTest, DynamicWeldConnectedComponents)
 </sdf>
 )";
 
-  gz::plugin::Loader loader;
-  loader.LoadLib(mujoco_plugin_LIB);
-
-  gz::plugin::PluginPtr mujoco =
-      loader.Instantiate("gz::physics::mujoco::Plugin");
-  ASSERT_TRUE(mujoco);
-
-  auto engine = gz::physics::RequestEngine3d<TestFeatures>::From(mujoco);
-  ASSERT_TRUE(engine);
-
-  sdf::Root root;
-  const sdf::Errors errors = root.LoadSdfString(sdfString);
-  ASSERT_TRUE(errors.empty());
-
-  const sdf::World *sdfWorld = root.WorldByIndex(0);
-  ASSERT_NE(nullptr, sdfWorld);
-
-  WorldPtr world = engine->ConstructWorld(*sdfWorld);
+  WorldInfo *worldInfo = nullptr;
+  WorldPtr world = this->LoadWorld(sdfString, &worldInfo);
   ASSERT_NE(nullptr, world);
-
-  auto *worldInfo = static_cast<WorldInfo *>(
-      world->FullIdentity().ref.get());
   ASSERT_NE(nullptr, worldInfo);
-  ASSERT_NE(nullptr, worldInfo->mjModelObj);
-  ASSERT_NE(nullptr, worldInfo->mjDataObj);
 
-  auto m1 = world->GetModel("M1");
-  ASSERT_NE(nullptr, m1);
-  auto m2 = world->GetModel("M2");
-  ASSERT_NE(nullptr, m2);
-
-  auto link1A = m1->GetLink("link1A");
-  auto link1B = m1->GetLink("link1B");
-  auto link1C = m1->GetLink("link1C");
-  auto link2A = m2->GetLink("link2A");
-  auto link2B = m2->GetLink("link2B");
-  ASSERT_TRUE(link1A && link1B && link1C && link2A && link2B);
+  auto link1B = this->GetLink(world, "M1::link1B");
+  auto link2B = this->GetLink(world, "M2::link2B");
+  ASSERT_TRUE(link1B && link2B);
 
   // Attach M2::link2B to M1::link1B using a dynamic fixed joint
   auto fixedJoint = link2B->AttachFixedJoint(link1B);
   ASSERT_NE(nullptr, fixedJoint);
 
-  int b1A = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, "M1::link1A");
-  int b1B = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, "M1::link1B");
-  int b1C = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, "M1::link1C");
-  int b2A = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, "M2::link2A");
-  int b2B = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, "M2::link2B");
-
-  int w1A = worldInfo->mjModelObj->body_weldid[b1A];
-  int w1B = worldInfo->mjModelObj->body_weldid[b1B];
-  int w1C = worldInfo->mjModelObj->body_weldid[b1C];
-  int w2A = worldInfo->mjModelObj->body_weldid[b2A];
-  int w2B = worldInfo->mjModelObj->body_weldid[b2B];
+  int w1A = this->GetWeldId(worldInfo, "M1::link1A");
+  int w1B = this->GetWeldId(worldInfo, "M1::link1B");
+  int w1C = this->GetWeldId(worldInfo, "M1::link1C");
+  int w2A = this->GetWeldId(worldInfo, "M2::link2A");
+  int w2B = this->GetWeldId(worldInfo, "M2::link2B");
 
   // Verify MuJoCo's native body_weldid mapping:
   // Fixed child link1B has the same weldid as its parent link1A.
@@ -165,14 +197,9 @@ TEST(WeldExclusionsTest, DynamicWeldConnectedComponents)
   // Non-fixed child link1C has a unique weldid (terminates rigid tree).
   EXPECT_NE(w1A, w1C);
 
-  auto recompile = [&]() {
-    mj_recompile(worldInfo->mjSpecObj, nullptr, worldInfo->mjModelObj,
-                 worldInfo->mjDataObj);
-  };
-
   // When dynamic weld constraint is active:
   // Tree 1 (link1A, link1B) and Tree 2 (link2A, link2B) are merged into one.
-  recompile();
+  this->Recompile(worldInfo);
   auto clusterMap =
       ComputeWeldExclusions(worldInfo->mjModelObj, worldInfo->mjDataObj);
   EXPECT_NE(-1, clusterMap[w1A]);
@@ -182,11 +209,214 @@ TEST(WeldExclusionsTest, DynamicWeldConnectedComponents)
 
   // Detach dynamic weld constraint:
   fixedJoint->Detach();
-  recompile();
+  this->Recompile(worldInfo);
   clusterMap =
       ComputeWeldExclusions(worldInfo->mjModelObj, worldInfo->mjDataObj);
 
   // Cross-tree bodies are no longer in an active dynamic cluster.
   EXPECT_EQ(-1, clusterMap[w1A]);
   EXPECT_EQ(-1, clusterMap[w2A]);
+}
+
+/////////////////////////////////////////////////
+TEST_F(WeldExclusionsTest, DynamicWeldMultipleClusters)
+{
+  const std::string sdfString = R"(
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="multiple_clusters_world">
+    <model name="MA"><link name="lA"/></model>
+    <model name="MB"><link name="lB"/></model>
+    <model name="MC"><link name="lC"/></model>
+    <model name="MD"><link name="lD"/></model>
+  </world>
+</sdf>
+)";
+
+  WorldInfo *worldInfo = nullptr;
+  WorldPtr world = this->LoadWorld(sdfString, &worldInfo);
+  ASSERT_NE(nullptr, world);
+  ASSERT_NE(nullptr, worldInfo);
+
+  auto linkA = this->GetLink(world, "MA::lA");
+  auto linkB = this->GetLink(world, "MB::lB");
+  auto linkC = this->GetLink(world, "MC::lC");
+  auto linkD = this->GetLink(world, "MD::lD");
+  ASSERT_TRUE(linkA && linkB && linkC && linkD);
+
+  // Cluster 1: A attached to B
+  linkA->AttachFixedJoint(linkB);
+  // Cluster 2: C attached to D
+  linkC->AttachFixedJoint(linkD);
+
+  this->Recompile(worldInfo);
+
+  int wA = this->GetWeldId(worldInfo, "MA::lA");
+  int wB = this->GetWeldId(worldInfo, "MB::lB");
+  int wC = this->GetWeldId(worldInfo, "MC::lC");
+  int wD = this->GetWeldId(worldInfo, "MD::lD");
+
+  auto clusterMap =
+      ComputeWeldExclusions(worldInfo->mjModelObj, worldInfo->mjDataObj);
+
+  // Cluster 1: A and B are in the same cluster
+  EXPECT_NE(-1, clusterMap[wA]);
+  EXPECT_EQ(clusterMap[wA], clusterMap[wB]);
+
+  // Cluster 2: C and D are in the same cluster
+  EXPECT_NE(-1, clusterMap[wC]);
+  EXPECT_EQ(clusterMap[wC], clusterMap[wD]);
+
+  // Cluster 1 and Cluster 2 are distinct
+  EXPECT_NE(clusterMap[wA], clusterMap[wC]);
+}
+
+/////////////////////////////////////////////////
+TEST_F(WeldExclusionsTest, DynamicWeldChainedClusters)
+{
+  const std::string sdfString = R"(
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="chained_clusters_world">
+    <model name="MA"><link name="lA"/></model>
+    <model name="MB"><link name="lB"/></model>
+    <model name="MC"><link name="lC"/></model>
+  </world>
+</sdf>
+)";
+
+  WorldInfo *worldInfo = nullptr;
+  WorldPtr world = this->LoadWorld(sdfString, &worldInfo);
+  ASSERT_NE(nullptr, world);
+  ASSERT_NE(nullptr, worldInfo);
+
+  auto linkA = this->GetLink(world, "MA::lA");
+  auto linkB = this->GetLink(world, "MB::lB");
+  auto linkC = this->GetLink(world, "MC::lC");
+  ASSERT_TRUE(linkA && linkB && linkC);
+
+  // Chain: A -> B -> C
+  linkA->AttachFixedJoint(linkB);
+  linkB->AttachFixedJoint(linkC);
+
+  this->Recompile(worldInfo);
+
+  int wA = this->GetWeldId(worldInfo, "MA::lA");
+  int wB = this->GetWeldId(worldInfo, "MB::lB");
+  int wC = this->GetWeldId(worldInfo, "MC::lC");
+
+  auto clusterMap =
+      ComputeWeldExclusions(worldInfo->mjModelObj, worldInfo->mjDataObj);
+
+  // All 3 models should belong to the exact same cluster
+  EXPECT_NE(-1, clusterMap[wA]);
+  EXPECT_EQ(clusterMap[wA], clusterMap[wB]);
+  EXPECT_EQ(clusterMap[wB], clusterMap[wC]);
+}
+
+/////////////////////////////////////////////////
+TEST_F(WeldExclusionsTest, DynamicWeldLoops)
+{
+  const std::string sdfString = R"(
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="loop_clusters_world">
+    <model name="MA"><link name="lA"/></model>
+    <model name="MB"><link name="lB"/></model>
+    <model name="MC"><link name="lC"/></model>
+  </world>
+</sdf>
+)";
+
+  WorldInfo *worldInfo = nullptr;
+  WorldPtr world = this->LoadWorld(sdfString, &worldInfo);
+  ASSERT_NE(nullptr, world);
+  ASSERT_NE(nullptr, worldInfo);
+
+  auto linkA = this->GetLink(world, "MA::lA");
+  auto linkB = this->GetLink(world, "MB::lB");
+  auto linkC = this->GetLink(world, "MC::lC");
+  ASSERT_TRUE(linkA && linkB && linkC);
+
+  // Loop: A -> B -> C -> A
+  auto jAB = linkA->AttachFixedJoint(linkB);
+  auto jBC = linkB->AttachFixedJoint(linkC);
+  auto jCA = linkC->AttachFixedJoint(linkA);
+
+  this->Recompile(worldInfo);
+
+  int wA = this->GetWeldId(worldInfo, "MA::lA");
+  int wB = this->GetWeldId(worldInfo, "MB::lB");
+  int wC = this->GetWeldId(worldInfo, "MC::lC");
+
+  auto clusterMap =
+      ComputeWeldExclusions(worldInfo->mjModelObj, worldInfo->mjDataObj);
+
+  // All 3 models in the loop share the same cluster
+  EXPECT_NE(-1, clusterMap[wA]);
+  EXPECT_EQ(clusterMap[wA], clusterMap[wB]);
+  EXPECT_EQ(clusterMap[wB], clusterMap[wC]);
+
+  // Break the loop (detach C->A).
+  // The remaining chain A->B->C keeps all 3 connected.
+  jCA->Detach();
+  this->Recompile(worldInfo);
+  clusterMap =
+      ComputeWeldExclusions(worldInfo->mjModelObj, worldInfo->mjDataObj);
+
+  EXPECT_NE(-1, clusterMap[wA]);
+  EXPECT_EQ(clusterMap[wA], clusterMap[wB]);
+  EXPECT_EQ(clusterMap[wB], clusterMap[wC]);
+
+  // Detach remaining joints. Now no connections remain.
+  jBC->Detach();
+  jAB->Detach();
+  this->Recompile(worldInfo);
+  clusterMap =
+      ComputeWeldExclusions(worldInfo->mjModelObj, worldInfo->mjDataObj);
+
+  EXPECT_EQ(-1, clusterMap[wA]);
+  EXPECT_EQ(-1, clusterMap[wB]);
+  EXPECT_EQ(-1, clusterMap[wC]);
+}
+
+/////////////////////////////////////////////////
+TEST_F(WeldExclusionsTest, DynamicWeldWorldBody)
+{
+  const std::string sdfString = R"(
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="world_body_weld_world">
+    <model name="MA"><link name="lA"/></model>
+    <model name="MB"><link name="lB"/></model>
+  </world>
+</sdf>
+)";
+
+  WorldInfo *worldInfo = nullptr;
+  WorldPtr world = this->LoadWorld(sdfString, &worldInfo);
+  ASSERT_NE(nullptr, world);
+  ASSERT_NE(nullptr, worldInfo);
+
+  auto linkA = this->GetLink(world, "MA::lA");
+  auto linkB = this->GetLink(world, "MB::lB");
+  ASSERT_TRUE(linkA && linkB);
+
+  // Attach linkA and linkB to worldBody (nullptr parent)
+  linkA->AttachFixedJoint(nullptr);
+  linkB->AttachFixedJoint(nullptr);
+
+  this->Recompile(worldInfo);
+
+  int wA = this->GetWeldId(worldInfo, "MA::lA");
+  int wB = this->GetWeldId(worldInfo, "MB::lB");
+  int wWorld = worldInfo->mjModelObj->body_weldid[0];  // worldBody
+
+  auto clusterMap =
+      ComputeWeldExclusions(worldInfo->mjModelObj, worldInfo->mjDataObj);
+
+  // Both models attached to world should belong to the same world cluster
+  EXPECT_NE(-1, clusterMap[wA]);
+  EXPECT_EQ(clusterMap[wA], clusterMap[wB]);
+  EXPECT_EQ(clusterMap[wA], clusterMap[wWorld]);
 }
