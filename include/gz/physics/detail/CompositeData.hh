@@ -20,7 +20,6 @@
 
 #include <memory>
 #include <utility>
-#include <typeindex>
 
 #include <gz/utils/SuppressWarning.hh>
 
@@ -93,7 +92,7 @@ namespace gz
       {
         bool inserted = false;
         const CompositeData::MapOfData::iterator it = _dataMap.insert(
-              std::make_pair(std::type_index(typeid(Data)),
+              std::make_pair(typeid(Data).name(),
                              CompositeData::DataEntry())).first;
 
         if (!it->second.data)
@@ -122,7 +121,7 @@ namespace gz
     Data &CompositeData::Get()
     {
       const MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(std::type_index(typeid(Data)), DataEntry())).first;
+            std::make_pair(typeid(Data).name(), DataEntry())).first;
 
       if (!it->second.data)
       {
@@ -158,7 +157,7 @@ namespace gz
     bool CompositeData::Remove()
     {
       const MapOfData::iterator it =
-          this->dataMap.find(std::type_index(typeid(Data)));
+          this->dataMap.find(typeid(Data).name());
 
       if (this->dataMap.end() == it || !it->second.data)
         return true;
@@ -184,7 +183,7 @@ namespace gz
     Data *CompositeData::Query(const QueryMode _mode)
     {
       const MapOfData::const_iterator it =
-          this->dataMap.find(std::type_index(typeid(Data)));
+          this->dataMap.find(typeid(Data).name());
 
       if (this->dataMap.end() == it)
         return nullptr;
@@ -203,7 +202,7 @@ namespace gz
     const Data *CompositeData::Query(const QueryMode _mode) const
     {
       const MapOfData::const_iterator it =
-          this->dataMap.find(std::type_index(typeid(Data)));
+          this->dataMap.find(typeid(Data).name());
 
       if (this->dataMap.end() == it)
         return nullptr;
@@ -232,7 +231,7 @@ namespace gz
       DataStatus status;
 
       const MapOfData::const_iterator it =
-          this->dataMap.find(std::type_index(typeid(Data)));
+          this->dataMap.find(typeid(Data).name());
 
       if (this->dataMap.end() == it)
         return status;
@@ -252,7 +251,7 @@ namespace gz
     bool CompositeData::Unquery() const
     {
       const MapOfData::const_iterator it =
-          this->dataMap.find(std::type_index(typeid(Data)));
+          this->dataMap.find(typeid(Data).name());
 
       if (this->dataMap.end() == it)
         return false;
@@ -274,7 +273,7 @@ namespace gz
     Data &CompositeData::MakeRequired(Args &&..._args)
     {
       const MapOfData::iterator it = this->dataMap.insert(
-            std::make_pair(std::type_index(typeid(Data)), DataEntry())).first;
+            std::make_pair(typeid(Data).name(), DataEntry())).first;
 
       it->second.required = true;
       if (!it->second.data)
@@ -294,7 +293,7 @@ namespace gz
     bool CompositeData::Requires() const
     {
       const MapOfData::const_iterator it =
-          this->dataMap.find(std::type_index(typeid(Data)));
+          this->dataMap.find(typeid(Data).name());
 
       if (this->dataMap.end() == it)
         return false;

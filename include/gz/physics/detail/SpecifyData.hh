@@ -21,7 +21,6 @@
 #include <memory>
 #include <utility>
 #include <iostream>
-#include <typeindex>
 
 #include "gz/physics/SpecifyData.hh"
 
@@ -35,7 +34,7 @@ namespace gz
       : CompositeData(),
         privateExpectData(
           this->dataMap.insert(
-            std::make_pair(std::type_index(typeid(Expected)),
+            std::make_pair(typeid(Expected).name(),
                            CompositeData::DataEntry())).first)
     {
       // Do nothing
