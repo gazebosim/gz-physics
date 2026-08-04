@@ -193,8 +193,7 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
     UserDataHeader header;
     header.magic = kUserDataMagicNumber;
     header.worldInfo = &_worldInfo;
-    std::memcpy(_worldInfo.mjDataObj->userdata, &header,
-                sizeof(UserDataHeader));
+    std::memcpy(_worldInfo.mjDataObj->userdata, &header, sizeof(header));
   }
 
   mjcb_contactfilter = ContactFilterCallback;
