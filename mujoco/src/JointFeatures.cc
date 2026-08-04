@@ -973,9 +973,9 @@ Identity JointFeatures::AttachFixedJoint(
     worldInfo->specDirty = true;
     if (worldInfo->mjModelObj)
     {
-      int b1 = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, childBodyName);
-      int b2 = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, parentBodyName);
-      if (b1 > 0 && b2 > 0 && b1 < worldInfo->mjModelObj->nbody &&
+      int b1 = mjs_getId(childLinkInfo->body->element);
+      int b2 = parentLinkInfo ? mjs_getId(parentLinkInfo->body->element) : 0;
+      if (b1 >= 0 && b2 >= 0 && b1 < worldInfo->mjModelObj->nbody &&
           b2 < worldInfo->mjModelObj->nbody)
       {
         int w1 = worldInfo->mjModelObj->body_weldid[b1];
