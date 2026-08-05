@@ -739,16 +739,25 @@ struct ModelKinematicStructure
           }
         }
 
-       uint16_t contype = contypeOpt.value_or(conaffinity);
+        uint16_t contype = contypeOpt.value_or(conaffinity);
         geom->contype = static_cast<int>(contype);
         geom->conaffinity = static_cast<int>(conaffinity);
 
         if (mu.has_value())
           geom->friction[0] = mu.value();
         if (spinningFriction.has_value())
+        {
+          // set condim (contact dimensionality) to enable spinning
+          // (torsional) friction
+	  geom->condim = std::max(geom->condim, 4);
           geom->friction[1] = spinningFriction.value();
+        }
         if (rollingFriction.has_value())
+        {
+          // set condim (contact dimensionality) to enable rolling friction
+	  geom->condim = 6;
           geom->friction[2] = rollingFriction.value();
+        }
 
         mjs_setName(geom->element,
                     ::sdf::JoinName(body_name, collision->Name()).c_str());
