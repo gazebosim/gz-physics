@@ -963,13 +963,13 @@ struct ModelKinematicStructure
         {
           // set condim (contact dimensionality) to enable spinning
           // (torsional) friction
-	  geom->condim = std::max(geom->condim, 4);
+          geom->condim = std::max(geom->condim, 4);
           geom->friction[1] = spinningFriction.value();
         }
         if (rollingFriction.has_value())
         {
           // set condim (contact dimensionality) to enable rolling friction
-	  geom->condim = 6;
+          geom->condim = 6;
           geom->friction[2] = rollingFriction.value();
         }
 
