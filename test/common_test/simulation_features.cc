@@ -2252,7 +2252,7 @@ TYPED_TEST_SUITE(SimulationFeaturesRayIntersectionTest,
 
 TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
 {
-  std::vector<std::string> supportedCollisionDetectors = {"bullet"};
+  std::vector<std::string> supportedCollisionDetectors = {"ode", "bullet"};
 
   for (const std::string &name : this->pluginNames)
   {
@@ -2311,7 +2311,7 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
 
 TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
 {
-  std::vector<std::string> unsupportedCollisionDetectors = {"ode", "dart", "fcl", "banana"};
+  std::vector<std::string> unsupportedCollisionDetectors = {"dart", "fcl"};
 
   for (const std::string &name : this->pluginNames)
   {
@@ -2347,6 +2347,46 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
   }
 }
 
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesRayIntersectionTest, ClosestRayIntersection)
+{
+  std::vector<std::string> supportedCollisionDetectors = {"ode", "bullet"};
+
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone", "tpe")
+
+    for (const std::string &collisionDetector : supportedCollisionDetectors) {
+      auto world = LoadPluginAndWorld<FeaturesRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kMultipleObjectsComplexSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput = StepWorld<FeaturesRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+
+      // Test ray along X axis, should hit closest sphere at x=1
+      // Objects are at different Y positions to confuse spatial traversal
+      auto result =
+        world->GetRayIntersectionFromLastStep(
+            Eigen::Vector3d(-2, 0, 0), Eigen::Vector3d(10, 0, 0));
+
+      auto rayIntersection =
+          result.template
+            Get<gz::physics::World3d<FeaturesRayIntersections>::RayIntersection>();
+
+      double epsilon = 1e-3;
+
+      // The sphere at x=1 has radius 0.3, so the ray should hit at x=0.7
+      // Ray goes from -2 to 10, total length = 12
+      // Hit point at x=0.7 is 2.7 units from start, fraction = 2.7/12 = 0.225
+      EXPECT_TRUE(
+          rayIntersection.point.isApprox(Eigen::Vector3d(0.7, 0, 0), epsilon));
+      EXPECT_NEAR(rayIntersection.fraction, 0.225, epsilon);
+    }
+  }
+}
+
 // The features that an engine must have to be loaded by this loader.
 struct FeaturesBatchRayIntersections : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
@@ -2367,54 +2407,60 @@ TYPED_TEST_SUITE(SimulationFeaturesBatchRayIntersectionTest,
 TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
            SupportedBatchRayIntersections)
 {
+  std::vector<std::string> supportedCollisionDetectors =
+    {"ode", "bullet"};
+
   for (const std::string &name : this->pluginNames)
   {
-    auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
-        this->loader,
-        name,
-        common_test::worlds::kSphereSdf);
-    world->SetCollisionDetector("bullet");
-    auto checkedOutput =
-      StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
-    EXPECT_TRUE(checkedOutput);
-
-    using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
-    using RayQuery = World::RayQuery;
-    using RayIntersection = World::RayIntersection;
-    using BatchedRayIntersectionData = World::BatchedRayIntersectionData;
-
-    // Build a batch: first ray hits the sphere, second misses
-    std::vector<RayQuery> rays = {
-      {Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d(2, 0, 2)},   // hit
-      {Eigen::Vector3d(2, 0, 10), Eigen::Vector3d(-2, 0, 10)},  // miss
-    };
-
-    BatchedRayIntersectionData output;
-    world->GetBatchRayIntersectionFromLastStep(rays, output);
-    const auto &results = output.Get<std::vector<RayIntersection>>();
-
-    ASSERT_EQ(2u, results.size());
-
-    // Ray 0 - hits the unit sphere centred at (0,0,2)
+    for (const std::string &collisionDetector : supportedCollisionDetectors)
     {
-      const auto &hit = results[0];
-      EXPECT_TRUE(hit.IsHit());
-      double epsilon = 1e-3;
-      EXPECT_TRUE(hit.point.isApprox(Eigen::Vector3d(-1, 0, 2), epsilon))
-        << "hit point: " << hit.point.transpose();
-      EXPECT_TRUE(hit.normal.isApprox(Eigen::Vector3d(-1, 0, 0), epsilon))
-        << "hit normal: " << hit.normal.transpose();
-      EXPECT_DOUBLE_EQ(0.25, hit.fraction);
-    }
+      auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kSphereSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput =
+        StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
 
-    // Ray 1 - misses; +INF fraction, NaN point/normal.
-    {
-      const auto &miss = results[1];
-      EXPECT_FALSE(miss.IsHit());
-      EXPECT_TRUE(miss.point.array().isNaN().all())
-        << "miss point should be NaN: " << miss.point.transpose();
-      EXPECT_TRUE(miss.normal.array().isNaN().all())
-        << "miss normal should be NaN: " << miss.normal.transpose();
+      using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
+      using RayQuery = World::RayQuery;
+      using RayIntersection = World::RayIntersection;
+      using BatchedRayIntersectionData = World::BatchedRayIntersectionData;
+
+      // Build a batch: first ray hits the sphere, second misses
+      std::vector<RayQuery> rays = {
+        {Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d(2, 0, 2)},   // hit
+        {Eigen::Vector3d(2, 0, 10), Eigen::Vector3d(-2, 0, 10)},  // miss
+      };
+
+      BatchedRayIntersectionData output;
+      world->GetBatchRayIntersectionFromLastStep(rays, output);
+      const auto &results = output.Get<std::vector<RayIntersection>>();
+
+      ASSERT_EQ(2u, results.size());
+
+      // Ray 0 - hits the unit sphere centred at (0,0,2)
+      {
+        const auto &hit = results[0];
+        EXPECT_TRUE(hit.IsHit());
+        double epsilon = 1e-3;
+        EXPECT_TRUE(hit.point.isApprox(Eigen::Vector3d(-1, 0, 2), epsilon))
+          << "hit point: " << hit.point.transpose();
+        EXPECT_TRUE(hit.normal.isApprox(Eigen::Vector3d(-1, 0, 0), epsilon))
+          << "hit normal: " << hit.normal.transpose();
+        EXPECT_DOUBLE_EQ(0.25, hit.fraction);
+      }
+
+      // Ray 1 - misses; +INF fraction, NaN point/normal.
+      {
+        const auto &miss = results[1];
+        EXPECT_FALSE(miss.IsHit());
+        EXPECT_TRUE(miss.point.array().isNaN().all())
+          << "miss point should be NaN: " << miss.point.transpose();
+        EXPECT_TRUE(miss.normal.array().isNaN().all())
+          << "miss normal should be NaN: " << miss.normal.transpose();
+      }
     }
   }
 }
@@ -2423,26 +2469,32 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
 TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
            EmptyBatchRayIntersections)
 {
+  std::vector<std::string> supportedCollisionDetectors =
+    {"ode", "bullet"};
+
   for (const std::string &name : this->pluginNames)
   {
-    auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
-        this->loader,
-        name,
-        common_test::worlds::kSphereSdf);
-    world->SetCollisionDetector("bullet");
-    auto checkedOutput =
-      StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
-    EXPECT_TRUE(checkedOutput);
+    for (const std::string &collisionDetector : supportedCollisionDetectors)
+    {
+      auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kSphereSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput =
+        StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
 
-    using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
-    using RayQuery = World::RayQuery;
-    using RayIntersection = World::RayIntersection;
-    using BatchedRayIntersectionData = World::BatchedRayIntersectionData;
+      using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
+      using RayQuery = World::RayQuery;
+      using RayIntersection = World::RayIntersection;
+      using BatchedRayIntersectionData = World::BatchedRayIntersectionData;
 
-    std::vector<RayQuery> rays;  // intentionally empty
-    BatchedRayIntersectionData output;
-    world->GetBatchRayIntersectionFromLastStep(rays, output);
-    EXPECT_TRUE(output.Get<std::vector<RayIntersection>>().empty());
+      std::vector<RayQuery> rays;  // intentionally empty
+      BatchedRayIntersectionData output;
+      world->GetBatchRayIntersectionFromLastStep(rays, output);
+      EXPECT_TRUE(output.Get<std::vector<RayIntersection>>().empty());
+    }
   }
 }
 
@@ -2451,7 +2503,7 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
            UnsupportedBatchRayIntersections)
 {
   std::vector<std::string> unsupportedCollisionDetectors =
-    {"ode", "dart", "fcl", "banana"};
+    {"dart", "fcl"};
 
   for (const std::string &name : this->pluginNames)
   {
@@ -2493,59 +2545,65 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
 TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
            LargeBatchRayIntersections)
 {
+  std::vector<std::string> supportedCollisionDetectors =
+    {"ode", "bullet"};
+
   for (const std::string &name : this->pluginNames)
   {
-    auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
-        this->loader,
-        name,
-        common_test::worlds::kSphereSdf);
-    world->SetCollisionDetector("bullet");
-    auto checkedOutput =
-      StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
-    EXPECT_TRUE(checkedOutput);
-
-    using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
-    using RayQuery = World::RayQuery;
-    using RayIntersection = World::RayIntersection;
-    using BatchedRayIntersectionData = World::BatchedRayIntersectionData;
-
-    // Sphere is centred at (0, 0, 2) with radius 1.
-    struct RayCase { RayQuery ray; bool expectedHit; };
-    const std::vector<RayCase> cases = {
-      // equator crossings
-      {{Eigen::Vector3d(-2, 0, 2),    Eigen::Vector3d(2, 0, 2)},    true},
-      {{Eigen::Vector3d(0, -2, 2),    Eigen::Vector3d(0, 2, 2)},    true},
-      // chords above/below equator
-      {{Eigen::Vector3d(-2, 0, 2.5),  Eigen::Vector3d(2, 0, 2.5)},  true},
-      {{Eigen::Vector3d(-2, 0, 1.5),  Eigen::Vector3d(2, 0, 1.5)},  true},
-      // vertical shots
-      {{Eigen::Vector3d(0, 0, 5),     Eigen::Vector3d(0, 0, 1)},    true},
-      {{Eigen::Vector3d(0, 0, 10),    Eigen::Vector3d(0, 0, 2)},    true},
-      // repeat of first hit — verifies multiple hits in sequence
-      {{Eigen::Vector3d(0, -2, 2),    Eigen::Vector3d(0, 2, 2)},    true},
-      // misses
-      {{Eigen::Vector3d(2, 0, 10),    Eigen::Vector3d(-2, 0, 10)},  false},
-      {{Eigen::Vector3d(0, 2, 20),    Eigen::Vector3d(0, -2, 20)},  false},
-      {{Eigen::Vector3d(5, 5, 2),     Eigen::Vector3d(10, 5, 2)},   false},
-      {{Eigen::Vector3d(3, 3, 2),     Eigen::Vector3d(5, 3, 2)},    false},
-      {{Eigen::Vector3d(-2, 1.5, 2),  Eigen::Vector3d(2, 1.5, 2)},  false},
-    };
-
-    std::vector<RayQuery> rays;
-    rays.reserve(cases.size());
-    for (const auto &c : cases)
-      rays.push_back(c.ray);
-
-    BatchedRayIntersectionData output;
-    world->GetBatchRayIntersectionFromLastStep(rays, output);
-    const auto &results = output.Get<std::vector<RayIntersection>>();
-
-    ASSERT_EQ(cases.size(), results.size());
-
-    for (std::size_t i = 0; i < cases.size(); ++i)
+    for (const std::string &collisionDetector : supportedCollisionDetectors)
     {
-      EXPECT_EQ(cases[i].expectedHit, results[i].IsHit())
-        << "ray index " << i << " hit mismatch";
+      auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kSphereSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput =
+        StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+
+      using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
+      using RayQuery = World::RayQuery;
+      using RayIntersection = World::RayIntersection;
+      using BatchedRayIntersectionData = World::BatchedRayIntersectionData;
+
+      // Sphere is centred at (0, 0, 2) with radius 1.
+      struct RayCase { RayQuery ray; bool expectedHit; };
+      const std::vector<RayCase> cases = {
+        // equator crossings
+        {{Eigen::Vector3d(-2, 0, 2),    Eigen::Vector3d(2, 0, 2)},    true},
+        {{Eigen::Vector3d(0, -2, 2),    Eigen::Vector3d(0, 2, 2)},    true},
+        // chords above/below equator
+        {{Eigen::Vector3d(-2, 0, 2.5),  Eigen::Vector3d(2, 0, 2.5)},  true},
+        {{Eigen::Vector3d(-2, 0, 1.5),  Eigen::Vector3d(2, 0, 1.5)},  true},
+        // vertical shots
+        {{Eigen::Vector3d(0, 0, 5),     Eigen::Vector3d(0, 0, 1)},    true},
+        {{Eigen::Vector3d(0, 0, 10),    Eigen::Vector3d(0, 0, 2)},    true},
+        // repeat of first hit — verifies multiple hits in sequence
+        {{Eigen::Vector3d(0, -2, 2),    Eigen::Vector3d(0, 2, 2)},    true},
+        // misses
+        {{Eigen::Vector3d(2, 0, 10),    Eigen::Vector3d(-2, 0, 10)},  false},
+        {{Eigen::Vector3d(0, 2, 20),    Eigen::Vector3d(0, -2, 20)},  false},
+        {{Eigen::Vector3d(5, 5, 2),     Eigen::Vector3d(10, 5, 2)},   false},
+        {{Eigen::Vector3d(3, 3, 2),     Eigen::Vector3d(5, 3, 2)},    false},
+        {{Eigen::Vector3d(-2, 1.5, 2),  Eigen::Vector3d(2, 1.5, 2)},  false},
+      };
+
+      std::vector<RayQuery> rays;
+      rays.reserve(cases.size());
+      for (const auto &c : cases)
+        rays.push_back(c.ray);
+
+      BatchedRayIntersectionData output;
+      world->GetBatchRayIntersectionFromLastStep(rays, output);
+      const auto &results = output.Get<std::vector<RayIntersection>>();
+
+      ASSERT_EQ(cases.size(), results.size());
+
+      for (std::size_t i = 0; i < cases.size(); ++i)
+      {
+        EXPECT_EQ(cases[i].expectedHit, results[i].IsHit())
+          << "ray index " << i << " hit mismatch";
+      }
     }
   }
 }

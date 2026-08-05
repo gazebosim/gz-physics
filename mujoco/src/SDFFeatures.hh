@@ -20,6 +20,7 @@
 
 #include <gz/physics/Implements.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
+#include <gz/physics/sdf/ConstructNestedModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
 #include "Base.hh"
@@ -32,7 +33,8 @@ namespace mujoco {
 
 struct SDFFeatureList : FeatureList<
   sdf::ConstructSdfWorld,
-  sdf::ConstructSdfModel
+  sdf::ConstructSdfModel,
+  sdf::ConstructSdfNestedModel
 > { };
 
 class SDFFeatures :
@@ -45,6 +47,10 @@ class SDFFeatures :
       const ::sdf::World &_sdfWorld) override;
 
   public: Identity ConstructSdfModel(
+      const Identity &_parentID,
+      const ::sdf::Model &_sdfModel) override;
+
+  public: Identity ConstructSdfNestedModel(
       const Identity &_parentID,
       const ::sdf::Model &_sdfModel) override;
 
