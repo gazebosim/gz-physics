@@ -972,14 +972,10 @@ namespace gz
         const char *name = "";
         bool operator<(const TypeName &_other) const
         {
-          if (this->name == _other.name)
-            return false;
           return std::strcmp(this->name, _other.name) < 0;
         }
         bool operator==(const TypeName &_other) const
         {
-          if (this->name == _other.name)
-            return true;
           return std::strcmp(this->name, _other.name) == 0;
         }
         bool operator!=(const TypeName &_other) const
