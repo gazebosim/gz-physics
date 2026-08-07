@@ -35,10 +35,17 @@ endif()
 ExternalProject_Add(
   mujoco_ext
   GIT_REPOSITORY https://github.com/google-deepmind/mujoco
-  GIT_TAG 881544c0c58dc2e95fbd132a5ec90b99e012b6f7 # 3.5.0
+  GIT_TAG b85fdca54f0e0038b804af146a0b4e94199e00d0 # 3.11.0
   INSTALL_DIR    "${MUJOCO_INSTALL_DIR}"
   BUILD_BYPRODUCTS ${MUJOCO_BYPRODUCTS} # Needed for Ninja
   LOG_BUILD ON
+  # MuJoCo 3.11.0's cmake/FindOrFetch.cmake emits "Ignored CHECK_PASS without
+  # CHECK_START" for every fetched dependency. A bug in Mujoco code.
+  # The check-stack warning is emitted unconditionally, so -Wno-dev below
+  # does not silence it. Workaround: log the configure step to a file instead;
+  # combined with LOG_OUTPUT_ON_FAILURE the full output is still printed if it
+  # fails.
+  LOG_CONFIGURE ON
   LOG_OUTPUT_ON_FAILURE ON
   UPDATE_DISCONNECTED ON # Avoids configure/build steps everytime gz-physics built
   CMAKE_ARGS
