@@ -6,9 +6,9 @@ add_library(MockEntities SHARED MockEntities.cc)
 add_library(MockFrames SHARED frames.cc)
 add_library(MockJoints SHARED MockJoints.cc)
 add_library(MockCompositeData SHARED MockCompositeData.cc)
-if (NOT MSVC)
-  target_compile_options(MockCompositeData PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)
-endif()
+set_target_properties(MockCompositeData PROPERTIES
+  CXX_VISIBILITY_PRESET hidden
+  VISIBILITY_INLINES_HIDDEN 1)
 
 list(APPEND plugins
     MockEntities

@@ -16,20 +16,12 @@
 */
 
 #include "mock/MockCompositeData.hh"
-#include <gz/physics/Register.hh>
+#include <gz/plugin/Register.hh>
 
 namespace mock
 {
-  template <typename PolicyT>
-  class CompositeDataPlugin
-      : public gz::physics::Implements<PolicyT, MockCompositeDataList>
+  class CompositeDataPlugin : public virtual MockCompositeDataPlugin
   {
-    public: gz::physics::Identity InitiateEngine(
-        std::size_t /*_engineID*/) override
-    {
-      return this->GenerateIdentity(0);
-    }
-
     public: gz::physics::CompositeData GetCompositeData() const override
     {
       gz::physics::CompositeData data;
@@ -38,12 +30,6 @@ namespace mock
       return data;
     }
   };
-
-  class CompositeDataPlugin3d
-      : public CompositeDataPlugin<gz::physics::FeaturePolicy3d> { };
-
-  GZ_PHYSICS_ADD_PLUGIN(
-      CompositeDataPlugin3d,
-      gz::physics::FeaturePolicy3d,
-      MockCompositeDataList)
 }
+
+GZ_ADD_PLUGIN(mock::CompositeDataPlugin, mock::MockCompositeDataPlugin)

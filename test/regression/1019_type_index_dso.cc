@@ -18,7 +18,6 @@
 #include <gtest/gtest.h>
 
 #include <gz/plugin/Loader.hh>
-#include <gz/physics/RequestEngine.hh>
 #include "mock/MockCompositeData.hh"
 
 TEST(Issue1019Test, TypeIndexAcrossDSO)
@@ -27,14 +26,13 @@ TEST(Issue1019Test, TypeIndexAcrossDSO)
   const auto pluginNames = loader.LoadLib(MockCompositeData_LIB);
   ASSERT_EQ(1u, pluginNames.size());
 
-  auto plugin = loader.Instantiate("mock::CompositeDataPlugin3d");
+  auto plugin = loader.Instantiate("mock::CompositeDataPlugin");
   ASSERT_TRUE(plugin);
 
-  auto engine = gz::physics::RequestEngine3d<
-      mock::MockCompositeDataList>::From(plugin);
-  ASSERT_TRUE(engine);
+  auto *mockPlugin = plugin->QueryInterface<mock::MockCompositeDataPlugin>();
+  ASSERT_NE(nullptr, mockPlugin);
 
-  gz::physics::CompositeData data = engine->GetCompositeData();
+  gz::physics::CompositeData data = mockPlugin->GetCompositeData();
 
   // In PR #1019, CompositeData was changed to use std::type_index as the map
   // key. When a plugin DSO is compiled with hidden visibility for
@@ -42,11 +40,8 @@ TEST(Issue1019Test, TypeIndexAcrossDSO)
   // std::type_index(typeid(ExtraContactData)) has a different pointer in the
   // test binary than in the plugin DSO, causing Query to fail (return nullptr).
   const auto *extra = data.Query<mock::ExtraContactData>();
-  EXPECT_NE(nullptr, extra);
-  if (extra)
-  {
-    EXPECT_DOUBLE_EQ(42.0, extra->depth);
-  }
+  ASSERT_NE(nullptr, extra);
+  EXPECT_DOUBLE_EQ(42.0, extra->depth);
 }
 
 int main(int argc, char **argv)

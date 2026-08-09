@@ -9,10 +9,8 @@ gz_build_tests(
     GZ_PHYSICS_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
   TEST_LIST list)
 
-if (BUILD_TESTING)
-  foreach(test ${list})
-    target_compile_definitions(${test} PRIVATE
-      "MockCompositeData_LIB=\"$<TARGET_FILE:MockCompositeData>\"")
-    add_dependencies(${test} MockCompositeData)
-  endforeach()
+if(TARGET REGRESSION_1019_type_index_dso)
+  target_compile_definitions(REGRESSION_1019_type_index_dso PRIVATE
+    "MockCompositeData_LIB=\"$<TARGET_FILE:MockCompositeData>\"")
+  add_dependencies(REGRESSION_1019_type_index_dso MockCompositeData)
 endif()

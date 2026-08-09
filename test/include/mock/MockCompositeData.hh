@@ -19,38 +19,21 @@
 #define GZ_PHYSICS_TEST_MOCKCOMPOSITEDATA_HH_
 
 #include <gz/physics/CompositeData.hh>
-#include <gz/physics/GetContacts.hh>
-#include <gz/physics/FeatureList.hh>
-#include <gz/physics/FeaturePolicy.hh>
 
 namespace mock
 {
-  using ExtraContactData =
-      gz::physics::GetContactsFromLastStepFeature::ExtraContactDataT<
-          gz::physics::FeaturePolicy3d>;
-
-  struct MockCompositeDataFeature : public gz::physics::Feature
+  template <typename T>
+  struct MyCustomData
   {
-    template <typename PolicyT, typename FeaturesT>
-    class Engine : public virtual Feature::Engine<PolicyT, FeaturesT>
-    {
-      public: gz::physics::CompositeData GetCompositeData() const
-      {
-        return this->template Interface<MockCompositeDataFeature>()->
-            GetCompositeData();
-      }
-    };
-
-    template <typename PolicyT>
-    class Implementation : public virtual Feature::Implementation<PolicyT>
-    {
-      public: virtual gz::physics::CompositeData GetCompositeData() const = 0;
-    };
+    T depth;
   };
 
-  using MockCompositeDataList = gz::physics::FeatureList<
-      MockCompositeDataFeature
-  >;
-}
+  using ExtraContactData = MyCustomData<double>;
 
+  class MockCompositeDataPlugin
+  {
+    public: virtual ~MockCompositeDataPlugin() = default;
+    public: virtual gz::physics::CompositeData GetCompositeData() const = 0;
+  };
+}
 #endif
