@@ -704,6 +704,8 @@ Identity SDFFeatures::ConstructSdfLink(
   const Eigen::Vector3d localCom =
       math::eigen3::convert(sdfInertia.Pose().Pos());
 
+  const bool isKinematic = _sdfLink.Kinematic();
+
   bodyProperties.mInertia.setLocalCOM(localCom);
 
   bodyProperties.mGravityMode = _sdfLink.EnableGravity();
@@ -712,6 +714,19 @@ Identity SDFFeatures::ConstructSdfLink(
   jointProperties.mName = bodyProperties.mName + "_FreeJoint";
   // TODO(MXG): Consider adding a UUID to this joint name in order to avoid any
   // potential (albeit unlikely) name collisions.
+
+  bodyProperties.mInertia.setMass(sdfInertia.MassMatrix().Mass());
+  bodyProperties.mGravityMode = _sdfLink.EnableGravity();
+  bodyProperties.mInertia.setMoment(I_link);
+
+  bodyProperties.mInertia.setLocalCOM(localCom);
+  bodyProperties.mFrictionCoeff = 0;
+
+  if(isKinematic){
+    gzdbg << "Kinematic tag found -> " << bodyProperties.mName << std::endl;
+    jointProperties.mName = bodyProperties.mName + "_KinematicJoint";
+    jointProperties.mActuatorType = dart::dynamics::Joint::ACCELERATION;
+  }
 
   // Note: When constructing a link from this function, we always instantiate
   // it as a standalone free body within the model. If it should have any joint
