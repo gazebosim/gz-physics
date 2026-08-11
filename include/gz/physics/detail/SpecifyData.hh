@@ -36,7 +36,7 @@ namespace gz
       : CompositeData(),
         privateExpectData(
           this->dataMap.insert(
-            std::make_pair(CompositeData::TypeName{typeid(Expected).name()},
+            std::make_pair(CompositeData::TypeName(typeid(Expected)),
                            CompositeData::DataEntry())).first)
     {
       // Do nothing

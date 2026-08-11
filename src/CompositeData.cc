@@ -336,7 +336,7 @@ namespace gz
       for (const auto &entry : dataMap)
       {
         if (entry.second.data)
-          entries.insert(entries.end(), entry.first.name);
+          entries.insert(entries.end(), entry.first.name());
       }
 
       return entries;
@@ -353,7 +353,7 @@ namespace gz
       for (const auto &entry : dataMap)
       {
         if (entry.second.data && !entry.second.queried)
-          unqueried.insert(unqueried.end(), entry.first.name);
+          unqueried.insert(unqueried.end(), entry.first.name());
       }
 
       return unqueried;

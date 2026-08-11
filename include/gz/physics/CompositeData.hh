@@ -967,21 +967,23 @@ namespace gz
       /// comparator to match types safely across dynamically loaded shared
       /// library boundaries without heap allocations.
       /// \private
-      public: struct TypeName
+      public: class TypeName
       {
-        const char *name = "";
-        bool operator<(const TypeName &_other) const
+        public: TypeName(const std::type_info& _info) : _name(_info.name()) {}
+        public: const char *name() const { return this->_name; }
+        public: bool operator<(const TypeName &_other) const
         {
-          return std::strcmp(this->name, _other.name) < 0;
+          return std::strcmp(this->_name, _other._name) < 0;
         }
-        bool operator==(const TypeName &_other) const
+        public: bool operator==(const TypeName &_other) const
         {
-          return std::strcmp(this->name, _other.name) == 0;
+          return std::strcmp(this->_name, _other._name) == 0;
         }
-        bool operator!=(const TypeName &_other) const
+        public: bool operator!=(const TypeName &_other) const
         {
           return !(*this == _other);
         }
+        private: const char *_name = "";
       };
 
       // We make this typedef public so that helper functions can use it without
