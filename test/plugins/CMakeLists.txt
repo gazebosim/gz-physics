@@ -11,10 +11,10 @@ set_target_properties(MockCompositeData PROPERTIES
   VISIBILITY_INLINES_HIDDEN 1)
 
 list(APPEND plugins
+    MockCompositeData
     MockEntities
     MockFrames
-    MockJoints
-    MockCompositeData)
+    MockJoints)
 if (DART_FOUND)
   list(APPEND plugins MockDoublePendulum)
 endif()
