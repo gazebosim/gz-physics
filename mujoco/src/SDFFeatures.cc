@@ -137,17 +137,23 @@ void copyStandardJointAxisProperties(
     mjsJoint * _joint,
     const ::sdf::JointAxis *_sdfAxis)
 {
-  _joint->damping = _sdfAxis->Damping();
+  // Since MuJoCo 3.7.0, `damping` and `stiffness` are polynomial coefficient
+  // arrays. Element 0 is the linear coefficient, which is what SDFormat
+  // describes; the higher-order coefficients are left at their zero defaults.
+  _joint->damping[0] = _sdfAxis->Damping();
   _joint->frictionloss = _sdfAxis->Friction();
   _joint->springref = _sdfAxis->SpringReference();
-  _joint->stiffness = _sdfAxis->SpringStiffness();
-  _joint->limited = static_cast<int>(!std::isinf(_sdfAxis->Lower()) &&
-                                     !std::isinf(_sdfAxis->Upper()));
+  _joint->stiffness[0] = _sdfAxis->SpringStiffness();
+  _joint->limited = (!std::isinf(_sdfAxis->Lower()) &&
+                     !std::isinf(_sdfAxis->Upper()))
+                        ? mjLIMITED_TRUE
+                        : mjLIMITED_FALSE;
   _joint->range[0] = _sdfAxis->Lower();
   _joint->range[1] = _sdfAxis->Upper();
 
-  _joint->actfrclimited =
-      static_cast<int>(!std::isinf(infIfNeg(_sdfAxis->Effort())));
+  _joint->actfrclimited = !std::isinf(infIfNeg(_sdfAxis->Effort()))
+                              ? mjLIMITED_TRUE
+                              : mjLIMITED_FALSE;
 
   _joint->actfrcrange[0] = -infIfNeg(_sdfAxis->Effort());
   _joint->actfrcrange[1] = infIfNeg(_sdfAxis->Effort());
@@ -540,7 +546,7 @@ struct ModelKinematicStructure
           // premature solver clamping and massive numerical damping. By mapping
           // position limits purely onto the translational slide joint, we
           // ensure exact kinematic limit enforcement without solver resistance.
-          joint->limited = false;
+          joint->limited = mjLIMITED_FALSE;
         }
 
         joint2 = mjs_addJoint(child, nullptr);
@@ -553,9 +559,11 @@ struct ModelKinematicStructure
           // actuator effort limits are enforced purely on the primary
           // rotational hinge joint to avoid double-counting and physical unit
           // mismatches.
-          joint2->limited = static_cast<int>(!std::isinf(sdfAxis1->Lower()) &&
-                                             !std::isinf(sdfAxis1->Upper()));
-          if (joint2->limited)
+          joint2->limited = (!std::isinf(sdfAxis1->Lower()) &&
+                             !std::isinf(sdfAxis1->Upper()))
+                                ? mjLIMITED_TRUE
+                                : mjLIMITED_FALSE;
+          if (joint2->limited == mjLIMITED_TRUE)
           {
             const double pitch =
                 convertScrewThreadPitch(sdfJoint->ScrewThreadPitch());
