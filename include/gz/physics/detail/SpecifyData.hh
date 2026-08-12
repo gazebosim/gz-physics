@@ -18,10 +18,11 @@
 #ifndef GZ_PHYSICS_DETAIL_SPECIFYDATA_HH_
 #define GZ_PHYSICS_DETAIL_SPECIFYDATA_HH_
 
+#include <cstring>
 #include <memory>
 #include <utility>
 #include <iostream>
-#include <typeindex>
+#include <typeinfo>
 
 #include "gz/physics/SpecifyData.hh"
 
@@ -35,7 +36,7 @@ namespace gz
       : CompositeData(),
         privateExpectData(
           this->dataMap.insert(
-            std::make_pair(std::type_index(typeid(Expected)),
+            std::make_pair(CompositeData::TypeName(typeid(Expected)),
                            CompositeData::DataEntry())).first)
     {
       // Do nothing
