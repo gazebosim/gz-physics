@@ -116,6 +116,9 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   auto worldInfo = modelInfo->worldInfo;
   auto *d = worldInfo->mjDataObj;
   auto *m = worldInfo->mjModelObj;
+  if (!d || !m)
+    return;
+
   const auto bodyId = mjs_getId(modelInfo->body->element);
   const auto jntadr = m->body_jntadr[bodyId];
   const Eigen::Quaterniond quat(_pose.rotation());
@@ -140,8 +143,48 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   else
   {
     const auto qposadr = m->jnt_qposadr[jntadr];
-    mju_copy3(&d->qpos[qposadr], _pose.translation().data());
-    mju_copy4(&d->qpos[qposadr]+3, quatCoeffs);
+    const Eigen::Isometry3d oldRootPose =
+        convertPose(&d->qpos[qposadr], &d->qpos[qposadr + 3]);
+    const Eigen::Isometry3d deltaPose = _pose * oldRootPose.inverse();
+
+    int clusterId = -1;
+    if (bodyId >= 0 &&
+        bodyId < static_cast<int>(worldInfo->dynamicWeldClusterMap.size()))
+    {
+      clusterId = worldInfo->dynamicWeldClusterMap[bodyId];
+    }
+
+    if (clusterId != -1)
+    {
+      for (int b = 1; b < m->nbody; ++b)
+      {
+        if (b < static_cast<int>(worldInfo->dynamicWeldClusterMap.size()) &&
+            worldInfo->dynamicWeldClusterMap[b] == clusterId)
+        {
+          int bJntadr = m->body_jntadr[b];
+          if (bJntadr >= 0 && m->jnt_type[bJntadr] == mjJNT_FREE)
+          {
+            int bQposadr = m->jnt_qposadr[bJntadr];
+            const Eigen::Isometry3d bOldPose =
+                convertPose(&d->qpos[bQposadr], &d->qpos[bQposadr + 3]);
+            const Eigen::Isometry3d bNewPose = deltaPose * bOldPose;
+
+            const Eigen::Vector3d bPos = bNewPose.translation();
+            const Eigen::Quaterniond bQuat(bNewPose.rotation());
+            const double bQuatCoeffs[] = {
+                bQuat.w(), bQuat.x(), bQuat.y(), bQuat.z()};
+
+            mju_copy3(&d->qpos[bQposadr], bPos.data());
+            mju_copy4(&d->qpos[bQposadr + 3], bQuatCoeffs);
+          }
+        }
+      }
+    }
+    else
+    {
+      mju_copy3(&d->qpos[qposadr], _pose.translation().data());
+      mju_copy4(&d->qpos[qposadr] + 3, quatCoeffs);
+    }
   }
   mj_forward(m, d);
 }

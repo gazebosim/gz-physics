@@ -26,6 +26,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <gz/math/AxisAlignedBox.hh>
@@ -36,6 +37,7 @@
 #include <gz/physics/Geometry.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
+#include <gz/physics/mujoco-plugin/Export.hh>
 
 namespace gz
 {
@@ -43,6 +45,18 @@ namespace physics
 {
 namespace mujoco
 {
+/// \brief A magic number embedded in mjData->userdata to safely verify
+/// ownership of the stored pointer during the global ContactFilterCallback.
+/// The bytes spell out 'GZPHGZPH'.
+///
+/// Example of how this helps: MuJoCo's `mjcb_contactfilter` is a global
+/// callback that fires for *every* mjModel evaluated in the current process.
+/// If a user runs a different MuJoCo simulation (not managed by gz-physics)
+/// in the same process, and they happen to store a float value like `3.14` in
+/// `userdata`, the global callback would try to reinterpret `3.14` as a pointer
+/// and segfault. The magic number ensures we only unpack the pointer if the
+/// userdata was strictly injected by our plugin.
+constexpr uint64_t kUserDataMagicNumber = 0x475A5048475A5048ULL;
 
 /// \brief Format the scoped name of a joint axis, appending a suffix
 /// for secondary degrees of freedom if the axis index is greater than 0.
@@ -300,6 +314,10 @@ struct WorldInfo
   // Key2 is the scoped name of the model, including the world name
   detail::EntityStorage<std::shared_ptr<ModelInfo>, std::string> models;
 
+  /// \brief Vector mapping each body_weldid to a dynamic cluster ID,
+  /// or -1 if the body is not part of any dynamic weld constraint.
+  std::vector<int> dynamicWeldClusterMap;
+
   // Vector of ShapeInfo, indexed by mujoco geom id
   std::vector<std::shared_ptr<ShapeInfo>> geomIdToShapeInfo{};
 
@@ -313,7 +331,22 @@ struct WorldInfo
   /// The cache is invalidated right before mj_step in
   /// SimulationFeatures::WorldForwardStep
   std::vector<std::optional<Eigen::Vector3d>> ballJointPositionsCache{};
+
+  /// \brief Recompute rigid cluster connected components from active fixed
+  /// joints. Updates dynamicWeldClusterMap.
+  void UpdateWeldExclusions();
 };
+
+/// \brief Compute the mapping from body_weldid to dynamic cluster ID based
+/// on current dynamic weld constraints.
+/// \param[in] extraEdges Optional list of additional (weld1, weld2) edges
+/// \return Vector of size m->nbody mapping body_weldid to dynamic cluster ID
+/// (-1 if none)
+// Make the symbol visible so that it can be called from a unit test.
+GZ_PHYSICS_MUJOCO_PLUGIN_VISIBLE
+std::vector<int> ComputeWeldExclusions(
+    const mjModel *_m, const mjData *_d,
+    const std::vector<std::pair<int, int>> &_extraEdges = {});
 
 class Base
 {

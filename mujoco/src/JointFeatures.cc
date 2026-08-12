@@ -20,6 +20,8 @@
 #include <cstddef>
 #include <memory>
 #include <string_view>
+#include <utility>
+#include <vector>
 #include <Eigen/Geometry>
 #include <gz/common/Console.hh>
 #include <gz/math/Helpers.hh>
@@ -35,6 +37,31 @@ namespace physics {
 namespace mujoco {
 
 namespace  {
+
+void setActuatorMode(mjModel *_m, int _actuatorId, bool _isVelocity)
+{
+  const mjtBias targetBias = _isVelocity ? mjBIAS_AFFINE : mjBIAS_NONE;
+
+  if (_m->actuator_biastype[_actuatorId] == targetBias)
+  {
+    return;
+  }
+
+  _m->actuator_biastype[_actuatorId] = targetBias;
+
+  mju_zero(_m->actuator_gainprm + _actuatorId * mjNGAIN, mjNGAIN);
+  mju_zero(_m->actuator_biasprm + _actuatorId * mjNBIAS, mjNBIAS);
+
+  if (!_isVelocity)
+  {
+    // In force control/passive mode (mjBIAS_NONE):
+    // - gainprm[0] is set to 1.0 so the output force matches the ctrl input.
+    _m->actuator_gainprm[_actuatorId * mjNGAIN] = 1.0;
+  }
+  // The gain parameters for velocity mode are dynamically computed and set
+  // in SimulationFeatures::WorldStep to maintain a uniform tracking response.
+}
+
 Eigen::Vector3d *getBallJointPositionImpl(JointInfo *jointInfo)
 {
   auto *d = jointInfo->worldInfo->mjDataObj;
@@ -300,8 +327,24 @@ double JointFeatures::GetJointForce(
   {
     return math::NAN_D;
   }
-  return jointInfo->worldInfo->mjDataObj
-      ->qfrc_actuator[jointInfo->nv_index + _dof];
+
+  // If SetJointForce was called before a physics step has run, returning
+  // d->ctrl directly ensures GetJointForce immediately reflects the commanded
+  // force before mj_forward computes d->qfrc_actuator.
+  auto *m = jointInfo->worldInfo->mjModelObj;
+  auto *d = jointInfo->worldInfo->mjDataObj;
+  if (jointInfo->actuator)
+  {
+    const int actuatorId =
+        mjs_getId(jointInfo->actuator->element) + static_cast<int>(_dof);
+    if (actuatorId >= 0 && m->actuator_biastype[actuatorId] == mjBIAS_NONE &&
+        d->ctrl[actuatorId] != 0.0)
+    {
+      return d->ctrl[actuatorId];
+    }
+  }
+
+  return d->qfrc_actuator[jointInfo->nv_index + _dof];
 }
 
 /////////////////////////////////////////////////
@@ -451,7 +494,7 @@ void JointFeatures::SetJointForce(
     gzerr << "No actuator set up for this joint\n";
     return;
   }
-  int ctrlIndex = mjs_getId(jointInfo->actuator->element);
+  const int ctrlIndex = mjs_getId(jointInfo->actuator->element);
   if (ctrlIndex < 0)
     return;
 
@@ -459,8 +502,56 @@ void JointFeatures::SetJointForce(
   {
     return;
   }
+
+  const int actuatorId = ctrlIndex + static_cast<int>(_dof);
+  setActuatorMode(jointInfo->worldInfo->mjModelObj, actuatorId, false);
+
   jointInfo->worldInfo->mjDataObj->ctrl[ctrlIndex + _dof] = _value;
-  mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointVelocityCommand(
+    const Identity &_id, std::size_t _dof, double _value)
+{
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+
+
+  if (!jointInfo->joint)
+  {
+    gzerr << "Cannot set velocity command on joint [" << jointInfo->name
+          << "] because it is a fixed joint.\n";
+    return;
+  }
+
+  if (!jointInfo->actuator)
+  {
+    gzerr << "No actuator set up for this joint\n";
+    return;
+  }
+  const int ctrlIndex = mjs_getId(jointInfo->actuator->element);
+  if (ctrlIndex < 0)
+    return;
+
+  if (!this->ValidateDofParam(_id, _dof))
+  {
+    return;
+  }
+
+  if (!std::isfinite(_value))
+  {
+    gzerr << "Invalid joint velocity value [" << _value
+          << "] commanded on joint [" << jointInfo->name << " DOF "
+          << _dof << "]. The command will be ignored\n";
+    // If the velocity command is not finite (e.g. NaN), we ignore the command
+    // and return early. This matches the behavior of DART and
+    // bullet-featherstone.
+    return;
+  }
+
+  const int actuatorId = ctrlIndex + static_cast<int>(_dof);
+  setActuatorMode(jointInfo->worldInfo->mjModelObj, actuatorId, true);
+
+  jointInfo->worldInfo->mjDataObj->ctrl[actuatorId] = _value;
 }
 
 /////////////////////////////////////////////////
@@ -803,6 +894,8 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
     this->frames.erase(jointInfo->entityId);
 
     modelInfo->joints.RemoveEntity(jointInfo->name);
+
+    worldInfo->UpdateWeldExclusions();
   }
 }
 
@@ -862,11 +955,11 @@ Identity JointFeatures::AttachFixedJoint(
     gzerr << "Invalid worldInfo or modelInfo when attaching fixed joint.\n";
     return this->GenerateInvalidId();
   }
-  if (modelInfo->joints.HasEntity(_name))
+  std::string uniqueName = _name;
+  std::size_t counter = 1;
+  while (modelInfo->joints.HasEntity(uniqueName))
   {
-    gzerr << "There's already a joint with the same name [ " << _name
-          << " ].\n";
-    return this->GenerateInvalidId();
+    uniqueName = _name + "_" + std::to_string(counter++);
   }
 
   const char *childBodyName
@@ -876,7 +969,7 @@ Identity JointFeatures::AttachFixedJoint(
             ? mjs_getString(mjs_getName(parentLinkInfo->body->element))
             : "";
 
-  const std::string mjJointName = ::sdf::JoinName(modelInfo->name, _name);
+  const std::string mjJointName = ::sdf::JoinName(modelInfo->name, uniqueName);
 
   mjsEquality *eqSpec = mjs_asEquality(mjs_findElement(
       worldInfo->mjSpecObj, mjOBJ_EQUALITY, mjJointName.c_str()));
@@ -937,7 +1030,7 @@ Identity JointFeatures::AttachFixedJoint(
 
   auto jointInfo =
     std::make_shared<JointInfo>(this->GetNextEntity(), modelInfo);
-  jointInfo->name = _name;
+  jointInfo->name = uniqueName;
   jointInfo->childBody = childLinkInfo->body;
   jointInfo->worldInfo = worldInfo;
   jointInfo->weldConstraintSpec = eqSpec;
@@ -961,14 +1054,176 @@ Identity JointFeatures::AttachFixedJoint(
   }
 
   modelInfo->joints.AddEntity(
-    jointInfo->entityId, jointInfo, jointInfo->name, modelInfo->entityId);
+    jointInfo->entityId, jointInfo, uniqueName, modelInfo->entityId);
 
   if (requireRecompile)
   {
     worldInfo->specDirty = true;
+    if (worldInfo->mjModelObj)
+    {
+      int b1 = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, childBodyName);
+      int b2 = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, parentBodyName);
+      if (b1 > 0 && b2 > 0 && b1 < worldInfo->mjModelObj->nbody &&
+          b2 < worldInfo->mjModelObj->nbody)
+      {
+        int w1 = worldInfo->mjModelObj->body_weldid[b1];
+        int w2 = worldInfo->mjModelObj->body_weldid[b2];
+        worldInfo->dynamicWeldClusterMap = ComputeWeldExclusions(
+            worldInfo->mjModelObj, worldInfo->mjDataObj, {{w1, w2}});
+      }
+    }
+  }
+  else
+  {
+    worldInfo->UpdateWeldExclusions();
   }
 
   return this->GenerateIdentity(jointInfo->entityId, jointInfo);
+}
+
+namespace {
+/// \brief A simple graph data structure to encapsulate adjacency lists
+/// and connected component extraction using contiguous memory vectors.
+struct Graph
+{
+  std::vector<std::vector<int>> adj;
+
+  /// \brief Constructor.
+  /// \param[in] _numNodes The number of nodes in the graph.
+  explicit Graph(int _numNodes) : adj(_numNodes)
+  {
+  }
+
+  /// \brief Add an undirected edge between two nodes.
+  /// \param[in] _u First node.
+  /// \param[in] _v Second node.
+  void AddEdge(int _u, int _v)
+  {
+    this->adj[_u].push_back(_v);
+    this->adj[_v].push_back(_u);
+  }
+
+  /// \brief Extract all connected components (clusters) from the graph.
+  /// \return A list of connected components, where each component is a
+  /// vector of node IDs. Isolated nodes are ignored.
+  std::vector<std::vector<int>> GetConnectedComponents() const
+  {
+    std::vector<std::vector<int>> components;
+    std::vector<bool> visited(this->adj.size(), false);
+
+    for (std::size_t i = 1; i < this->adj.size(); ++i)
+    {
+      if (visited[i] || this->adj[i].empty())
+        continue;
+
+      std::vector<int> cluster;
+      std::vector<int> q;
+      q.push_back(i);
+      visited[i] = true;
+
+      std::size_t head = 0;
+      while (head < q.size())
+      {
+        int curr = q[head++];
+        cluster.push_back(curr);
+
+        for (int neighbor : this->adj[curr])
+        {
+          if (!visited[neighbor])
+          {
+            visited[neighbor] = true;
+            q.push_back(neighbor);
+          }
+        }
+      }
+
+      // Only keep clusters with at least 2 bodies to form an excluded pair
+      if (cluster.size() > 1)
+      {
+        components.push_back(std::move(cluster));
+      }
+    }
+    return components;
+  }
+};
+}  // namespace
+
+/////////////////////////////////////////////////
+std::vector<int> ComputeWeldExclusions(
+    const mjModel *_m, const mjData *_d,
+    const std::vector<std::pair<int, int>> &_extraEdges)
+{
+  std::vector<int> clusterMap(_m->nbody, -1);
+
+  Graph weldGraph(_m->nbody);
+
+  // --------------------------------------------------------------------------
+  // Step 1: Build the Weld Graph (Add edges for every welded connection)
+  // --------------------------------------------------------------------------
+
+  // We only add edges for dynamic active fixed joints.
+  // We do NOT need to manually traverse kinematic trees because MuJoCo
+  // natively computes them and assigns rigidly connected bodies the exact
+  // same `body_weldid`.
+  // MuJoCo's broadphase inherently drops collisions where weld1 == weld2.
+  // Our graph's nodes will represent these `body_weldid`s, not raw body IDs.
+
+  if (_m && _d)
+  {
+    for (int eqId = 0; eqId < _m->neq; ++eqId)
+    {
+      if (_m->eq_type[eqId] == mjEQ_WELD && _d->eq_active[eqId] == 1)
+      {
+        int b1 = _m->eq_obj1id[eqId];
+        int b2 = _m->eq_obj2id[eqId];
+        if (b1 > 0 && b2 > 0 && b1 < _m->nbody && b2 < _m->nbody)
+        {
+          int w1 = _m->body_weldid[b1];
+          int w2 = _m->body_weldid[b2];
+          // Only add edge if they are in different kinematic trees
+          // (weld groups)
+          if (w1 != w2)
+          {
+            weldGraph.AddEdge(w1, w2);
+          }
+        }
+      }
+    }
+  }
+
+  for (const auto &[w1, w2] : _extraEdges)
+  {
+    if (w1 != w2)
+    {
+      weldGraph.AddEdge(w1, w2);
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Step 2: Extract Connected Components & Assign Cluster IDs
+  // --------------------------------------------------------------------------
+
+  const auto clusters = weldGraph.GetConnectedComponents();
+
+  for (std::size_t clusterId = 0; clusterId < clusters.size(); ++clusterId)
+  {
+    for (int w : clusters[clusterId])
+    {
+      clusterMap[w] = static_cast<int>(clusterId);
+    }
+  }
+
+  return clusterMap;
+}
+
+/////////////////////////////////////////////////
+void WorldInfo::UpdateWeldExclusions()
+{
+  if (!this->mjModelObj)
+    return;
+
+  this->dynamicWeldClusterMap =
+      ComputeWeldExclusions(this->mjModelObj, this->mjDataObj);
 }
 
 }  // namespace mujoco
