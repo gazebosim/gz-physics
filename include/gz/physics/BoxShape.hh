@@ -99,6 +99,8 @@ namespace gz
         public: using ShapePtrType = BoxShapePtr<PolicyT, FeaturesT>;
 
         /// \brief Rigidly attach a BoxShape to this link.
+        /// \param[in] _name
+        ///   The name of the BoxShape.
         /// \param[in] _size
         ///   The size of the BoxShape's dimensions.
         /// \param[in] _pose
