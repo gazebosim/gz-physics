@@ -25,8 +25,9 @@ namespace gz
 namespace physics
 {
 // On gz-physics10 this header defines RayIntersectionT at namespace scope.
-// On gz-physics9 the struct stays nested in GetRayIntersectionFromLastStepFeature
-// to preserve ABI, so this header aliases it instead. The include direction is
+// On gz-physics9 the struct stays nested in
+// GetRayIntersectionFromLastStepFeature to preserve ABI, so this header
+// aliases it instead. The include direction is
 // therefore inverted relative to gz-physics main.
 template <typename PolicyT>
 using RayIntersectionT =
