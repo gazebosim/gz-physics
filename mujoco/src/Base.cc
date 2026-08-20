@@ -29,6 +29,58 @@ namespace mujoco
 {
 namespace {
 
+struct UserDataHeader
+{
+  uint64_t magic;
+  WorldInfo *worldInfo;
+};
+
+// Calculate required userdata slots (each slot is a mjtNum)
+constexpr int kRequiredUserDataSlots =
+    (sizeof(UserDataHeader) + sizeof(mjtNum) - 1) / sizeof(mjtNum);
+
+WorldInfo *GetWorldInfoFromUserData(const mjModel *m, const mjData *d)
+{
+  if (m && m->nuserdata >= kRequiredUserDataSlots && d && d->userdata)
+  {
+    UserDataHeader header;
+    std::memcpy(&header, d->userdata, sizeof(header));
+    if (header.magic == kUserDataMagicNumber)
+    {
+      return header.worldInfo;
+    }
+  }
+  return nullptr;
+}
+
+int ContactFilterCallback(const mjModel *m, mjData *d, int g1, int g2)
+{
+  int b1 = m->geom_bodyid[g1];
+  int b2 = m->geom_bodyid[g2];
+
+  WorldInfo *worldInfo = GetWorldInfoFromUserData(m, d);
+  if (worldInfo && !worldInfo->dynamicWeldClusterMap.empty())
+  {
+    int c1 = worldInfo->dynamicWeldClusterMap[m->body_weldid[b1]];
+    int c2 = worldInfo->dynamicWeldClusterMap[m->body_weldid[b2]];
+
+    if (c1 != -1 && c1 == c2)
+    {
+      return 1;  // Exclude collision
+    }
+  }
+
+  // Fallback to default contype/conaffinity mask filtering.
+  // The global callback replaces the default mechanism, so we must re-implement
+  // the bitmask check manually.
+  int contype1 = m->geom_contype[g1];
+  int conaffinity1 = m->geom_conaffinity[g1];
+  int contype2 = m->geom_contype[g2];
+  int conaffinity2 = m->geom_conaffinity[g2];
+
+  return !(contype1 & conaffinity2) && !(contype2 & conaffinity1);
+}
+
 // Store joint position, velocity, acceleration and force indices. This is an
 // optimization that avoids looking up these values in every simulation step.
 // Note: qvelAddr is also used for acceleration
@@ -113,14 +165,17 @@ void resolveJointIndices(WorldInfo &_worldInfo)
       }
     }
   }
-
 }
-}
+}  // namespace
 
 bool Base::RecompileSpec(WorldInfo &_worldInfo) const
 {
   if (!_worldInfo.specDirty)
     return true;
+
+  // Set nuserdata so that the compiler allocates the requested amount of data
+  // in mjData::userdata
+  _worldInfo.mjSpecObj->nuserdata = kRequiredUserDataSlots;
 
   int rc = mj_recompile(_worldInfo.mjSpecObj, nullptr, _worldInfo.mjModelObj,
                         _worldInfo.mjDataObj);
@@ -131,6 +186,17 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
               << "\n";
     return false;
   }
+
+  // Inject magic number and pointer to WorldInfo in the userdata slots
+  if (_worldInfo.mjModelObj->nuserdata >= kRequiredUserDataSlots)
+  {
+    UserDataHeader header;
+    header.magic = kUserDataMagicNumber;
+    header.worldInfo = &_worldInfo;
+    std::memcpy(_worldInfo.mjDataObj->userdata, &header, sizeof(header));
+  }
+
+  mjcb_contactfilter = ContactFilterCallback;
 
   // Ensure prevBodyPoses is sized correctly for the new model
   _worldInfo.prevBodyPoses.clear();
@@ -162,6 +228,8 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
   }
 
   resolveJointIndices(_worldInfo);
+
+  _worldInfo.UpdateWeldExclusions();
 
   mj_forward(_worldInfo.mjModelObj, _worldInfo.mjDataObj);
   return true;
