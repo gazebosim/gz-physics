@@ -19,7 +19,10 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numeric>
 #include <string_view>
+#include <utility>
+#include <vector>
 #include <Eigen/Geometry>
 #include <gz/common/Console.hh>
 #include <gz/math/Helpers.hh>
@@ -803,6 +806,8 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
     this->frames.erase(jointInfo->entityId);
 
     modelInfo->joints.RemoveEntity(jointInfo->name);
+
+    worldInfo->UpdateWeldExclusions();
   }
 }
 
@@ -862,11 +867,11 @@ Identity JointFeatures::AttachFixedJoint(
     gzerr << "Invalid worldInfo or modelInfo when attaching fixed joint.\n";
     return this->GenerateInvalidId();
   }
-  if (modelInfo->joints.HasEntity(_name))
+  std::string uniqueName = _name;
+  std::size_t counter = 1;
+  while (modelInfo->joints.HasEntity(uniqueName))
   {
-    gzerr << "There's already a joint with the same name [ " << _name
-          << " ].\n";
-    return this->GenerateInvalidId();
+    uniqueName = _name + "_" + std::to_string(counter++);
   }
 
   const char *childBodyName
@@ -876,7 +881,7 @@ Identity JointFeatures::AttachFixedJoint(
             ? mjs_getString(mjs_getName(parentLinkInfo->body->element))
             : "";
 
-  const std::string mjJointName = ::sdf::JoinName(modelInfo->name, _name);
+  const std::string mjJointName = ::sdf::JoinName(modelInfo->name, uniqueName);
 
   mjsEquality *eqSpec = mjs_asEquality(mjs_findElement(
       worldInfo->mjSpecObj, mjOBJ_EQUALITY, mjJointName.c_str()));
@@ -937,7 +942,7 @@ Identity JointFeatures::AttachFixedJoint(
 
   auto jointInfo =
     std::make_shared<JointInfo>(this->GetNextEntity(), modelInfo);
-  jointInfo->name = _name;
+  jointInfo->name = uniqueName;
   jointInfo->childBody = childLinkInfo->body;
   jointInfo->worldInfo = worldInfo;
   jointInfo->weldConstraintSpec = eqSpec;
@@ -961,14 +966,188 @@ Identity JointFeatures::AttachFixedJoint(
   }
 
   modelInfo->joints.AddEntity(
-    jointInfo->entityId, jointInfo, jointInfo->name, modelInfo->entityId);
+    jointInfo->entityId, jointInfo, uniqueName, modelInfo->entityId);
 
   if (requireRecompile)
   {
     worldInfo->specDirty = true;
+    if (worldInfo->mjModelObj)
+    {
+      int b1 = mjs_getId(childLinkInfo->body->element);
+      int b2 = parentLinkInfo ? mjs_getId(parentLinkInfo->body->element) : 0;
+      if (b1 >= 0 && b2 >= 0 && b1 < worldInfo->mjModelObj->nbody &&
+          b2 < worldInfo->mjModelObj->nbody)
+      {
+        int w1 = worldInfo->mjModelObj->body_weldid[b1];
+        int w2 = worldInfo->mjModelObj->body_weldid[b2];
+        worldInfo->dynamicWeldClusterMap = ComputeWeldExclusions(
+            worldInfo->mjModelObj, worldInfo->mjDataObj, {{w1, w2}});
+      }
+    }
+  }
+  else
+  {
+    worldInfo->UpdateWeldExclusions();
   }
 
   return this->GenerateIdentity(jointInfo->entityId, jointInfo);
+}
+
+namespace {
+/// \brief Disjoint-set data structure (Union-Find) to compute connected
+/// components of welded body clusters using contiguous vectors.
+class DisjointSet
+{
+  /// \brief Constructor.
+  /// \param[in] _n Number of elements.
+  public: explicit DisjointSet(std::size_t _n)
+    : parent(_n), weldCount(_n, 1)
+  {
+    std::iota(this->parent.begin(), this->parent.end(), 0);
+  }
+
+  /// \brief Find representative set root with path compression.
+  /// \param[in] _i Element ID.
+  /// \return Root ID.
+  public: int Find(int _i)
+  {
+    if (this->parent[_i] == _i)
+      return _i;
+    return this->parent[_i] = this->Find(this->parent[_i]);
+  }
+
+  /// \brief Merge sets containing _i and _j.
+  /// \param[in] _i First element ID.
+  /// \param[in] _j Second element ID.
+  public: void Union(int _i, int _j)
+  {
+    int rootI = this->Find(_i);
+    int rootJ = this->Find(_j);
+    if (rootI != rootJ)
+    {
+      this->parent[rootI] = rootJ;
+      this->weldCount[rootJ] += this->weldCount[rootI];
+    }
+  }
+
+  /// \brief Return the number of distinct weld groups merged into the set
+  /// containing _i.
+  /// \param[in] _i Element ID.
+  /// \return Count of merged weld groups.
+  public: int WeldCount(int _i)
+  {
+    return this->weldCount[this->Find(_i)];
+  }
+
+  private: std::vector<int> parent;
+  private: std::vector<int> weldCount;
+};
+}  // namespace
+
+/////////////////////////////////////////////////
+std::vector<int> ComputeWeldExclusions(
+    const mjModel *_m, const mjData *_d,
+    const std::vector<std::pair<int, int>> &_extraEdges)
+{
+  if (!_m || !_d)
+    return {};
+
+  std::vector<int> clusterMap(_m->nbody, -1);
+
+  // --------------------------------------------------------------------------
+  // Step 1: Merge Dynamic Welded Connections into Disjoint Sets
+  // --------------------------------------------------------------------------
+
+  // We only add edges for dynamic active fixed joints.
+  // We do NOT need to manually traverse kinematic trees because MuJoCo
+  // natively computes them and assigns rigidly connected bodies the exact
+  // same `body_weldid`.
+  // MuJoCo's broadphase inherently drops collisions where weld1 == weld2.
+  // Our DSU sets will merge these `body_weldid`s, not raw body IDs.
+
+  DisjointSet dsu(_m->nbody);
+
+  auto addEdge = [&](int b1, int b2) {
+    if (b1 >= 0 && b2 >= 0 && b1 < _m->nbody && b2 < _m->nbody)
+    {
+      int w1 = _m->body_weldid[b1];
+      int w2 = _m->body_weldid[b2];
+      if (w1 != w2)
+      {
+        dsu.Union(w1, w2);
+      }
+    }
+  };
+
+  for (int eqId = 0; eqId < _m->neq; ++eqId)
+  {
+    if (_m->eq_type[eqId] == mjEQ_WELD && _d->eq_active[eqId] == 1)
+    {
+      addEdge(_m->eq_obj1id[eqId], _m->eq_obj2id[eqId]);
+    }
+  }
+
+  for (const auto &[w1, w2] : _extraEdges)
+  {
+    if (w1 >= 0 && w2 >= 0 && w1 < _m->nbody && w2 < _m->nbody && w1 != w2)
+    {
+      dsu.Union(w1, w2);
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // Step 2: Extract Connected Components & Assign Cluster IDs
+  // --------------------------------------------------------------------------
+  // We re-loop over active equality constraints and extra edges to assign
+  // cluster IDs directly to their endpoints. This is O(K) in the number of
+  // active constraints (where K << N_bodies) and avoids extra heap memory
+  // allocations or scanning all N_bodies in the model.
+
+  std::vector<int> rootToClusterId(_m->nbody, -1);
+  int nextClusterId = 0;
+
+  auto assignCluster = [&](int b) {
+    if (b >= 0 && b < _m->nbody)
+    {
+      int w = _m->body_weldid[b];
+      if (dsu.WeldCount(w) > 1)
+      {
+        int root = dsu.Find(w);
+        if (rootToClusterId[root] == -1)
+        {
+          rootToClusterId[root] = nextClusterId++;
+        }
+        clusterMap[w] = rootToClusterId[root];
+      }
+    }
+  };
+
+  for (int eqId = 0; eqId < _m->neq; ++eqId)
+  {
+    if (_m->eq_type[eqId] == mjEQ_WELD && _d->eq_active[eqId] == 1)
+    {
+      assignCluster(_m->eq_obj1id[eqId]);
+      assignCluster(_m->eq_obj2id[eqId]);
+    }
+  }
+
+  for (const auto &[w1, w2] : _extraEdges)
+  {
+    assignCluster(w1);
+    assignCluster(w2);
+  }
+
+  return clusterMap;
+}
+
+/////////////////////////////////////////////////
+void WorldInfo::UpdateWeldExclusions()
+{
+  if (!this->mjModelObj)
+    return;
+
+  this->dynamicWeldClusterMap =
+      ComputeWeldExclusions(this->mjModelObj, this->mjDataObj);
 }
 
 }  // namespace mujoco
