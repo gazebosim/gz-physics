@@ -21,6 +21,11 @@
 #include <utility>
 
 #include <dart/collision/CollisionObject.hpp>
+#include <dart/collision/bullet/BulletCollisionGroup.hpp>
+#include <dart/collision/ode/OdeCollisionGroup.hpp>
+#include <gz/common/Console.hh>
+
+#include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 
 #include "GzCollisionDetector.hh"
 
@@ -100,6 +105,22 @@ void GzCollisionDetector::LimitCollisionPairMaxContacts(
 }
 
 /////////////////////////////////////////////////
+bool GzCollisionDetector::BatchRaycast(
+    CollisionGroup */*_group*/,
+    const std::vector<GzRay> &/*_rays*/,
+    std::vector<GzRayResult> &/*_output*/) const
+{
+  static bool warned = false;
+  if (!warned)
+  {
+    warned = true;
+    gzwarn << "BatchRaycast: collision detector does not support batch "
+           << "raycasting. All ray results will be NaN." << std::endl;
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////
 GzOdeCollisionDetector::GzOdeCollisionDetector()
   : OdeCollisionDetector(), GzCollisionDetector()
 {
@@ -126,6 +147,21 @@ std::shared_ptr<GzOdeCollisionDetector> GzOdeCollisionDetector::create()
   return std::shared_ptr<GzOdeCollisionDetector>(new GzOdeCollisionDetector());
 }
 
+class GzOdeCollisionGroup : public OdeCollisionGroup
+{
+  friend class GzOdeCollisionDetector;
+public:
+  /// Constructor
+  using OdeCollisionGroup::OdeCollisionGroup;
+
+  using OdeCollisionGroup::getOdeSpaceId;
+};
+
+std::unique_ptr<CollisionGroup> GzOdeCollisionDetector::createCollisionGroup()
+{
+  return std::make_unique<GzOdeCollisionGroup>(shared_from_this());
+}
+
 /////////////////////////////////////////////////
 bool GzOdeCollisionDetector::collide(
     CollisionGroup *_group,
@@ -149,10 +185,230 @@ bool GzOdeCollisionDetector::collide(
   return ret;
 }
 
+struct ODERayCastData
+{
+  RaycastResult* result;
+  const Eigen::Vector3d *origin;
+  double curContactDistSqr = std::numeric_limits<double>::max();
+};
+
+void NearCallbackODE(void *_data, dGeomID _o1, dGeomID _o2)
+{
+  // Check space
+  if (dGeomIsSpace(_o1) || dGeomIsSpace(_o2))
+  {
+    dSpaceCollide2(_o1, _o2, _data, &NearCallbackODE);
+    return;
+  }
+
+  // Identify the ray
+  dGeomID ray = nullptr;
+  dGeomID other = nullptr;
+
+  if (dGeomGetClass(_o1) == dRayClass)
+  {
+    ray = _o1;
+    other = _o2;
+  }
+  if (dGeomGetClass(_o2) == dRayClass)
+  {
+    ray = _o2;
+    other = _o1;
+  }
+
+  if(ray == nullptr)
+  {
+    // should not happen, but to be safe...
+    return;
+  }
+
+  dContactGeom contact;
+
+  ODERayCastData* data = static_cast<ODERayCastData*>(_data);
+
+  auto setResult = [&](dart::collision::RayHit &rayHit)
+  {
+
+      auto geomData = dGeomGetData(other);
+      rayHit.mNormal = Eigen::Vector3d(contact.normal);
+      rayHit.mPoint = Eigen::Vector3d(contact.pos);
+      rayHit.mCollisionObject =
+        static_cast<dart::collision::CollisionObject*>(geomData);
+  };
+
+  // param 3 makes sure that we only generate one collision per call
+  if(dCollide(ray, other, 1, &contact, sizeof(dContactGeom)) > 0)
+  {
+    Eigen::Vector3d contactPoint(contact.pos);
+
+    const double sqrDist = (*data->origin - contactPoint).squaredNorm();
+    if(sqrDist > data->curContactDistSqr)
+    {
+      // ignore farther contacts
+      return;
+    }
+
+    if(data->result->mRayHits.empty())
+    {
+      setResult(data->result->mRayHits.emplace_back());
+
+    }
+    else
+    {
+      setResult(data->result->mRayHits.front());
+    }
+    data->curContactDistSqr = sqrDist;
+  }
+}
+
+static void doSingleRaycastODE(const Eigen::Vector3d& origin,
+      const Eigen::Vector3d& target,
+      RaycastResult* result,
+      const dGeomID &rayId,
+      const dSpaceID &spaceId)
+{
+  const Eigen::Vector3d dirNonNormalized(target - origin);
+  const double length = dirNonNormalized.norm();
+  result->clear();
+  if(length < 1e-7)
+  {
+    return;
+  }
+
+  const Eigen::Vector3d dir(dirNonNormalized / length);
+
+  dGeomRaySet(rayId, origin.x(), origin.y(), origin.z(),
+              dir.x(), dir.y(), dir.z());
+  dGeomRaySetLength(rayId, length);
+
+  ODERayCastData data;
+  data.result = result;
+  data.origin = &origin;
+
+  dSpaceCollide2(rayId,
+                  reinterpret_cast<dGeomID>(spaceId),
+                  &data, &NearCallbackODE);
+
+  if(!result->mRayHits.empty())
+  {
+    // compute fraction, we need to do it here, as we need
+    // length and orgin
+    RayHit &rayHit(result->mRayHits.front());
+    rayHit.mFraction = (rayHit.mPoint - origin).norm() / length;
+  }
+}
+
+bool GzOdeCollisionDetector::raycast(
+      CollisionGroup* group,
+      const Eigen::Vector3d& from,
+      const Eigen::Vector3d& to,
+      const RaycastOption& option,
+      RaycastResult* result)
+{
+  if(!result)
+  {
+    return false;
+  }
+
+  if(option.mEnableAllHits)
+  {
+      gzwarn << "raycast multihit support is not"
+             << " implemented for ODE" << std::endl;
+      return false;
+  }
+
+  auto odeGroup = static_cast<GzOdeCollisionGroup *>(group);
+  const dSpaceID spaceId = odeGroup->getOdeSpaceId();
+
+  const dGeomID rayId = dCreateRay(nullptr, 1.0);
+  dGeomRaySetClosestHit(rayId, 1);
+
+  doSingleRaycastODE(from, to, result, rayId, spaceId);
+
+  dGeomDestroy(rayId);
+
+  // near callback updated our ray hit result now (or not)
+  return !result->mRayHits.empty();
+}
+
+bool GzOdeCollisionDetector::BatchRaycast(
+      CollisionGroup *_group,
+      const std::vector<GzRay> &_rays,
+      std::vector<GzRayResult> &_results) const
+{
+  auto odeGroup = static_cast<GzOdeCollisionGroup *>(_group);
+  const dSpaceID spaceId = odeGroup->getOdeSpaceId();
+
+  const dGeomID rayId = dCreateRay(nullptr, 1.0);
+  dGeomRaySetClosestHit(rayId, 1);
+
+  _results.clear();
+  _results.reserve(_rays.size());
+  RaycastResult result;
+  for(const GzRay &ray : _rays)
+  {
+    doSingleRaycastODE(ray.origin, ray.target, &result, rayId, spaceId);
+
+    // near callback updated our ray hit result now (or not)
+    if(result.hasHit())
+    {
+      RayHit &rayHit(result.mRayHits.front());
+      _results.emplace_back(GzRayResult{rayHit.mPoint, rayHit.mFraction,
+                            rayHit.mNormal});
+    }
+    else
+    {
+      // No hit: NaN fraction/point/normal. NaN (not +INF as on gz-physics10
+      // per REP-117) preserves gz-physics9's released miss value on this
+      // branch.
+      _results.emplace_back(GzRayResult{
+          Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN()),
+          std::numeric_limits<double>::quiet_NaN(),
+          Eigen::Vector3d::Constant(std::numeric_limits<double>::quiet_NaN())});
+    }
+  }
+
+  dGeomDestroy(rayId);
+
+  return true;
+}
+
+/// \brief Exposes BulletCollisionGroup::getBulletCollisionWorld() which
+/// is protected in the base class.
+class GzBulletCollisionGroup : public dart::collision::BulletCollisionGroup
+{
+  public: explicit GzBulletCollisionGroup(
+      const dart::collision::CollisionDetectorPtr &_detector);
+
+  /// \brief Return the underlying btCollisionWorld
+  public: const btCollisionWorld *getCollisionWorld() const;
+};
+
+/////////////////////////////////////////////////
+GzBulletCollisionGroup::GzBulletCollisionGroup(
+    const dart::collision::CollisionDetectorPtr &_detector)
+  : dart::collision::BulletCollisionGroup(_detector)
+{
+}
+
+/////////////////////////////////////////////////
+const btCollisionWorld *GzBulletCollisionGroup::getCollisionWorld() const
+{
+  // getBulletCollisionWorld() is protected in BulletCollisionGroup.
+  return this->getBulletCollisionWorld();
+}
+
 /////////////////////////////////////////////////
 GzBulletCollisionDetector::GzBulletCollisionDetector()
   : BulletCollisionDetector(), GzCollisionDetector()
 {
+}
+
+/////////////////////////////////////////////////
+std::unique_ptr<dart::collision::CollisionGroup>
+GzBulletCollisionDetector::createCollisionGroup()
+{
+  return std::make_unique<GzBulletCollisionGroup>(this->shared_from_this());
 }
 
 /////////////////////////////////////////////////
@@ -192,4 +448,59 @@ bool GzBulletCollisionDetector::collide(
       _group1, _group2, _option, _result);
   this->LimitCollisionPairMaxContacts(_result);
   return ret;
+}
+
+/////////////////////////////////////////////////
+bool GzBulletCollisionDetector::BatchRaycast(
+    CollisionGroup *_group,
+    const std::vector<GzRay> &_rays,
+    std::vector<GzRayResult> &_output) const
+{
+  auto *gzGroup = dynamic_cast<GzBulletCollisionGroup *>(_group);
+  if (!gzGroup)
+    return false;
+
+  const btCollisionWorld *btWorld = gzGroup->getCollisionWorld();
+  if (!btWorld)
+    return false;
+
+  _output.clear();
+  _output.reserve(_rays.size());
+
+  for (const auto &ray : _rays)
+  {
+    const btVector3 btFrom(
+      static_cast<btScalar>(ray.origin.x()),
+      static_cast<btScalar>(ray.origin.y()),
+      static_cast<btScalar>(ray.origin.z()));
+    const btVector3 btTo(
+      static_cast<btScalar>(ray.target.x()),
+      static_cast<btScalar>(ray.target.y()),
+      static_cast<btScalar>(ray.target.z()));
+
+    btCollisionWorld::ClosestRayResultCallback rayCallback(btFrom, btTo);
+    btWorld->rayTest(btFrom, btTo, rayCallback);
+
+    GzRayResult &result = _output.emplace_back();
+    if (rayCallback.hasHit())
+    {
+      const btVector3 &hp = rayCallback.m_hitPointWorld;
+      const btVector3 &hn = rayCallback.m_hitNormalWorld;
+      result.point << hp.x(), hp.y(), hp.z();
+      result.normal << hn.x(), hn.y(), hn.z();
+      result.fraction = static_cast<double>(rayCallback.m_closestHitFraction);
+    }
+    else
+    {
+      // No object in range: NaN fraction; point/normal undefined (NaN).
+      // NaN (not +INF as on gz-physics10 per REP-117) preserves gz-physics9's
+      // released miss value on this branch.
+      constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
+      result.point = Eigen::Vector3d::Constant(kNaN);
+      result.fraction = kNaN;
+      result.normal = Eigen::Vector3d::Constant(kNaN);
+    }
+  }
+
+  return true;
 }
