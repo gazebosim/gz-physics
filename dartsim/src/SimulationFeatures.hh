@@ -33,6 +33,7 @@
 #include <ignition/physics/CanWriteData.hh>
 
 #include <gz/physics/ForwardStep.hh>
+#include <gz/physics/GetBatchRayIntersection.hh>
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/ContactProperties.hh>
 #include <ignition/physics/SpecifyData.hh>
@@ -56,7 +57,13 @@ struct SimulationFeatureList : FeatureList<
 #ifdef DART_HAS_CONTACT_SURFACE
   SetContactPropertiesCallbackFeature,
 #endif
+<<<<<<< HEAD
   GetContactsFromLastStepFeature
+=======
+  GetContactsFromLastStepFeature,
+  GetRayIntersectionFromLastStepFeature,
+  GetBatchRayIntersectionFromLastStepFeature
+>>>>>>> be4569c (Backport CPU-lidar raycast (#880, #976) to gz-physics9 without the NaN->+INF breaking change (#1027))
 > { };
 
 #ifdef DART_HAS_CONTACT_SURFACE
@@ -96,6 +103,24 @@ class SimulationFeatures :
   public: using GetContactsFromLastStepFeature::Implementation<FeaturePolicy3d>
     ::ContactInternal;
 
+<<<<<<< HEAD
+=======
+  public: using GetRayIntersectionFromLastStepFeature::Implementation<
+    FeaturePolicy3d>::RayIntersection;
+
+  public: using BatchedRayIntersectionData =
+    GetBatchRayIntersectionFromLastStepFeature::Implementation<
+      FeaturePolicy3d>::BatchedRayIntersectionData;
+
+  public: using BatchRayQuery =
+    GetBatchRayIntersectionFromLastStepFeature::Implementation<
+      FeaturePolicy3d>::RayQuery;
+
+  public: using BatchRayIntersection =
+    GetBatchRayIntersectionFromLastStepFeature::Implementation<
+      FeaturePolicy3d>::RayIntersection;
+
+>>>>>>> be4569c (Backport CPU-lidar raycast (#880, #976) to gz-physics9 without the NaN->+INF breaking change (#1027))
   public: SimulationFeatures() = default;
   public: ~SimulationFeatures() override = default;
 
@@ -109,6 +134,15 @@ class SimulationFeatures :
 
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &_worldID) const override;
+
+  /// \brief link poses from the most recent pose change/update.
+  /// The key is the link's ID, and the value is the link's pose
+  private: mutable std::unordered_map<std::size_t, math::Pose3d> prevLinkPoses;
+
+  public: bool GetBatchRayIntersectionFromLastStep(
+      const Identity &_worldID,
+      const std::vector<BatchRayQuery> &_rays,
+      BatchedRayIntersectionData &_output) const override;
 
   /// \brief link poses from the most recent pose change/update.
   /// The key is the link's ID, and the value is the link's pose

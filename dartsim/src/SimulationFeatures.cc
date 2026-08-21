@@ -19,6 +19,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 
 #include <dart/collision/CollisionObject.hpp>
@@ -29,9 +30,22 @@
 #include <dart/constraint/ContactSurface.hpp>
 #endif
 
+<<<<<<< HEAD
 
 #include <ignition/math/Pose3.hh>
 #include <ignition/math/eigen3/Conversions.hh>
+=======
+#include <gz/common/Console.hh>
+#include <gz/common/Profiler.hh>
+
+#include <gz/math/Pose3.hh>
+#include <gz/math/eigen3/Conversions.hh>
+
+#include "gz/physics/GetBatchRayIntersection.hh"
+#include "gz/physics/GetContacts.hh"
+
+#include "GzCollisionDetector.hh"
+>>>>>>> be4569c (Backport CPU-lidar raycast (#880, #976) to gz-physics9 without the NaN->+INF breaking change (#1027))
 #include "SimulationFeatures.hh"
 
 #include "gz/common/Profiler.hh"
@@ -112,10 +126,87 @@ void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
     }
   }
 
+<<<<<<< HEAD
   // Save the new poses so that they can be used to check for updates in the
   // next iteration. Re-setting this->prevLinkPoses with the contents of
   // newPoses ensures that we aren't caching data for links that were removed
   this->prevLinkPoses = std::move(newPoses);
+=======
+SimulationFeatures::RayIntersection
+SimulationFeatures::GetRayIntersectionFromLastStep(
+  const Identity &_worldID,
+  const LinearVector3d &_from,
+  const LinearVector3d &_to) const
+{
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  auto collisionDetector = world->getConstraintSolver()->getCollisionDetector();
+  auto collisionGroup = world->getConstraintSolver()->getCollisionGroup().get();
+
+  // Perform raycast
+  dart::collision::RaycastOption option;
+  dart::collision::RaycastResult result;
+  collisionDetector->raycast(collisionGroup, _from, _to, option, &result);
+
+  // Currently, raycast supports only the Bullet collision detector.
+  // For other collision detectors, the result will always be NaN.
+  SimulationFeatures::RayIntersection intersection;
+  if (result.hasHit())
+  {
+    // Store intersection data if there is a ray hit
+    const auto &firstHit = result.mRayHits[0];
+    intersection.point = firstHit.mPoint;
+    intersection.normal = firstHit.mNormal;
+    intersection.fraction = firstHit.mFraction;
+  }
+  else
+  {
+    // Miss: NaN fraction/point/normal. Kept as NaN (gz-physics10 switched the
+    // miss value to +INF per REP-117) to preserve gz-physics9's released
+    // behavior on this branch. See RayIntersectionT::IsHit().
+    constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
+    intersection.point = Eigen::Vector3d::Constant(kNaN);
+    intersection.normal = Eigen::Vector3d::Constant(kNaN);
+    intersection.fraction = std::numeric_limits<double>::quiet_NaN();
+  }
+
+  return intersection;
+>>>>>>> be4569c (Backport CPU-lidar raycast (#880, #976) to gz-physics9 without the NaN->+INF breaking change (#1027))
+}
+
+/////////////////////////////////////////////////
+bool SimulationFeatures::GetBatchRayIntersectionFromLastStep(
+  const Identity &_worldID,
+  const std::vector<SimulationFeatures::BatchRayQuery> &_rays,
+  SimulationFeatures::BatchedRayIntersectionData &_output) const
+{
+  auto &results = _output.Get<std::vector<BatchRayIntersection>>();
+
+  if (_rays.empty())
+  {
+    results.clear();
+    return true;
+  }
+
+  auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
+  auto *const solver = world->getConstraintSolver();
+
+  auto detector = solver->getCollisionDetector();
+  auto *gzDetector =
+    dynamic_cast<dart::collision::GzCollisionDetector *>(detector.get());
+
+  if (gzDetector &&
+      gzDetector->BatchRaycast(
+          solver->getCollisionGroup().get(), _rays, results))
+    return true;
+
+  // Unsupported detector: fill with NaN fraction, NaN point/normal. NaN (not
+  // +INF as on gz-physics10 per REP-117) preserves gz-physics9's released
+  // miss value on this branch.
+  constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
+  const Eigen::Vector3d kNaNVec = Eigen::Vector3d::Constant(kNaN);
+  results.assign(_rays.size(),
+      {kNaNVec, kNaN, kNaNVec});
+  return false;
 }
 
 std::vector<SimulationFeatures::ContactInternal>
