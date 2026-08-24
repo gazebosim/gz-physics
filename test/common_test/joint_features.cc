@@ -1429,16 +1429,11 @@ struct JointFeatureAttachDetachList : gz::physics::FeatureList<
     gz::physics::AttachFixedJointFeature,
     gz::physics::DetachJointFeature,
     gz::physics::ForwardStep,
-    gz::physics::GetBasicJointProperties,
-    gz::physics::GetBasicJointState,
     gz::physics::GetEngineInfo,
-    gz::physics::GetJointFromModel,
     gz::physics::GetLinkFromModel,
     gz::physics::GetModelFromWorld,
     gz::physics::LinkFrameSemantics,
-    gz::physics::SetBasicJointState,
     gz::physics::SetJointTransformFromParentFeature,
-    gz::physics::SetJointVelocityCommandFeature,
     gz::physics::sdf::ConstructSdfModel,
     gz::physics::sdf::ConstructSdfWorld
 > { };
@@ -1578,6 +1573,197 @@ TYPED_TEST(JointFeaturesAttachDetachTest, JointAttachDetach)
     }
     frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
     EXPECT_NEAR(0.0, frameDataModel2Body.linearVelocity.z(), 1e-3);
+  }
+}
+
+using JointFeatureAttachDetachContactList = gz::physics::FeatureList<
+    gz::physics::AttachFixedJointFeature,
+    gz::physics::DetachJointFeature,
+    gz::physics::FindFreeGroupFeature,
+    gz::physics::ForwardStep,
+    gz::physics::GetContactsFromLastStepFeature,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetLinkFromModel,
+    gz::physics::GetModelFromWorld,
+    gz::physics::LinkFrameSemantics,
+    gz::physics::SetBasicJointState,
+    gz::physics::SetFreeGroupWorldPose,
+    gz::physics::SetJointTransformFromParentFeature,
+    gz::physics::sdf::ConstructSdfWorld
+>;
+
+template <class T>
+class JointFeaturesAttachDetachContactTest :
+  public JointFeaturesTest<T>{};
+using JointFeaturesAttachDetachContactTestTypes =
+  ::testing::Types<JointFeatureAttachDetachContactList>;
+TYPED_TEST_SUITE(JointFeaturesAttachDetachContactTest,
+                 JointFeaturesAttachDetachContactTestTypes);
+
+/////////////////////////////////////////////////
+// Verify contact generation and exclusion behavior during attach and detach operations.
+TYPED_TEST(JointFeaturesAttachDetachContactTest, JointAttachDetachContact)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<JointFeatureAttachDetachContactList>::From(
+            plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kDetachableJointContactSdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto model1 = world->GetModel("M1");
+    auto model2 = world->GetModel("M2");
+    ASSERT_NE(nullptr, model1);
+    ASSERT_NE(nullptr, model2);
+
+    auto link1Base = model1->GetLink("link1_base");
+    auto link2Base = model2->GetLink("link2_base");
+    auto link2Moving = model2->GetLink("link2_moving");
+    ASSERT_NE(nullptr, link1Base);
+    ASSERT_NE(nullptr, link2Base);
+    ASSERT_NE(nullptr, link2Moving);
+
+    auto j2Prism = model2->GetJoint("j2_prism");
+    ASSERT_NE(nullptr, j2Prism);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // 1. Initial step without attached joint: link1_base and link2_base
+    // touch/overlap, generating contacts
+    world->Step(output, state, input);
+    auto initialContacts = world->GetContactsFromLastStep();
+    EXPECT_GT(initialContacts.size(), 0u);
+
+    // 2. Attach fixed joint between link1_base and link2_base
+    auto fixedJoint = link2Base->AttachFixedJoint(link1Base);
+    ASSERT_NE(nullptr, fixedJoint);
+
+    // Set the transform from the parent (link1Base) to the joint (which is at link2Base origin)
+    // link1_base is at (0, 0, 0.5) and link2_base is at (0.8, 0, 0.5) in world frame.
+    Eigen::Isometry3d parentToJoint = Eigen::Isometry3d::Identity();
+    parentToJoint.translation() = Eigen::Vector3d(0.8, 0.0, 0.0);
+    fixedJoint->SetTransformFromParent(parentToJoint);
+
+    world->Step(output, state, input);
+    auto weldedContacts = world->GetContactsFromLastStep();
+    // Motionless welded bodies produce ZERO contacts between each other
+    EXPECT_EQ(0u, weldedContacts.size());
+
+    // 3. Move prismatic moving link from M2 (link2_moving) down to collide with
+    // revolute link from M1 (link1_moving)
+    j2Prism->SetPosition(0, -0.7);
+
+    world->Step(output, state, input);
+    auto movingContacts = world->GetContactsFromLastStep();
+    // Moving links with DOFs DO generate contact points when touching
+    // cross-model links
+    EXPECT_GT(movingContacts.size(), 0u);
+
+    // Reset link2_moving position
+    j2Prism->SetPosition(0, 0.0);
+    world->Step(output, state, input);
+
+    // 4. Detach fixed joint
+    fixedJoint->Detach();
+
+    world->Step(output, state, input);
+    auto detachedContacts = world->GetContactsFromLastStep();
+    // Contact points are generated again between the previously welded bodies
+    EXPECT_GT(detachedContacts.size(), 0u);
+  }
+}
+
+/////////////////////////////////////////////////
+// Verify contact generation and exclusion when SetWorldPose is called on a
+// free group immediately after AttachFixedJoint, before world->Step().
+TYPED_TEST(JointFeaturesAttachDetachContactTest, JointAttachFixedGroupMoveContact)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<JointFeatureAttachDetachContactList>::From(
+            plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors =
+        root.Load(common_test::worlds::kDetachableJointContactSdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto model1 = world->GetModel("M1");
+    auto model2 = world->GetModel("M2");
+    ASSERT_NE(nullptr, model1);
+    ASSERT_NE(nullptr, model2);
+
+    auto link1Base = model1->GetLink("link1_base");
+    auto link2Base = model2->GetLink("link2_base");
+    auto link2Moving = model2->GetLink("link2_moving");
+    ASSERT_NE(nullptr, link1Base);
+    ASSERT_NE(nullptr, link2Base);
+    ASSERT_NE(nullptr, link2Moving);
+
+    auto j2Prism = model2->GetJoint("j2_prism");
+    ASSERT_NE(nullptr, j2Prism);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // 1. Initial step without attached joint: link1_base and link2_base touch
+    world->Step(output, state, input);
+    auto initialContacts = world->GetContactsFromLastStep();
+    EXPECT_GT(initialContacts.size(), 0u);
+
+    // 2. Attach fixed joint between link1_base and link2_base
+    auto fixedJoint = link2Base->AttachFixedJoint(link1Base);
+    ASSERT_NE(nullptr, fixedJoint);
+
+    Eigen::Isometry3d parentToJoint = Eigen::Isometry3d::Identity();
+    parentToJoint.translation() = Eigen::Vector3d(0.8, 0.0, 0.0);
+    fixedJoint->SetTransformFromParent(parentToJoint);
+
+    // 3. Move model1 immediately using free group BEFORE world->Step()
+    auto freeGroupM1 = model1->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroupM1);
+    gz::math::Pose3d movePose(0.1, 0, 0.5, 0, 0, 0);
+    freeGroupM1->SetWorldPose(gz::math::eigen3::convert(movePose));
+
+    // Step world and verify contact behavior
+    world->Step(output, state, input);
+    auto weldedContacts = world->GetContactsFromLastStep();
+    // Attached links must not generate contacts with each other
+    EXPECT_EQ(0u, weldedContacts.size());
+
+    // 4. Move prismatic moving link to collide with cross-model link
+    j2Prism->SetPosition(0, -0.7);
+
+    world->Step(output, state, input);
+    auto movingContacts = world->GetContactsFromLastStep();
+    // Contacts ARE generated when non-welded links touch
+    EXPECT_GT(movingContacts.size(), 0u);
   }
 }
 
@@ -2447,7 +2633,6 @@ using FixedJointFreeGroupFeatureList = gz::physics::FeatureList<
     gz::physics::LinkFrameSemantics,
     gz::physics::SetBasicJointState,
     gz::physics::SetJointTransformFromParentFeature,
-    gz::physics::SetJointVelocityCommandFeature,
     gz::physics::sdf::ConstructSdfModel,
     gz::physics::sdf::ConstructSdfWorld
 >;
@@ -2535,6 +2720,14 @@ TEST_F(FixedJointFreeGroupFeatureTestTypes, FixedJointFreeGroupMove)
     // Move parent model using free group
     freeGroupM1->SetWorldPose(gz::math::eigen3::convert(newModel1Pose));
 
+    // Verify immediate pose update for attached links before world->Step()
+    frameDataModel1Body = model1Body->FrameDataRelativeToWorld();
+    frameDataModel2Body = model2Body->FrameDataRelativeToWorld();
+    EXPECT_EQ(newModel1Pose,
+              gz::math::eigen3::convert(frameDataModel1Body.pose));
+    EXPECT_EQ(newModel2Pose,
+              gz::math::eigen3::convert(frameDataModel2Body.pose));
+
     for (std::size_t i = 0; i < numSteps; ++i)
     {
       world->Step(output, state, input);
@@ -2566,7 +2759,6 @@ using FixedJointWeldFeatureList = gz::physics::FeatureList<
     gz::physics::SetBasicJointState,
     gz::physics::SetFixedJointWeldChildToParentFeature,
     gz::physics::SetJointTransformFromParentFeature,
-    gz::physics::SetJointVelocityCommandFeature,
     gz::physics::sdf::ConstructSdfModel,
     gz::physics::sdf::ConstructSdfWorld
 >;
