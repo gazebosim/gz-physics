@@ -306,8 +306,12 @@ static ShapeAndTransform ConstructPlane(
 static ShapeAndTransform ConstructHeightmap(
     const ::sdf::Heightmap & /*_heightmap*/)
 {
-  ignerr << "Heightmap construction from an SDF has not been implemented yet "
-         << "for dartsim.\n";
+  // TODO(mjcarroll) Allow dartsim to construct heightmaps internally rather
+  // than relying on the physics consumer constructing and attaching:
+  // https://github.com/gazebosim/gz-physics/issues/451
+  igndbg << "Dartsim did not construct the heightmap during this SDF "
+        << "construction stage. A physics consumer may still attach it later "
+        << "through AttachHeightmapShapeFeature.\n";
   return {nullptr};
 }
 
@@ -317,8 +321,12 @@ static ShapeAndTransform ConstructMesh(
 {
   // TODO(MXG): Look into what kind of mesh URI we get here. Will it just be
   // a local file name, or do we need to resolve the URI?
-  ignerr << "Mesh construction from an SDF has not been implemented yet for "
-         << "dartsim.\n";
+  // TODO(mjcarroll) Allow dartsim to construct meshes internally rather
+  // than relying on the physics consumer constructing and attaching:
+  // https://github.com/gazebosim/gz-physics/issues/451
+  igndbg << "Dartsim did not construct the mesh during this SDF construction "
+        << "stage. A physics consumer may still attach it later through "
+        << "AttachMeshShapeFeature.\n";
   return {nullptr};
 }
 
@@ -770,8 +778,10 @@ Identity SDFFeatures::ConstructSdfCollision(
   if (!shape)
   {
     // The geometry element was empty, or the shape type is not supported
-    ignerr << "The geometry element of collision [" << _collision.Name() << "] "
-           << "couldn't be created\n";
+    igndbg << "ConstructSdfCollision did not create the geometry element of "
+          << "collision [" << _collision.Name() << "] at this stage. Mesh and "
+          << "heightmap geometry may still be attached later by the physics "
+          << "consumer.\n";
     return this->GenerateInvalidId();
   }
 
