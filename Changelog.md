@@ -1,5 +1,13 @@
 ## Gazebo Physics 9.x
 
+### Gazebo Physics 9.5.0 (2026-08-26)
+
+1. Backport CPU-lidar raycast (#880, #976) to gz-physics9 without the NaN->+INF breaking change
+    * [Pull request #880, #976) to gz-physics9 without the NaN->+INF breaking change (#1027](https://github.com/gazebosim/gz-physics/pull/880, #976) to gz-physics9 without the NaN->+INF breaking change (#1027)
+
+1. ci: test on Ubuntu Resolute (26.04)
+    * [Pull request #1034](https://github.com/gazebosim/gz-physics/pull/1034
+
 ### Gazebo Physics 9.4.0 (2026-07-20)
 
 1. [bazel] Bump default bazel version to 9.1.1 and bump CI workflow version
