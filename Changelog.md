@@ -6,7 +6,7 @@
     * [Pull request #1027](https://github.com/gazebosim/gz-physics/pull/1027)
 
 1. ci: test on Ubuntu Resolute (26.04)
-    * [Pull request #1034](https://github.com/gazebosim/gz-physics/pull/1034
+    * [Pull request #1034](https://github.com/gazebosim/gz-physics/pull/1034)
 
 ### Gazebo Physics 9.4.0 (2026-07-20)
 
