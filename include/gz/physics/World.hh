@@ -92,7 +92,7 @@ namespace gz
         /// the frame whose coordinates are used to express the gravity vector.
         /// The World frame is used as a default if no frame is specified.
         /// \param[in] _gravity Gravity vector.
-        /// \param[in] _inCoordinatesOf Frame whose coordinates are used
+        /// \param[in] _forceInCoordinatesOf Frame whose coordinates are used
         /// to express _gravity.
         public: void SetGravity(
             const LinearVectorType &_gravity,
@@ -101,7 +101,7 @@ namespace gz
         /// \brief Get the World gravity vector. Optionally, you may specify
         /// the frame whose coordinates are used to express the gravity vector.
         /// The World frame is used as a default if no frame is specified.
-        /// \param[in] _inCoordinatesOf Frame whose coordinates are used
+        /// \param[in] _forceInCoordinatesOf Frame whose coordinates are used
         /// to express _gravity.
         /// \return Gravity vector in corrdinates of _inCoordinatesOf.
         public: LinearVectorType GetGravity(
@@ -214,7 +214,7 @@ namespace gz
         /// \brief Implementation API for setting the number of solver
         /// iterations.
         /// \param[in] _id Identity of the world.
-        /// \param[in] _solver Number of solver iterations.
+        /// \param[in] _iterations Number of solver iterations.
         public: virtual void SetWorldSolverIterations(
             const Identity &_id, std::size_t _iterations) = 0;
 
