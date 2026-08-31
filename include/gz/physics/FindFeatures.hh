@@ -30,7 +30,7 @@ namespace gz
     template <typename FeaturePolicyT, typename FeatureListT>
     struct FindFeatures
     {
-      // Tuple of features that are being requested
+      // List of features that are being requested
       using Features = FeatureListT;
 
       /// \brief Find a set of plugins that satisfy the requested list of

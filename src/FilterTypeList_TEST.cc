@@ -25,47 +25,47 @@ class ClassB : public physics::Feature { };
 class ClassC : public physics::Feature { };
 class ClassD : public ClassB { };
 
-using Filter = std::tuple<ClassA, ClassD>;
-using Input = std::tuple<ClassB, ClassC, ClassD, ClassA>;
+using Filter = physics::TypeList<ClassA, ClassD>;
+using Input = physics::TypeList<ClassB, ClassC, ClassD, ClassA>;
 
-using Result = physics::detail::SubtractTuple<Filter>
+using Result = physics::detail::SubtractList<Filter>
     ::From<Input>::type;
 
 using UnfilteredResult =
-    physics::detail::SubtractTuple<std::tuple<>>::From<Input>::type;
+    physics::detail::SubtractList<physics::TypeList<>>::From<Input>::type;
 
-TEST(FilterTuple_TEST, FilterTupleResult)
+TEST(FilterTypeList_TEST, FilterTypeListResult)
 {
   // ClassA and ClassD should be filtered out because they are in Filter.
   // ClassB should be filtered out because it is a base class of ClassD.
   // Therefore we should only be left with ClassC.
-  EXPECT_EQ(1u, std::tuple_size<Result>::value);
+  EXPECT_EQ(1u, Result::size);
 
-  EXPECT_EQ(4u, std::tuple_size<UnfilteredResult>::value);
+  EXPECT_EQ(4u, UnfilteredResult::size);
   std::cout << typeid(UnfilteredResult).name() << std::endl;
 }
 
 
 using SingleCombineLists =
   physics::detail::CombineListsImpl<
-      std::tuple<>, ClassA>::type;
+      physics::TypeList<>, ClassA>::type;
 
 using SingleCombineListsInitial =
   physics::detail::CombineListsImpl<
-      std::tuple<>, ClassA>::InitialResult;
+      physics::TypeList<>, ClassA>::InitialResult;
 
 using SingleCombineListsPartial =
   physics::detail::CombineListsImpl<
-      std::tuple<>, ClassA>::PartialResult;
+      physics::TypeList<>, ClassA>::PartialResult;
 
 using SingleCombineListsChildFilter =
   physics::detail::CombineListsImpl<
-      std::tuple<>, ClassA>::ChildFilter;
+      physics::TypeList<>, ClassA>::ChildFilter;
 
-TEST(FilterTuple_TEST, CombineListsResult)
+TEST(FilterTypeList_TEST, CombineListsResult)
 {
-  EXPECT_EQ(1u, std::tuple_size<SingleCombineListsInitial>::value);
-  EXPECT_EQ(1u, std::tuple_size<SingleCombineListsPartial>::value);
-  EXPECT_EQ(1u, std::tuple_size<SingleCombineListsChildFilter>::value);
-  EXPECT_EQ(1u, std::tuple_size<SingleCombineLists>::value);
+  EXPECT_EQ(1u, SingleCombineListsInitial::size);
+  EXPECT_EQ(1u, SingleCombineListsPartial::size);
+  EXPECT_EQ(1u, SingleCombineListsChildFilter::size);
+  EXPECT_EQ(1u, SingleCombineLists::size);
 }
