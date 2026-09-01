@@ -1,5 +1,13 @@
 ## Gazebo Physics 9.x
 
+### Gazebo Physics 9.5.1 (2026-09-01)
+
+1. Use explicit element overload of Eigen::Vector3d
+    * [Pull request #1043](https://github.com/gazebosim/gz-physics/pull/1043)
+
+1. Clarify deferred DART mesh construction logs
+    * [Pull request #1035](https://github.com/gazebosim/gz-physics/pull/1035)
+
 ### Gazebo Physics 9.5.0 (2026-08-26)
 
 1. Backport CPU-lidar raycast (#880, #976) to gz-physics9 without the NaN->+INF breaking change
