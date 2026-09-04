@@ -31,6 +31,9 @@ void ModelFeatures::SetModelStatic(const Identity &_id, bool _static)
 
   // In DART, isMobile=false means the skeleton is fixed (static).
   skeleton->setMobile(!_static);
+  // Links of a skeleton that becomes mobile again must be re-evaluated by
+  // Write(ChangedWorldPoses &).
+  this->InvalidateStaticPoses();
 
   // When transitioning between states, zero out any
   // velocities and accelerations that DART may have stored on the skeleton

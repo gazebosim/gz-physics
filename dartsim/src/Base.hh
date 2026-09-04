@@ -26,6 +26,7 @@
 #include <dart/dynamics/Skeleton.hpp>
 #include <dart/simulation/World.hpp>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -83,9 +84,17 @@ struct LinkInfo
   /// \brief The total link inertia, which may be split between the `link` and
   /// `weldedNodes` body nodes.
   std::optional<math::Inertiald> inertial;
-  /// \brief Cached pose from the previous physics step, used for performance
-  /// optimization.
-  std::optional<math::Pose3d> prevPose;
+  /// \brief Pose reported in the previous Write(ChangedWorldPoses &). It is
+  /// nullopt until the first report, so a new link is always reported once.
+  /// Mutable because it is bookkeeping updated from a const write method.
+  mutable std::optional<math::Pose3d> prevPose;
+  /// \brief True once this link belongs to an immobile (static) skeleton and
+  /// its pose was found unchanged after being reported. While set, and as
+  /// long as settledEpoch matches Base::poseEpoch, Write(ChangedWorldPoses &)
+  /// skips the link without querying its transform.
+  mutable bool poseSettled = false;
+  /// \brief Value of Base::poseEpoch when poseSettled was set.
+  mutable uint64_t settledEpoch = 0;
 };
 
 struct JointInfo
@@ -170,6 +179,18 @@ class Base : public Implements3d<FeatureList<Feature>>
   }
 
   public: std::size_t entityCount = 0;
+
+  /// \brief Incremented by every operation that can move a link of an
+  /// immobile skeleton or change which skeleton a link belongs to. A change
+  /// forces Write(ChangedWorldPoses &) to re-evaluate the links it had
+  /// marked as settled. See LinkInfo::poseSettled.
+  public: uint64_t poseEpoch = 0;
+
+  /// \brief Mark the poses of settled static links as possibly changed.
+  public: inline void InvalidateStaticPoses()
+  {
+    ++this->poseEpoch;
+  }
 
   public: inline std::size_t AddWorld(
       const DartWorldPtr &_world, const std::string &_name)
@@ -365,6 +386,9 @@ class Base : public Implements3d<FeatureList<Feature>>
   public: inline std::size_t AddJoint(DartJoint *_joint,
       const std::string &_fullName, std::size_t _modelID)
   {
+    // Creating a joint may have moved its child body node to another
+    // skeleton (BodyNode::moveTo), so the settled static poses are stale.
+    this->InvalidateStaticPoses();
     const std::size_t id = this->GetNextEntity();
     auto jointInfo = std::make_shared<JointInfo>();
     jointInfo->joint = _joint;

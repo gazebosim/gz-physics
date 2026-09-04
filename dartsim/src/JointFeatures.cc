@@ -102,6 +102,7 @@ void JointFeatures::SetJointPosition(
     return;
   }
   joint->setPosition(_dof, _value);
+  this->InvalidateStaticPoses();
 }
 
 /////////////////////////////////////////////////
@@ -481,6 +482,7 @@ void JointFeatures::SetJointTransformFromParent(
 {
   this->ReferenceInterface<JointInfo>(_id)
       ->joint->setTransformFromParentBodyNode(_pose);
+  this->InvalidateStaticPoses();
 }
 
 /////////////////////////////////////////////////
@@ -489,6 +491,7 @@ void JointFeatures::SetJointTransformToChild(
 {
   this->ReferenceInterface<JointInfo>(_id)
       ->joint->setTransformFromChildBodyNode(_pose.inverse());
+  this->InvalidateStaticPoses();
 }
 
 /////////////////////////////////////////////////
@@ -579,6 +582,8 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
   // TODO(addisu) Remove incrementVersion once DART has been updated to
   // internally increment the BodyNode's version after moveTo.
   child->incrementVersion();
+  // The child moved to a new (or its own) skeleton.
+  this->InvalidateStaticPoses();
 }
 
 /////////////////////////////////////////////////

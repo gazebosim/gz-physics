@@ -191,29 +191,40 @@ void SimulationFeatures::Write(WorldPoses &_worldPoses) const
 
 void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 {
-  // remove link poses from the previous iteration
+  // remove link poses from the previous iteration (clear keeps the capacity)
   _changedPoses.entries.clear();
-  _changedPoses.entries.reserve(this->links.size());
 
   for (const auto &[id, info] : this->links.idToObject)
   {
     // make sure the link exists
-    if (info && info->link)
-    {
-      WorldPose wp;
-      wp.pose = gz::math::eigen3::convert(
-          info->link->getWorldTransform());
-      wp.body = id;
+    if (!info || !info->link)
+      continue;
 
-      // If the link's pose is new or has changed, save this new pose and
-      // add it to the output poses. Otherwise, keep the existing link pose
-      if (!info->prevPose.has_value() ||
-          !info->prevPose->Pos().Equal(wp.pose.Pos(), 1e-6) ||
-          !info->prevPose->Rot().Equal(wp.pose.Rot(), 1e-6))
-      {
-        _changedPoses.entries.push_back(wp);
-        info->prevPose = wp.pose;
-      }
+    // A link of a static skeleton whose pose was already reported and found
+    // unchanged cannot move on its own. Skip it until something invalidates
+    // the settled poses (see Base::InvalidateStaticPoses).
+    if (info->poseSettled && info->settledEpoch == this->poseEpoch)
+      continue;
+
+    WorldPose wp;
+    wp.pose = gz::math::eigen3::convert(
+        info->link->getWorldTransform());
+    wp.body = id;
+
+    // If the link's pose is new or has changed, save this new pose and
+    // add it to the output poses. Otherwise, keep the existing link pose
+    if (!info->prevPose.has_value() ||
+        !info->prevPose->Pos().Equal(wp.pose.Pos(), 1e-6) ||
+        !info->prevPose->Rot().Equal(wp.pose.Rot(), 1e-6))
+    {
+      _changedPoses.entries.push_back(wp);
+      info->prevPose = wp.pose;
+      info->poseSettled = false;
+    }
+    else if (!info->link->getSkeleton()->isMobile())
+    {
+      info->poseSettled = true;
+      info->settledEpoch = this->poseEpoch;
     }
   }
 }

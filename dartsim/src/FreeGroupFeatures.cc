@@ -163,6 +163,9 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
     const Identity &_groupID,
     const PoseType &_pose)
 {
+  // The group may belong to a static skeleton, whose reported poses are
+  // otherwise assumed unchanged.
+  this->InvalidateStaticPoses();
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
