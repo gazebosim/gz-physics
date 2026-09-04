@@ -231,6 +231,8 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
 
   _worldInfo.UpdateWeldExclusions();
 
+  _worldInfo.jointForceCmdReceived.assign(_worldInfo.mjModelObj->nv, false);
+
   mj_forward(_worldInfo.mjModelObj, _worldInfo.mjDataObj);
   return true;
 }

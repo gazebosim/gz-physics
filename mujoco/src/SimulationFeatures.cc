@@ -83,6 +83,8 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   // in the next timestep, which is the expected behavior in Gazebo.
   std::fill(d->xfrc_applied, d->xfrc_applied + 6 * m->nbody, 0.0);
 
+  worldInfo->jointForceCmdReceived.assign(
+    worldInfo->jointForceCmdReceived.size(), 0);
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());
 }

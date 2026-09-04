@@ -329,20 +329,24 @@ double JointFeatures::GetJointForce(
     return math::NAN_D;
   }
 
+  if (!jointInfo->actuator)
+  {
+    gzerr << "No actuator set up for this joint\n";
+    return math::NAN_D;
+  }
   // If SetJointForce was called before a physics step has run, returning
   // d->ctrl directly ensures GetJointForce immediately reflects the commanded
   // force before mj_forward computes d->qfrc_actuator.
   auto *m = jointInfo->worldInfo->mjModelObj;
   auto *d = jointInfo->worldInfo->mjDataObj;
-  if (jointInfo->actuator)
+
+  const int actuatorId =
+    mjs_getId(jointInfo->actuator->element) + static_cast<int>(_dof);
+
+  if (actuatorId >= 0 && m->actuator_biastype[actuatorId] == mjBIAS_NONE &&
+    jointInfo->worldInfo->jointForceCmdReceived[jointInfo->nv_index + _dof])
   {
-    const int actuatorId =
-        mjs_getId(jointInfo->actuator->element) + static_cast<int>(_dof);
-    if (actuatorId >= 0 && m->actuator_biastype[actuatorId] == mjBIAS_NONE &&
-        d->ctrl[actuatorId] != 0.0)
-    {
-      return d->ctrl[actuatorId];
-    }
+    return d->ctrl[actuatorId];
   }
 
   return d->qfrc_actuator[jointInfo->nv_index + _dof];
@@ -504,10 +508,19 @@ void JointFeatures::SetJointForce(
     return;
   }
 
-  const int actuatorId = ctrlIndex + static_cast<int>(_dof);
-  setActuatorMode(jointInfo->worldInfo->mjModelObj, actuatorId, false);
+  auto *worldInfo = jointInfo->worldInfo;
 
-  jointInfo->worldInfo->mjDataObj->ctrl[ctrlIndex + _dof] = _value;
+  const int actuatorId = ctrlIndex + static_cast<int>(_dof);
+  setActuatorMode(worldInfo->mjModelObj, actuatorId, false);
+
+  worldInfo->mjDataObj->ctrl[ctrlIndex + _dof] = _value;
+
+  // Even though `mjData.ctrl` is used to set the force, we use `nv_index` to
+  // index into jointForceCmdReceived because there is potential to have
+  // multiple control inputs for a single joint, for example, to implement a PD
+  // controller. Using nv_index allows us to have a 1:1 mapping between Gazebo
+  // joints+dof and jointForceCmdReceived.
+  worldInfo->jointForceCmdReceived[jointInfo->nv_index + _dof] = 1;
 }
 
 /////////////////////////////////////////////////
