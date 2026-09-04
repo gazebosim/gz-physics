@@ -35,32 +35,38 @@ struct UserDataHeader
   WorldInfo *worldInfo;
 };
 
+// Calculate required userdata slots (each slot is a mjtNum)
+constexpr int kRequiredUserDataSlots =
+    (sizeof(UserDataHeader) + sizeof(mjtNum) - 1) / sizeof(mjtNum);
+
+WorldInfo *GetWorldInfoFromUserData(const mjModel *m, const mjData *d)
+{
+  if (m && m->nuserdata >= kRequiredUserDataSlots && d && d->userdata)
+  {
+    UserDataHeader header;
+    std::memcpy(&header, d->userdata, sizeof(header));
+    if (header.magic == kUserDataMagicNumber)
+    {
+      return header.worldInfo;
+    }
+  }
+  return nullptr;
+}
+
 int ContactFilterCallback(const mjModel *m, mjData *d, int g1, int g2)
 {
   int b1 = m->geom_bodyid[g1];
   int b2 = m->geom_bodyid[g2];
 
-  if (m->nuserdata == 2 && d && d->userdata)
+  WorldInfo *worldInfo = GetWorldInfoFromUserData(m, d);
+  if (worldInfo && !worldInfo->dynamicWeldClusterMap.empty())
   {
-    UserDataHeader header;
-    std::memcpy(&header, d->userdata, sizeof(UserDataHeader));
+    int c1 = worldInfo->dynamicWeldClusterMap[m->body_weldid[b1]];
+    int c2 = worldInfo->dynamicWeldClusterMap[m->body_weldid[b2]];
 
-    // Only run if this mjModel is ours as indicated by the magic number. We do
-    // this because ContactFilterCallback is a global callback.
-    if (header.magic == kUserDataMagicNumber)
+    if (c1 != -1 && c1 == c2)
     {
-      WorldInfo *worldInfo = header.worldInfo;
-
-      if (worldInfo && !worldInfo->dynamicWeldClusterMap.empty())
-      {
-        int c1 = worldInfo->dynamicWeldClusterMap[m->body_weldid[b1]];
-        int c2 = worldInfo->dynamicWeldClusterMap[m->body_weldid[b2]];
-
-        if (c1 != -1 && c1 == c2)
-        {
-          return 1;  // Exclude collision
-        }
-      }
+      return 1;  // Exclude collision
     }
   }
 
@@ -159,9 +165,8 @@ void resolveJointIndices(WorldInfo &_worldInfo)
       }
     }
   }
-
 }
-}
+}  // namespace
 
 bool Base::RecompileSpec(WorldInfo &_worldInfo) const
 {
@@ -170,7 +175,7 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
 
   // Set nuserdata so that the compiler allocates the requested amount of data
   // in mjData::userdata
-  _worldInfo.mjSpecObj->nuserdata = 2;
+  _worldInfo.mjSpecObj->nuserdata = kRequiredUserDataSlots;
 
   int rc = mj_recompile(_worldInfo.mjSpecObj, nullptr, _worldInfo.mjModelObj,
                         _worldInfo.mjDataObj);
@@ -182,14 +187,13 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
     return false;
   }
 
-  // Inject magic number and pointer to WorldInfo in the two userdata slots
-  if (_worldInfo.mjModelObj->nuserdata == 2)
+  // Inject magic number and pointer to WorldInfo in the userdata slots
+  if (_worldInfo.mjModelObj->nuserdata >= kRequiredUserDataSlots)
   {
     UserDataHeader header;
     header.magic = kUserDataMagicNumber;
     header.worldInfo = &_worldInfo;
-    std::memcpy(_worldInfo.mjDataObj->userdata, &header,
-                sizeof(UserDataHeader));
+    std::memcpy(_worldInfo.mjDataObj->userdata, &header, sizeof(header));
   }
 
   mjcb_contactfilter = ContactFilterCallback;

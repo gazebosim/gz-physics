@@ -5,8 +5,13 @@ endif()
 add_library(MockEntities SHARED MockEntities.cc)
 add_library(MockFrames SHARED frames.cc)
 add_library(MockJoints SHARED MockJoints.cc)
+add_library(MockCompositeData SHARED MockCompositeData.cc)
+set_target_properties(MockCompositeData PROPERTIES
+  CXX_VISIBILITY_PRESET hidden
+  VISIBILITY_INLINES_HIDDEN 1)
 
 list(APPEND plugins
+    MockCompositeData
     MockEntities
     MockFrames
     MockJoints)

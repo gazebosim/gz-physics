@@ -19,6 +19,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numeric>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -1061,9 +1062,9 @@ Identity JointFeatures::AttachFixedJoint(
     worldInfo->specDirty = true;
     if (worldInfo->mjModelObj)
     {
-      int b1 = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, childBodyName);
-      int b2 = mj_name2id(worldInfo->mjModelObj, mjOBJ_BODY, parentBodyName);
-      if (b1 > 0 && b2 > 0 && b1 < worldInfo->mjModelObj->nbody &&
+      int b1 = mjs_getId(childLinkInfo->body->element);
+      int b2 = parentLinkInfo ? mjs_getId(parentLinkInfo->body->element) : 0;
+      if (b1 >= 0 && b2 >= 0 && b1 < worldInfo->mjModelObj->nbody &&
           b2 < worldInfo->mjModelObj->nbody)
       {
         int w1 = worldInfo->mjModelObj->body_weldid[b1];
@@ -1082,69 +1083,53 @@ Identity JointFeatures::AttachFixedJoint(
 }
 
 namespace {
-/// \brief A simple graph data structure to encapsulate adjacency lists
-/// and connected component extraction using contiguous memory vectors.
-struct Graph
+/// \brief Disjoint-set data structure (Union-Find) to compute connected
+/// components of welded body clusters using contiguous vectors.
+class DisjointSet
 {
-  std::vector<std::vector<int>> adj;
-
   /// \brief Constructor.
-  /// \param[in] _numNodes The number of nodes in the graph.
-  explicit Graph(int _numNodes) : adj(_numNodes)
+  /// \param[in] _n Number of elements.
+  public: explicit DisjointSet(std::size_t _n)
+    : parent(_n), weldCount(_n, 1)
   {
+    std::iota(this->parent.begin(), this->parent.end(), 0);
   }
 
-  /// \brief Add an undirected edge between two nodes.
-  /// \param[in] _u First node.
-  /// \param[in] _v Second node.
-  void AddEdge(int _u, int _v)
+  /// \brief Find representative set root with path compression.
+  /// \param[in] _i Element ID.
+  /// \return Root ID.
+  public: int Find(int _i)
   {
-    this->adj[_u].push_back(_v);
-    this->adj[_v].push_back(_u);
+    if (this->parent[_i] == _i)
+      return _i;
+    return this->parent[_i] = this->Find(this->parent[_i]);
   }
 
-  /// \brief Extract all connected components (clusters) from the graph.
-  /// \return A list of connected components, where each component is a
-  /// vector of node IDs. Isolated nodes are ignored.
-  std::vector<std::vector<int>> GetConnectedComponents() const
+  /// \brief Merge sets containing _i and _j.
+  /// \param[in] _i First element ID.
+  /// \param[in] _j Second element ID.
+  public: void Union(int _i, int _j)
   {
-    std::vector<std::vector<int>> components;
-    std::vector<bool> visited(this->adj.size(), false);
-
-    for (std::size_t i = 1; i < this->adj.size(); ++i)
+    int rootI = this->Find(_i);
+    int rootJ = this->Find(_j);
+    if (rootI != rootJ)
     {
-      if (visited[i] || this->adj[i].empty())
-        continue;
-
-      std::vector<int> cluster;
-      std::vector<int> q;
-      q.push_back(i);
-      visited[i] = true;
-
-      std::size_t head = 0;
-      while (head < q.size())
-      {
-        int curr = q[head++];
-        cluster.push_back(curr);
-
-        for (int neighbor : this->adj[curr])
-        {
-          if (!visited[neighbor])
-          {
-            visited[neighbor] = true;
-            q.push_back(neighbor);
-          }
-        }
-      }
-
-      // Only keep clusters with at least 2 bodies to form an excluded pair
-      if (cluster.size() > 1)
-      {
-        components.push_back(std::move(cluster));
-      }
+      this->parent[rootI] = rootJ;
+      this->weldCount[rootJ] += this->weldCount[rootI];
     }
-    return components;
   }
+
+  /// \brief Return the number of distinct weld groups merged into the set
+  /// containing _i.
+  /// \param[in] _i Element ID.
+  /// \return Count of merged weld groups.
+  public: int WeldCount(int _i)
+  {
+    return this->weldCount[this->Find(_i)];
+  }
+
+  private: std::vector<int> parent;
+  private: std::vector<int> weldCount;
 };
 }  // namespace
 
@@ -1153,12 +1138,13 @@ std::vector<int> ComputeWeldExclusions(
     const mjModel *_m, const mjData *_d,
     const std::vector<std::pair<int, int>> &_extraEdges)
 {
+  if (!_m || !_d)
+    return {};
+
   std::vector<int> clusterMap(_m->nbody, -1);
 
-  Graph weldGraph(_m->nbody);
-
   // --------------------------------------------------------------------------
-  // Step 1: Build the Weld Graph (Add edges for every welded connection)
+  // Step 1: Merge Dynamic Welded Connections into Disjoint Sets
   // --------------------------------------------------------------------------
 
   // We only add edges for dynamic active fixed joints.
@@ -1166,51 +1152,78 @@ std::vector<int> ComputeWeldExclusions(
   // natively computes them and assigns rigidly connected bodies the exact
   // same `body_weldid`.
   // MuJoCo's broadphase inherently drops collisions where weld1 == weld2.
-  // Our graph's nodes will represent these `body_weldid`s, not raw body IDs.
+  // Our DSU sets will merge these `body_weldid`s, not raw body IDs.
 
-  if (_m && _d)
-  {
-    for (int eqId = 0; eqId < _m->neq; ++eqId)
+  DisjointSet dsu(_m->nbody);
+
+  auto addEdge = [&](int b1, int b2) {
+    if (b1 >= 0 && b2 >= 0 && b1 < _m->nbody && b2 < _m->nbody)
     {
-      if (_m->eq_type[eqId] == mjEQ_WELD && _d->eq_active[eqId] == 1)
+      int w1 = _m->body_weldid[b1];
+      int w2 = _m->body_weldid[b2];
+      if (w1 != w2)
       {
-        int b1 = _m->eq_obj1id[eqId];
-        int b2 = _m->eq_obj2id[eqId];
-        if (b1 > 0 && b2 > 0 && b1 < _m->nbody && b2 < _m->nbody)
-        {
-          int w1 = _m->body_weldid[b1];
-          int w2 = _m->body_weldid[b2];
-          // Only add edge if they are in different kinematic trees
-          // (weld groups)
-          if (w1 != w2)
-          {
-            weldGraph.AddEdge(w1, w2);
-          }
-        }
+        dsu.Union(w1, w2);
       }
+    }
+  };
+
+  for (int eqId = 0; eqId < _m->neq; ++eqId)
+  {
+    if (_m->eq_type[eqId] == mjEQ_WELD && _d->eq_active[eqId] == 1)
+    {
+      addEdge(_m->eq_obj1id[eqId], _m->eq_obj2id[eqId]);
     }
   }
 
   for (const auto &[w1, w2] : _extraEdges)
   {
-    if (w1 != w2)
+    if (w1 >= 0 && w2 >= 0 && w1 < _m->nbody && w2 < _m->nbody && w1 != w2)
     {
-      weldGraph.AddEdge(w1, w2);
+      dsu.Union(w1, w2);
     }
   }
 
   // --------------------------------------------------------------------------
   // Step 2: Extract Connected Components & Assign Cluster IDs
   // --------------------------------------------------------------------------
+  // We re-loop over active equality constraints and extra edges to assign
+  // cluster IDs directly to their endpoints. This is O(K) in the number of
+  // active constraints (where K << N_bodies) and avoids extra heap memory
+  // allocations or scanning all N_bodies in the model.
 
-  const auto clusters = weldGraph.GetConnectedComponents();
+  std::vector<int> rootToClusterId(_m->nbody, -1);
+  int nextClusterId = 0;
 
-  for (std::size_t clusterId = 0; clusterId < clusters.size(); ++clusterId)
-  {
-    for (int w : clusters[clusterId])
+  auto assignCluster = [&](int b) {
+    if (b >= 0 && b < _m->nbody)
     {
-      clusterMap[w] = static_cast<int>(clusterId);
+      int w = _m->body_weldid[b];
+      if (dsu.WeldCount(w) > 1)
+      {
+        int root = dsu.Find(w);
+        if (rootToClusterId[root] == -1)
+        {
+          rootToClusterId[root] = nextClusterId++;
+        }
+        clusterMap[w] = rootToClusterId[root];
+      }
     }
+  };
+
+  for (int eqId = 0; eqId < _m->neq; ++eqId)
+  {
+    if (_m->eq_type[eqId] == mjEQ_WELD && _d->eq_active[eqId] == 1)
+    {
+      assignCluster(_m->eq_obj1id[eqId]);
+      assignCluster(_m->eq_obj2id[eqId]);
+    }
+  }
+
+  for (const auto &[w1, w2] : _extraEdges)
+  {
+    assignCluster(w1);
+    assignCluster(w2);
   }
 
   return clusterMap;

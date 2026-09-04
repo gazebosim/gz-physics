@@ -148,18 +148,16 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
     const Eigen::Isometry3d deltaPose = _pose * oldRootPose.inverse();
 
     int clusterId = -1;
-    if (bodyId >= 0 &&
-        bodyId < static_cast<int>(worldInfo->dynamicWeldClusterMap.size()))
+    if (!worldInfo->dynamicWeldClusterMap.empty())
     {
-      clusterId = worldInfo->dynamicWeldClusterMap[bodyId];
+      clusterId = worldInfo->dynamicWeldClusterMap[m->body_weldid[bodyId]];
     }
 
     if (clusterId != -1)
     {
       for (int b = 1; b < m->nbody; ++b)
       {
-        if (b < static_cast<int>(worldInfo->dynamicWeldClusterMap.size()) &&
-            worldInfo->dynamicWeldClusterMap[b] == clusterId)
+        if (worldInfo->dynamicWeldClusterMap[m->body_weldid[b]] == clusterId)
         {
           int bJntadr = m->body_jntadr[b];
           if (bJntadr >= 0 && m->jnt_type[bJntadr] == mjJNT_FREE)
