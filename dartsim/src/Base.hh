@@ -192,6 +192,10 @@ class Base : public Implements3d<FeatureList<Feature>>
     ++this->poseEpoch;
   }
 
+  /// \brief True once any link with fluid added mass has been added, so the
+  /// per step buoyancy correction loop only runs when it has work to do.
+  public: bool hasFluidAddedMassLinks = false;
+
   public: inline std::size_t AddWorld(
       const DartWorldPtr &_world, const std::string &_name)
   {
@@ -260,6 +264,8 @@ class Base : public Implements3d<FeatureList<Feature>>
     // Inertial properties (if available) used when splitting nodes to close
     // kinematic loops.
     linkInfo->inertial = _inertial;
+    if (_inertial && _inertial->FluidAddedMass().has_value())
+      this->hasFluidAddedMassLinks = true;
     this->links.AddEntity(id, linkInfo, _bn, _modelID);
     this->frames[id] = _bn;
 

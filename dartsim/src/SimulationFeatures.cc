@@ -96,18 +96,23 @@ void SimulationFeatures::WorldForwardStep(
     }
   }
 
-  for (const auto &[id, info] : this->links.idToObject)
+  // Only walk the links when at least one of them has fluid added mass
+  if (this->hasFluidAddedMassLinks)
   {
-    if (info && info->inertial->FluidAddedMass().has_value())
+    for (const auto &[id, info] : this->links.idToObject)
     {
-      auto com = Eigen::Vector3d(info->inertial->Pose().Pos().X(),
-                                 info->inertial->Pose().Pos().Y(),
-                                 info->inertial->Pose().Pos().Z());
+      if (info && info->inertial &&
+          info->inertial->FluidAddedMass().has_value())
+      {
+        auto com = Eigen::Vector3d(info->inertial->Pose().Pos().X(),
+                                   info->inertial->Pose().Pos().Y(),
+                                   info->inertial->Pose().Pos().Z());
 
-      auto mass = info->inertial->MassMatrix().Mass();
-      auto g = world->getGravity();
+        auto mass = info->inertial->MassMatrix().Mass();
+        auto g = world->getGravity();
 
-      info->link->addExtForce(mass * g, com, false, true);
+        info->link->addExtForce(mass * g, com, false, true);
+      }
     }
   }
 
