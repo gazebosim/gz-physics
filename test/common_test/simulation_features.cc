@@ -51,6 +51,7 @@
 #include <gz/physics/GetBatchRayIntersection.hh>
 #include <gz/physics/GetRayIntersection.hh>
 #include <gz/physics/Joint.hh>
+#include <gz/physics/Model.hh>
 #include "gz/physics/SphereShape.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
@@ -497,6 +498,135 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
     ASSERT_NE(poseIt, worldPoses.end());
     auto pos = poseIt->pose.Pos();
     EXPECT_NEAR(pos.Z(), 1.0, 5e-2) << "link: " << link->EntityID();
+  }
+}
+
+// The features that an engine must have to be loaded by this loader.
+struct FeaturesStaticLinks : public  gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetLinkFromModel,
+  gz::physics::FindFreeGroupFeature,
+  gz::physics::SetFreeGroupWorldPose,
+  gz::physics::ModelStaticState,
+  gz::physics::ForwardStep
+> {};
+
+template <class T>
+class SimulationFeaturesStaticLinksTest :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesStaticLinksTestTypes =
+  ::testing::Types<FeaturesStaticLinks>;
+TYPED_TEST_SUITE(SimulationFeaturesStaticLinksTest,
+                 SimulationFeaturesStaticLinksTestTypes);
+
+/// \brief Return true if the ChangedWorldPoses in _output contain _linkId
+bool ContainsLink(const gz::physics::ForwardStep::Output &_output,
+                  std::size_t _linkId)
+{
+  const auto *changed =
+      _output.Query<gz::physics::ChangedWorldPoses>(
+          gz::physics::CompositeData::QueryMode::SILENT);
+  if (nullptr == changed)
+    return false;
+  return std::any_of(changed->entries.begin(), changed->entries.end(),
+      [&](const auto &_wp) { return _wp.body == _linkId; });
+}
+
+/////////////////////////////////////////////////
+// The links of a static model must be reported once (they are new), then
+// stop appearing in ChangedWorldPoses, and be reported again exactly when
+// something moves them: a pose command or the model becoming dynamic.
+TYPED_TEST(SimulationFeaturesStaticLinksTest,
+           StaticLinksReportedOnceThenSkipped)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    auto world = LoadPluginAndWorld<FeaturesStaticLinks>(
+        this->loader, name, common_test::worlds::kContactSdf);
+    ASSERT_NE(nullptr, world);
+
+    auto ground = world->GetModel("ground_plane");
+    ASSERT_NE(nullptr, ground);
+    EXPECT_TRUE(ground->GetStatic());
+    auto groundLink = ground->GetLink("link");
+    ASSERT_NE(nullptr, groundLink);
+    const std::size_t groundLinkId = groundLink->EntityID();
+
+    auto sphere = world->GetModel("sphere");
+    ASSERT_NE(nullptr, sphere);
+    EXPECT_FALSE(sphere->GetStatic());
+    auto sphereLink = sphere->GetLink("link0");
+    ASSERT_NE(nullptr, sphereLink);
+    const std::size_t sphereLinkId = sphereLink->EntityID();
+
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+
+    // First step: every link is new, so both are reported
+    world->Step(output, state, input);
+    EXPECT_TRUE(ContainsLink(output, groundLinkId));
+    EXPECT_TRUE(ContainsLink(output, sphereLinkId));
+
+    // Following steps: the falling sphere keeps being reported (not
+    // necessarily on every step, its motion per step may be below the
+    // change threshold), the static ground link never is
+    bool sphereReported = false;
+    for (std::size_t i = 0; i < 10; ++i)
+    {
+      world->Step(output, state, input);
+      EXPECT_FALSE(ContainsLink(output, groundLinkId)) << "step " << i;
+      sphereReported = sphereReported || ContainsLink(output, sphereLinkId);
+    }
+    EXPECT_TRUE(sphereReported);
+
+    // Moving the static model through its free group must be reported once
+    auto groundFreeGroup = ground->FindFreeGroup();
+    ASSERT_NE(nullptr, groundFreeGroup);
+    const gz::math::Pose3d newPose(0, 0, -5, 0, 0, 0);
+    groundFreeGroup->SetWorldPose(gz::math::eigen3::convert(newPose));
+    world->Step(output, state, input);
+    EXPECT_TRUE(ContainsLink(output, groundLinkId));
+    {
+      const auto &entries =
+          output.Get<gz::physics::ChangedWorldPoses>().entries;
+      auto it = std::find_if(entries.begin(), entries.end(),
+          [&](const auto &_wp) { return _wp.body == groundLinkId; });
+      ASSERT_NE(it, entries.end());
+      EXPECT_NEAR(newPose.Pos().Z(), it->pose.Pos().Z(), 1e-6);
+    }
+    for (std::size_t i = 0; i < 5; ++i)
+    {
+      world->Step(output, state, input);
+      EXPECT_FALSE(ContainsLink(output, groundLinkId)) << "step " << i;
+    }
+
+    // The ground plane link has no inertial. bullet-featherstone keeps such
+    // a link fixed even after it is made dynamic, so the rest of the test
+    // (which relies on the model falling) does not apply to it.
+    if (gz::physics::TestLibLoader::EngineInList(name, {"bullet-featherstone"}))
+      continue;
+
+    // Making the model dynamic makes it fall and be reported every step
+    ground->SetStatic(false);
+    EXPECT_FALSE(ground->GetStatic());
+    for (std::size_t i = 0; i < 5; ++i)
+    {
+      world->Step(output, state, input);
+      EXPECT_TRUE(ContainsLink(output, groundLinkId)) << "step " << i;
+    }
+
+    // Making it static again: reported at most once more, then skipped
+    ground->SetStatic(true);
+    EXPECT_TRUE(ground->GetStatic());
+    world->Step(output, state, input);
+    world->Step(output, state, input);
+    for (std::size_t i = 0; i < 5; ++i)
+    {
+      world->Step(output, state, input);
+      EXPECT_FALSE(ContainsLink(output, groundLinkId)) << "step " << i;
+    }
   }
 }
 
