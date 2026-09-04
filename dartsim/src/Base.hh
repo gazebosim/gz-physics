@@ -104,6 +104,10 @@ struct ModelInfo
   std::vector<std::shared_ptr<JointInfo>> joints {};
   std::vector<std::size_t> nestedModels = {};
   std::optional<Eigen::VectorXd> lastGoodPositions = {};
+  /// \brief Scratch buffer for the per step NaN check of the skeleton
+  /// positions. Sized once, then swapped with lastGoodPositions so no
+  /// allocation happens per step.
+  Eigen::VectorXd positionsScratch = {};
 };
 
 struct ShapeInfo

@@ -16,6 +16,7 @@
 */
 
 #include <Eigen/Geometry>
+#include <cmath>
 #include <limits>
 #include <memory>
 #include <sstream>
@@ -115,8 +116,30 @@ void SimulationFeatures::WorldForwardStep(
 
   for (auto &[ignore, modelInfo] : this->models.idToObject)
   {
-    const Eigen::VectorXd &positions = modelInfo->model->getPositions();
-    if (positions.hasNaN())
+    const auto &skel = modelInfo->model;
+    // World::step only integrates mobile skeletons, so the positions of an
+    // immobile (static) skeleton cannot have changed during the step.
+    if (!skel || !skel->isMobile())
+      continue;
+
+    // Copy the positions into a preallocated buffer instead of calling
+    // getPositions(), which allocates a new vector on every call.
+    const std::size_t numDofs = skel->getNumDofs();
+    Eigen::VectorXd &positions = modelInfo->positionsScratch;
+    positions.resize(numDofs);
+    bool hasNaN = false;
+    for (std::size_t i = 0; i < numDofs; ++i)
+    {
+      const double position = skel->getDof(i)->getPosition();
+      if (std::isnan(position))
+      {
+        hasNaN = true;
+        break;
+      }
+      positions[i] = position;
+    }
+
+    if (hasNaN)
     {
       std::stringstream ss;
       ss << "Some links in model '" << modelInfo->localName
@@ -139,7 +162,10 @@ void SimulationFeatures::WorldForwardStep(
     }
     else
     {
-      modelInfo->lastGoodPositions = positions;
+      if (!modelInfo->lastGoodPositions)
+        modelInfo->lastGoodPositions.emplace();
+      // Keep the last good positions without copying them
+      modelInfo->lastGoodPositions->swap(positions);
     }
   }
   this->WriteRequiredData(_h);
