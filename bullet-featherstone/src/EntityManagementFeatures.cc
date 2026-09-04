@@ -25,6 +25,8 @@
 #include "EntityManagementFeatures.hh"
 #include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 
+#include <gz/common/Profiler.hh>
+
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
@@ -40,6 +42,7 @@ std::size_t EntityManagementFeatures::GetLinkCount(
 Identity EntityManagementFeatures::GetLink(
   const Identity &_modelID, std::size_t _linkIndex) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetLink(Index)");
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
   if (_linkIndex >= model->linkEntityIds.size())
     return this->GenerateInvalidId();
@@ -52,6 +55,7 @@ Identity EntityManagementFeatures::GetLink(
 Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, const std::string &_linkName) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetLink(Name)");
   // TODO(MXG): Consider using a hashmap with the link names as a key to speed
   // this up
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
@@ -100,6 +104,7 @@ Identity EntityManagementFeatures::GetJoint(
   const Identity &_modelID,
   std::size_t _jointIndex) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetJoint(Index)");
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
   if (_jointIndex >= model->jointEntityIds.size())
     return this->GenerateInvalidId();
@@ -113,6 +118,7 @@ Identity EntityManagementFeatures::GetJoint(
   const Identity &_modelID,
   const std::string &_jointName) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetJoint(Name)");
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
   const auto it = model->jointNameToEntityId.find(_jointName);
   if (it == model->jointNameToEntityId.end())
@@ -153,6 +159,7 @@ std::size_t EntityManagementFeatures::GetShapeCount(
 Identity EntityManagementFeatures::GetShape(
   const Identity &_linkID, std::size_t _shapeIndex) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetShape(Index)");
   const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
   if (_shapeIndex >= link->collisionEntityIds.size())
     return this->GenerateInvalidId();
@@ -165,6 +172,7 @@ Identity EntityManagementFeatures::GetShape(
 Identity EntityManagementFeatures::GetShape(
   const Identity &_linkID, const std::string &_shapeName) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetShape(Name)");
   const auto *link = this->ReferenceInterface<LinkInfo>(_linkID);
   const auto it = link->collisionNameToEntityId.find(_shapeName);
   if (it == link->collisionNameToEntityId.end())
@@ -297,6 +305,7 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 bool EntityManagementFeatures::ModelRemoved(
     const Identity &_modelID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::ModelRemoved");
   return this->models.find(_modelID) == this->models.end();
 }
 
@@ -304,6 +313,7 @@ bool EntityManagementFeatures::ModelRemoved(
 bool EntityManagementFeatures::RemoveModelByIndex(
     const Identity & _worldID, std::size_t _modelIndex)
 {
+  GZ_PROFILE("EntityManagementFeatures::RemoveModelByIndex");
   auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
   const auto it =
       world->modelIndexToEntityId.find(static_cast<int>(_modelIndex));
@@ -318,6 +328,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
 bool EntityManagementFeatures::RemoveModelByName(
     const Identity & _worldID, const std::string & _modelName )
 {
+  GZ_PROFILE("EntityManagementFeatures::RemoveModelByName");
   // Check if there is a model with the requested name
   auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
   const auto it = world->modelNameToEntityId.find(_modelName);
@@ -332,6 +343,7 @@ bool EntityManagementFeatures::RemoveModelByName(
 bool EntityManagementFeatures::RemoveNestedModelByIndex(
     const Identity &_modelID, std::size_t _nestedModelIndex)
 {
+  GZ_PROFILE("EntityManagementFeatures::RemoveNestedModelByIndex");
   auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
   if (!model)
     return false;
@@ -352,6 +364,7 @@ bool EntityManagementFeatures::RemoveNestedModelByIndex(
 bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &_modelID,
     const std::string &_modelName)
 {
+  GZ_PROFILE("EntityManagementFeatures::RemoveNestedModelByName");
   auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
   if (!model)
     return false;
@@ -402,6 +415,7 @@ std::size_t EntityManagementFeatures::GetWorldCount(
 Identity EntityManagementFeatures::GetWorld(
     const Identity &, const std::size_t _requestedWorldIndex) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetWorld");
   // _worldIndex is not the same as a WorldID. The value of _worldIndex should
   // range from 0 to GetWorldCount()-1. The most efficient implementation
   // would be to maintain a std::vector of WorldIDs, but then we'd have to
@@ -420,6 +434,7 @@ Identity EntityManagementFeatures::GetWorld(
 Identity EntityManagementFeatures::GetWorld(
     const Identity &, const std::string &_requestedWorldName) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetWorld(name)");
   // We could speed this up by maintaining a hashmap from world name to world ID
   for (const auto &[worldID, world] : this->worlds)
   {
@@ -455,6 +470,7 @@ Identity EntityManagementFeatures::GetEngineOfWorld(
 std::size_t EntityManagementFeatures::GetModelCount(
     const Identity &_worldID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetModelCount");
   // Get world model and return its nested model count
   auto modelIt = this->models.find(_worldID);
   if (modelIt != this->models.end())
@@ -468,6 +484,7 @@ std::size_t EntityManagementFeatures::GetModelCount(
 Identity EntityManagementFeatures::GetModel(
     const Identity &_worldID, std::size_t _modelIndex) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetModel(Index)");
   const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
   const auto it =
       world->modelIndexToEntityId.find(static_cast<int>(_modelIndex));
@@ -481,6 +498,7 @@ Identity EntityManagementFeatures::GetModel(
 Identity EntityManagementFeatures::GetModel(
     const Identity &_worldID, const std::string &_modelName) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetModel(Name)");
   const auto *world = this->ReferenceInterface<WorldInfo>(_worldID);
   const auto it = world->modelNameToEntityId.find(_modelName);
   if (it == world->modelNameToEntityId.end())
@@ -526,6 +544,7 @@ std::size_t EntityManagementFeatures::GetNestedModelCount(
 Identity EntityManagementFeatures::GetNestedModel(
     const Identity &_modelID, const std::size_t _modelIndex) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetNestedModel(Index)");
   const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   if (_modelIndex >= modelInfo->nestedModelEntityIds.size())
   {
@@ -551,6 +570,7 @@ Identity EntityManagementFeatures::GetNestedModel(
 Identity EntityManagementFeatures::GetNestedModel(
     const Identity &_modelID, const std::string &_modelName) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetNestedModel(name)");
   const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   auto modelIt = modelInfo->nestedModelNameToEntityId.find(_modelName);
   if (modelIt == modelInfo->nestedModelNameToEntityId.end())
@@ -563,6 +583,7 @@ Identity EntityManagementFeatures::GetNestedModel(
 /////////////////////////////////////////////////
 Identity EntityManagementFeatures::GetWorldModel(const Identity &_worldID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetWorldModel");
   return this->GenerateIdentity(_worldID, this->models.at(_worldID));
 }
 
