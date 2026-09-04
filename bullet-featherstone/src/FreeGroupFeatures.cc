@@ -20,6 +20,8 @@
 #include <memory>
 #include <unordered_map>
 
+#include <gz/common/Profiler.hh>
+
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
@@ -43,6 +45,7 @@ void enforceFixedConstraint(
     btMultiBodyFixedConstraint *_fixedConstraint,
     const std::unordered_map<std::size_t, Base::JointInfoPtr> &_allJoints)
 {
+  GZ_PROFILE("bullet_featherstone::enforceFixedConstraint");
   // Update fixed constraint's child link pose to maintain a fixed transform
   // from the parent link.
   btMultiBody *parent = _fixedConstraint->getMultiBodyA();
@@ -83,6 +86,7 @@ void enforceFixedConstraint(
 Identity FreeGroupFeatures::FindFreeGroupForModel(
     const Identity &_modelID) const
 {
+  GZ_PROFILE("FreeGroupFeatures::FindFreeGroupForModel");
   const auto *model = this->ReferenceInterface<ModelInfo>(_modelID);
 
   for (const auto & joint : this->joints)
@@ -123,6 +127,7 @@ Identity FreeGroupFeatures::FindFreeGroupForLink(
 /////////////////////////////////////////////////
 Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 {
+  GZ_PROFILE("FreeGroupFeatures::GetFreeGroupRootLink");
   // Free groups in bullet-featherstone are always represented by ModelInfo
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
 
@@ -164,6 +169,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
     const Identity &_groupID,
     const PoseType &_pose)
 {
+  GZ_PROFILE("FreeGroupFeatures::SetFreeGroupWorldPose");
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
   if (model)
   {

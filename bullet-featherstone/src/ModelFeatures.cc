@@ -17,6 +17,8 @@
 
 #include "ModelFeatures.hh"
 
+#include <gz/common/Profiler.hh>
+
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
@@ -24,6 +26,7 @@ namespace bullet_featherstone {
 /////////////////////////////////////////////////
 void ModelFeatures::SetModelStatic(const Identity &_id, bool _static)
 {
+  GZ_PROFILE("ModelFeatures::SetModelStatic");
   auto *modelInfo = this->ReferenceInterface<ModelInfo>(_id);
   if (!modelInfo)
     return;
@@ -83,6 +86,7 @@ void ModelFeatures::SetModelStatic(const Identity &_id, bool _static)
 /////////////////////////////////////////////////
 bool ModelFeatures::GetModelStatic(const Identity &_id) const
 {
+  GZ_PROFILE("ModelFeatures::GetModelStatic");
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_id);
   if (!modelInfo)
     return false;
