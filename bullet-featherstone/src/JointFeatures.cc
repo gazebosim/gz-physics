@@ -24,6 +24,7 @@
 #include <unordered_map>
 
 #include <gz/common/Console.hh>
+#include <gz/common/Profiler.hh>
 #include <sdf/Joint.hh>
 
 namespace gz {
@@ -34,6 +35,7 @@ namespace bullet_featherstone {
 void recreateJointLimitConstraint(JointInfo *_jointInfo, ModelInfo *_modelInfo,
     WorldInfo *_worldInfo)
 {
+  GZ_PROFILE("bullet_featherstone::recreateJointLimitConstraint");
   const auto *identifier = std::get_if<InternalJoint>(&_jointInfo->identifier);
   if (!identifier)
     return;
@@ -59,6 +61,7 @@ void updateColliderFlagsRecursive(std::size_t _linkID,
   const std::unordered_map<std::size_t, std::shared_ptr<LinkInfo>> &_links,
   std::function<void(LinkInfo *)> _updateColliderCb)
 {
+  GZ_PROFILE("bullet_featherstone::updateColliderFlagsRecursive");
   btMultiBodyFixedConstraint *fixedConstraint = nullptr;
   std::size_t childLinkID = 0u;
   for (const auto &joint : _joints)
@@ -86,6 +89,7 @@ void updateColliderFlagsRecursive(std::size_t _linkID,
 double JointFeatures::GetJointPosition(
     const Identity &_id, const std::size_t _dof) const
 {
+  GZ_PROFILE("JointFeatures::GetJointPosition");
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
   if (identifier)
@@ -103,6 +107,7 @@ double JointFeatures::GetJointPosition(
 double JointFeatures::GetJointVelocity(
     const Identity &_id, const std::size_t _dof) const
 {
+  GZ_PROFILE("JointFeatures::GetJointVelocity");
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
   if (identifier)
@@ -135,6 +140,7 @@ double JointFeatures::GetJointAcceleration(
 double JointFeatures::GetJointForce(
     const Identity &_id, const std::size_t /*_dof*/) const
 {
+  GZ_PROFILE("JointFeatures::GetJointForce");
   double results = gz::math::NAN_D;
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
@@ -200,6 +206,7 @@ Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 void JointFeatures::SetJointPosition(
   const Identity &_id, const std::size_t _dof, const double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointPosition");
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
   if (!identifier)
@@ -214,6 +221,7 @@ void JointFeatures::SetJointPosition(
 void JointFeatures::SetJointVelocity(
   const Identity &_id, const std::size_t _dof, const double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointVelocity");
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
   if (!identifier)
@@ -236,6 +244,7 @@ void JointFeatures::SetJointAcceleration(
 void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointForce");
   auto *joint = this->ReferenceInterface<JointInfo>(_id);
 
   if (!std::isfinite(_value))
@@ -314,6 +323,7 @@ Identity JointFeatures::CastToRevoluteJoint(const Identity &_jointID) const
 AngularVector3d JointFeatures::GetRevoluteJointAxis(
     const Identity &_jointID) const
 {
+  GZ_PROFILE("JointFeatures::GetRevoluteJointAxis");
   const auto *joint = this->ReferenceInterface<JointInfo>(_jointID);
 
   // In order for this function to be called, gz-physics should have already
@@ -338,6 +348,7 @@ Identity JointFeatures::CastToPrismaticJoint(const Identity &_jointID) const
 Eigen::Vector3d JointFeatures::GetPrismaticJointAxis(
     const Identity &_jointID) const
 {
+  GZ_PROFILE("JointFeatures::GetPrismaticJointAxis");
   const auto *joint = this->ReferenceInterface<JointInfo>(_jointID);
 
   // In order for this function to be called, gz-physics should have already
@@ -357,6 +368,7 @@ Identity JointFeatures::CastToJointType(
   const Identity &_jointID,
   const btMultibodyLink::eFeatherstoneJointType type) const
 {
+  GZ_PROFILE("JointFeatures::CastToJointType");
   const auto *joint = this->ReferenceInterface<JointInfo>(_jointID);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
   if (!identifier)
@@ -380,6 +392,7 @@ Identity JointFeatures::CastToJointType(
 void JointFeatures::SetJointVelocityCommand(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointVelocityCommand");
   auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
 
   // Take extra care that the value is finite. A nan can cause the Bullet
@@ -549,6 +562,7 @@ Identity JointFeatures::AttachFixedJoint(
     const BaseLink3dPtr &_parent,
     const std::string &_name)
 {
+  GZ_PROFILE("JointFeatures::AttachFixedJoint");
   auto *linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
   auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
   auto *parentLinkInfo = this->ReferenceInterface<LinkInfo>(
@@ -616,6 +630,7 @@ Identity JointFeatures::AttachFixedJoint(
 /////////////////////////////////////////////////
 void JointFeatures::DetachJoint(const Identity &_jointId)
 {
+  GZ_PROFILE("JointFeatures::DetachJoint");
   auto jointInfo = this->ReferenceInterface<JointInfo>(_jointId);
   if (jointInfo->fixedConstraint)
   {
@@ -666,6 +681,7 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
 void JointFeatures::SetJointTransformFromParent(
     const Identity &_id, const Pose3d &_pose)
 {
+  GZ_PROFILE("JointFeatures::SetJointTransformFromParent");
   auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
 
   if (jointInfo->fixedConstraint)
@@ -690,6 +706,7 @@ void JointFeatures::SetJointTransformFromParent(
 Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
     const Identity &_id) const
 {
+  GZ_PROFILE("JointFeatures::GetJointTransmittedWrenchInJointFrame");
   auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
 
   Wrench3d wrenchOut;
@@ -743,6 +760,7 @@ bool JointFeatures::SetJointMimicConstraint(
     double _offset,
     double _reference)
 {
+  GZ_PROFILE("JointFeatures::SetJointMimicConstraint");
   if (_dof != 0 || _leaderAxisDof != 0)
   {
     gzerr << "Failed to set mimic constraint for follower axis " << _dof
