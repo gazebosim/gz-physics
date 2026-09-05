@@ -332,6 +332,11 @@ struct WorldInfo
   /// SimulationFeatures::WorldForwardStep
   std::vector<std::optional<Eigen::Vector3d>> ballJointPositionsCache{};
 
+  /// \brief Store whether a joint command has been received in this step. This
+  /// is used to choose whether to return the current commanded force or the
+  /// computed force from the last step.
+  std::vector<uint8_t> jointForceCmdReceived;
+
   /// \brief Recompute rigid cluster connected components from active fixed
   /// joints. Updates dynamicWeldClusterMap.
   void UpdateWeldExclusions();
