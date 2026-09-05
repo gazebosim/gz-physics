@@ -19,6 +19,7 @@
 #define GZ_PHYSICS_MUJOCO_SRC_SDFFEATURES_HH_
 
 #include <gz/physics/Implements.hh>
+#include <gz/physics/sdf/ConstructCollision.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructNestedModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
@@ -34,7 +35,8 @@ namespace mujoco {
 struct SDFFeatureList : FeatureList<
   sdf::ConstructSdfWorld,
   sdf::ConstructSdfModel,
-  sdf::ConstructSdfNestedModel
+  sdf::ConstructSdfNestedModel,
+  sdf::ConstructSdfCollision
 > { };
 
 class SDFFeatures :
@@ -53,6 +55,10 @@ class SDFFeatures :
   public: Identity ConstructSdfNestedModel(
       const Identity &_parentID,
       const ::sdf::Model &_sdfModel) override;
+
+  public: Identity ConstructSdfCollision(
+      const Identity &_linkID,
+      const ::sdf::Collision &_collision) override;
 
   /// \brief Implementation that handles models and nested models
   /// \param[in] _parentID Id of parent
