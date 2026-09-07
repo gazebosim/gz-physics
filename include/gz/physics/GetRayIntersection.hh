@@ -18,6 +18,8 @@
 #ifndef GZ_PHYSICS_GETRAYINTERSECTION_HH_
 #define GZ_PHYSICS_GETRAYINTERSECTION_HH_
 
+#include <cmath>
+
 #include <gz/physics/FeatureList.hh>
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/Geometry.hh>
@@ -43,10 +45,17 @@ class GZ_PHYSICS_VISIBLE GetRayIntersectionFromLastStepFeature
     VectorType point;
 
     /// \brief The fraction of the ray length at the intersection/hit point.
+    /// NaN if no object in range.
+    /// Note: gz-physics10 changed the miss value to +INF (REP-117).
+    /// gz-physics9 intentionally retains NaN for API compatibility.
+    /// Use IsHit() — it is correct under both conventions.
     Scalar fraction;
 
     /// \brief The normal at the hit point in the world coordinates
     VectorType normal;
+
+    /// \brief Returns true if the ray intersected an object.
+    public: bool IsHit() const { return std::isfinite(fraction); }
   };
 
   public: template <typename PolicyT, typename FeaturesT>
