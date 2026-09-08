@@ -1241,11 +1241,6 @@ Identity SDFFeatures::ConstructSdfJoint(
       this->FullyScopedJointName(_modelID, jointName);
 
   const std::size_t jointID = this->AddJoint(joint, fullJointName, _modelID);
-  // Increment BodyNode version since the child could be moved to a new skeleton
-  // when a joint is created.
-  // TODO(azeey) Remove incrementVersion once DART has been updated to
-  // internally increment the BodyNode's version after Joint::moveTo.
-  _child->incrementVersion();
 
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }
