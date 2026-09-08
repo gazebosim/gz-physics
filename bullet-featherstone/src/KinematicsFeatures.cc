@@ -16,6 +16,7 @@
 */
 
 #include <gz/common/Console.hh>
+#include <gz/common/Profiler.hh>
 #include "KinematicsFeatures.hh"
 
 namespace gz {
@@ -26,6 +27,7 @@ namespace bullet_featherstone {
 FrameData3d getNonBaseLinkFrameData(const ModelInfo *_modelInfo,
                                     const LinkInfo *_linkInfo)
 {
+  GZ_PROFILE("bullet_featherstone::getNonBaseLinkFrameData");
   const auto index = _linkInfo->indexInModel.value();
   FrameData3d data;
   data.pose = GetWorldTransformOfLink(*_modelInfo, *_linkInfo);
@@ -40,6 +42,7 @@ FrameData3d getNonBaseLinkFrameData(const ModelInfo *_modelInfo,
 FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     const FrameID &_id) const
 {
+  GZ_PROFILE("KinematicsFeatures::FrameDataRelativeToWorld");
   bool isModel = false;
   bool isCollision = false;
   bool isJoint = false;

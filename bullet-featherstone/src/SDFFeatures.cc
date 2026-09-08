@@ -20,6 +20,7 @@
 #include <gz/common/Mesh.hh>
 #include <gz/common/MeshManager.hh>
 #include <gz/common/SubMesh.hh>
+#include <gz/common/Profiler.hh>
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Helpers.hh>
 
@@ -85,6 +86,7 @@ Identity SDFFeatures::ConstructSdfWorld(
     const Identity &_engine,
     const ::sdf::World &_sdfWorld)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfWorld");
   const Identity worldID = this->ConstructEmptyWorld(_engine, _sdfWorld.Name());
 
   const WorldInfoPtr &worldInfo = this->worlds.at(worldID);
@@ -164,6 +166,7 @@ void extractInertial(
     const ::sdf::Model *_model,
     const std::string &_joint, const std::string &_link)
 {
+  GZ_PROFILE("bullet_featherstone::resolveJointPoseRelToLink");
   ::sdf::Errors errors;
   const auto *joint = _model->JointByName(_joint);
   if (!joint)
@@ -222,6 +225,7 @@ bool buildTrees(const ::sdf::Model *_sdfModel,
     std::unordered_map<const ::sdf::Link*,
     std::vector<const ::sdf::Link*>> &_linkTree)
 {
+  GZ_PROFILE("bullet_featherstone::buildTrees");
   for (std::size_t i = 0; i < _sdfModel->JointCount(); ++i)
   {
     const auto *joint = _sdfModel->JointByIndex(i);
@@ -318,6 +322,7 @@ void findRootLinks(const ::sdf::Model *_sdfModel,
     const std::unordered_map<const ::sdf::Link*, ParentInfo> &_parentOf,
     std::vector<std::pair<const ::sdf::Link*, const ::sdf::Model*>> &_rootLinks)
 {
+  GZ_PROFILE("bullet_featherstone::findRootLinks");
   for (std::size_t i = 0; i < _sdfModel->LinkCount(); ++i)
   {
     const auto *link = _sdfModel->LinkByIndex(i);
@@ -349,6 +354,7 @@ std::optional<Structure> buildStructure(
     std::unordered_map<const ::sdf::Link*, std::vector<const ::sdf::Link*>>
     &_linkTree)
 {
+  GZ_PROFILE("bullet_featherstone::buildStructure");
   bool fixed = false;
   const ::sdf::Joint *rootJoint = nullptr;
   // rootJoint only exists if root link is connected to world by a joint
@@ -413,6 +419,7 @@ std::optional<Structure> buildStructure(
 /// \return A vector of structures
 std::vector<Structure> validateModel(const ::sdf::Model &_sdfModel)
 {
+  GZ_PROFILE("bullet_featherstone::validateModel");
   // A map of child link and its parent info
   std::unordered_map<const ::sdf::Link*, ParentInfo> parentOf;
 
@@ -461,6 +468,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     std::size_t _parentID,
     const ::sdf::Model &_sdfModel)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfModelImpl");
   // The ConstructSdfModelImpl function constructs the entire sdf model tree,
   // including nested models So return the nested model identity if it is
   // constructed already
@@ -995,6 +1003,7 @@ bool SDFFeatures::AddSdfCollision(
     const ::sdf::Collision &_collision,
     bool _isStatic)
 {
+  GZ_PROFILE("SDFFeatures::AddSdfCollision");
   if (!_collision.Geom())
   {
     gzerr << "The geometry element of collision [" << _collision.Name() << "] "
@@ -1393,6 +1402,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     const Identity &_linkID,
     const ::sdf::Collision &_collision)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfCollision");
   if(this->AddSdfCollision(_linkID, _collision, false))
   {
     for (const auto& collision : this->collisions)
@@ -1412,6 +1422,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     const Identity &_modelID,
     const ::sdf::Joint &_sdfJoint)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfJoint");
 #if BT_BULLET_VERSION < 289
   // The btMultiBody::setFixedBase function is only available in versions
   // >= 2.89. This is needed for dynamically creating world joints,
@@ -1493,6 +1504,7 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
     uint16_t _collideBitmask, std::optional<uint16_t> _categoryBitmask,
     btCollisionShape *_shape, const btTransform &_shapeTF)
 {
+  GZ_PROFILE("SDFFeatures::CreateLinkCollider");
   auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
   auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
   auto *worldInfo = this->ReferenceInterface<WorldInfo>(modelInfo->world);
