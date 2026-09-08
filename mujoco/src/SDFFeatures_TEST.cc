@@ -186,10 +186,12 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
                    double springRest, double stiffness, double lower,
                    double upper, double maxForce)
   {
-    EXPECT_DOUBLE_EQ(damping, joint->damping);
+    // Element 0 of the damping/stiffness polynomials is the linear coefficient,
+    // which is the only one SDFormat populates.
+    EXPECT_DOUBLE_EQ(damping, joint->damping[0]);
     EXPECT_DOUBLE_EQ(friction, joint->frictionloss);
     EXPECT_DOUBLE_EQ(springRest, joint->springref);
-    EXPECT_DOUBLE_EQ(stiffness, joint->stiffness);
+    EXPECT_DOUBLE_EQ(stiffness, joint->stiffness[0]);
     EXPECT_DOUBLE_EQ(lower, joint->range[0]);
     EXPECT_DOUBLE_EQ(upper, joint->range[1]);
     EXPECT_DOUBLE_EQ(-maxForce, joint->actfrcrange[0]);
@@ -406,10 +408,12 @@ TEST_P(SDFFeatures_TEST, UniversalJoint)
                    double springRest, double stiffness, double lower,
                    double upper, double maxForce)
   {
-    EXPECT_DOUBLE_EQ(damping, joint->damping);
+    // Element 0 of the damping/stiffness polynomials is the linear coefficient,
+    // which is the only one SDFormat populates.
+    EXPECT_DOUBLE_EQ(damping, joint->damping[0]);
     EXPECT_DOUBLE_EQ(friction, joint->frictionloss);
     EXPECT_DOUBLE_EQ(springRest, joint->springref);
-    EXPECT_DOUBLE_EQ(stiffness, joint->stiffness);
+    EXPECT_DOUBLE_EQ(stiffness, joint->stiffness[0]);
     EXPECT_DOUBLE_EQ(lower, joint->range[0]);
     EXPECT_DOUBLE_EQ(upper, joint->range[1]);
     EXPECT_DOUBLE_EQ(-maxForce, joint->actfrcrange[0]);

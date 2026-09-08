@@ -60,6 +60,8 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   worldInfo->ballJointPositionsCache.assign(
       worldInfo->ballJointPositionsCache.size(), std::nullopt);
 
+  this->UpdateVelocityServoGains(*worldInfo);
+
   mj_step(m, d);
 
   // Synchronize Cartesian position and velocity kinematics for the new state.
@@ -81,8 +83,73 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   // in the next timestep, which is the expected behavior in Gazebo.
   std::fill(d->xfrc_applied, d->xfrc_applied + 6 * m->nbody, 0.0);
 
+  worldInfo->jointForceCmdReceived.assign(
+    worldInfo->jointForceCmdReceived.size(), 0);
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());
+}
+
+/////////////////////////////////////////////////
+void SimulationFeatures::UpdateVelocityServoGains(WorldInfo &_worldInfo)
+{
+  auto *m = _worldInfo.mjModelObj;
+  auto *d = _worldInfo.mjDataObj;
+
+  // Dynamically compute the actuator servo gain parameters based on the true
+  // joint composite rotational inertia to provide a uniform
+  // configuration-independent tracking response.
+  for (int i = 0; i < m->nu; ++i)
+  {
+    if (m->actuator_biastype[i] == mjBIAS_AFFINE)
+    {
+      const int jointId = m->actuator_trnid[i * 2];
+      const int dofIndex = m->jnt_dofadr[jointId];
+
+      // Extract effective diagonal inertia for this DOF.
+      // The Matrix M in MuJoCo is represented in a compressed sparse row (CSR)
+      // format.
+      double J = 0.0;
+      const int rowStart = m->M_rowadr[dofIndex];
+      const int rowNnz = m->M_rownnz[dofIndex];
+      for (int k = 0; k < rowNnz; ++k)
+      {
+        if (m->M_colind[rowStart + k] == dofIndex)
+        {
+          J = d->M[rowStart + k];
+          break;
+        }
+      }
+
+      // The time constant for the velocity servo controller as a fraction of
+      // the timestep (5%).
+      constexpr double kServoTimeConstantFraction = 0.05;
+
+      // Compute gain using a fixed time constant of 0.05 timesteps.
+      //
+      // In velocity servo mode (mjBIAS_AFFINE):
+      // - gainprm[0] is the gain coefficient (kv).
+      // - biasprm[2] is the velocity feedback coefficient (-kv).
+      //
+      // The net actuator force is computed as:
+      //   force = gainprm[0] * ctrl + biasprm[0]
+      //         + biasprm[1] * pos + biasprm[2] * vel
+      //         = kv * ctrl - kv * vel
+      //         = kv * (ctrl - vel)
+      // which implements a proportional velocity controller.
+      //
+      // Because MuJoCo integrates velocity damping (biasprm[2]) implicitly via
+      // semi-implicit Euler, we can use an arbitrarily large kv (tau < dt)
+      // without causing numerical instability. This attempts to mimic DART's
+      // 1-step LCP hard constraints, but can result in large forces applied to
+      // the sytem.
+      const double tau = kServoTimeConstantFraction * m->opt.timestep;
+      const double kv = J / tau;
+
+      // Statelessly update the actuator parameters
+      m->actuator_gainprm[i * mjNGAIN] = kv;
+      m->actuator_biasprm[i * mjNBIAS + 2] = -kv;
+    }
+  }
 }
 
 /////////////////////////////////////////////////
