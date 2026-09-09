@@ -246,6 +246,15 @@ struct JointInfo
   mjsEquality* weldConstraintSpec{nullptr};
   // Compiled weld joint equality constraint index in mjModel (max 1)
   std::optional<int> weldEqIndex{std::nullopt};
+
+  // Pointer to force sensor spec (mjSENS_FORCE)
+  mjsSensor* forceSensorSpec{nullptr};
+  // Compiled force sensor index in mjModel
+  std::optional<int> forceSensorId{std::nullopt};
+  // Pointer to torque sensor spec (mjSENS_TORQUE)
+  mjsSensor* torqueSensorSpec{nullptr};
+  // Compiled torque sensor index in mjModel
+  std::optional<int> torqueSensorId{std::nullopt};
 };
 
 

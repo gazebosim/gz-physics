@@ -1095,6 +1095,39 @@ Identity JointFeatures::AttachFixedJoint(
   return this->GenerateIdentity(jointInfo->entityId, jointInfo);
 }
 
+/////////////////////////////////////////////////
+Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
+    const Identity &_id) const
+{
+  auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
+  if (!jointInfo || !jointInfo->worldInfo)
+  {
+    gzerr << "Invalid joint info when querying transmitted wrench.\n";
+    return {};
+  }
+
+  auto *worldInfo = jointInfo->worldInfo;
+  if (worldInfo->specDirty)
+  {
+    this->RecompileSpec(*worldInfo);
+  }
+
+  if (!jointInfo->forceSensorId || !jointInfo->torqueSensorId)
+  {
+    return {};
+  }
+
+  const auto *m = worldInfo->mjModelObj;
+  const auto *d = worldInfo->mjDataObj;
+  const int fAdr = m->sensor_adr[*jointInfo->forceSensorId];
+  const int tAdr = m->sensor_adr[*jointInfo->torqueSensorId];
+
+  Wrench3d wrench;
+  wrench.force = convertPos(&d->sensordata[fAdr]);
+  wrench.torque = convertPos(&d->sensordata[tAdr]);
+  return wrench;
+}
+
 namespace {
 /// \brief Disjoint-set data structure (Union-Find) to compute connected
 /// components of welded body clusters using contiguous vectors.
