@@ -2412,6 +2412,8 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
 
   for (const std::string &name : this->pluginNames)
   {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
+
     for (const std::string &collisionDetector : supportedCollisionDetectors)
     {
       auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
@@ -2474,6 +2476,8 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
 
   for (const std::string &name : this->pluginNames)
   {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
+
     for (const std::string &collisionDetector : supportedCollisionDetectors)
     {
       auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
@@ -2507,6 +2511,8 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
 
   for (const std::string &name : this->pluginNames)
   {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
+
     for (const std::string &collisionDetector : unsupportedCollisionDetectors)
     {
       auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
@@ -2550,6 +2556,8 @@ TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
 
   for (const std::string &name : this->pluginNames)
   {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
+
     for (const std::string &collisionDetector : supportedCollisionDetectors)
     {
       auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(

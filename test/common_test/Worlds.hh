@@ -33,6 +33,7 @@ const auto kCollisionPairContactPointSdf =
   CommonTestWorld("collision_pair_contact_point.sdf");
 const auto kContactSdf = CommonTestWorld("contact.sdf");
 const auto kDetachableJointWorld = CommonTestWorld("detachable_joint.world");
+const auto kDetachableJointContactSdf = CommonTestWorld("detachable_joint_contact.sdf");
 const auto kEmptySdf = CommonTestWorld("empty.sdf");
 const auto kFallingWorld = CommonTestWorld("falling.world");
 const auto kFallingAddedMassWorld = CommonTestWorld("falling_added_mass.world");

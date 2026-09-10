@@ -23,6 +23,8 @@
 #include <unordered_map>
 #include <utility>
 
+#include <gz/common/Profiler.hh>
+
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
@@ -45,6 +47,7 @@ bool hasConvexHullChildShapes(
 const btCollisionShape *findCollisionShape(
     const btCompoundShape *_compoundShape, int _childIndex)
 {
+  GZ_PROFILE("bullet_featherstone::findCollisionShape");
   // _childIndex should give us the index of the child shape within
   // _compoundShape which represents the collision.
   // One exception is when the collision is a convex decomposed mesh.
@@ -102,6 +105,7 @@ const btCollisionShape *findCollisionShape(
 void enforceFixedConstraint(
     btMultiBodyFixedConstraint *_fixedConstraint)
 {
+  GZ_PROFILE("bullet_featherstone::enforceFixedConstraint");
   // Update fixed constraint's child link pose to maintain a fixed transform
   // from the parent link.
   GzMultiBody *parent =
@@ -163,6 +167,7 @@ void enforceFixedConstraint(
 
 void clearCollisionCache(btMultiBodyDynamicsWorld *_world)
 {
+  GZ_PROFILE("bullet_featherstone::clearCollisionCache");
   btDispatcher* dispatcher = _world->getDispatcher();
   btOverlappingPairCache* pairCache =
       _world->getBroadphase()->getOverlappingPairCache();
@@ -181,6 +186,7 @@ void SimulationFeatures::WorldForwardStep(
     ForwardStep::State & /*_x*/,
     const ForwardStep::Input & _u)
 {
+  GZ_PROFILE("SimulationFeatures::WorldForwardStep");
   const auto worldInfo = this->ReferenceInterface<WorldInfo>(_worldID);
   auto *dtDur =
     _u.Query<std::chrono::steady_clock::duration>();
@@ -273,6 +279,7 @@ void SimulationFeatures::WorldForwardStep(
 std::vector<SimulationFeatures::ContactInternal>
 SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 {
+  GZ_PROFILE("SimulationFeatures::GetContactsFromLastStep");
   std::vector<SimulationFeatures::ContactInternal> outContacts;
   auto *const world = this->ReferenceInterface<WorldInfo>(_worldID);
   if (!world)
@@ -350,6 +357,7 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
 /////////////////////////////////////////////////
 void SimulationFeatures::Write(WorldPoses &_worldPoses) const
 {
+  GZ_PROFILE("SimulationFeatures::Write");
   // remove link poses from the previous iteration
   _worldPoses.entries.clear();
   _worldPoses.entries.reserve(this->links.size());
@@ -366,6 +374,7 @@ void SimulationFeatures::Write(WorldPoses &_worldPoses) const
 /////////////////////////////////////////////////
 void SimulationFeatures::Write(ChangedWorldPoses &_changedPoses) const
 {
+  GZ_PROFILE("SimulationFeatures::Write_changed");
   // remove link poses from the previous iteration
   _changedPoses.entries.clear();
   _changedPoses.entries.reserve(this->links.size());
