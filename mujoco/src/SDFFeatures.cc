@@ -931,6 +931,7 @@ struct ModelKinematicStructure
               if (auto muElem = odeElem->FindElement("mu"))
               {
                 mu = muElem->Get<double>();
+                gzmsg << "Parsed //friction/ode/mu: " << *mu << std::endl;
               }
             }
             if (!mu.has_value() && bulletElem)
@@ -938,6 +939,8 @@ struct ModelKinematicStructure
               if (auto f1Elem = bulletElem->FindElement("friction"))
               {
                 mu = f1Elem->Get<double>();
+                gzmsg << "Parsed //friction/bullet/friction: " << *mu
+                      << std::endl;
               }
             }
 
@@ -949,6 +952,8 @@ struct ModelKinematicStructure
                   bulletElem->FindElement("rolling_friction"))
               {
                 rollingFriction = rollingElem->Get<double>();
+                gzmsg << "Parsed //friction/bullet/rolling_friction: "
+                      << *rollingFriction << std::endl;
               }
             }
 
