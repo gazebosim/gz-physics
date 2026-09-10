@@ -146,6 +146,13 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
 
     // Expect negative joint velocity after 1 step without joint command
     world->Step(output, state, input);
+    if (this->PhysicsEngineName(name) == "mujoco")
+    {
+      // An extra step is necessary for MuJoCo to stabilize the initial
+      // contact constraints between the base link and the ground plane
+      // before gravity correctly accelerates the pendulum.
+      world->Step(output, state, input);
+    }
     EXPECT_LT(joint->GetVelocity(0), 0.0);
 
     auto base_link = model->GetLink("base");
@@ -176,7 +183,15 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
       // Call SetVelocityCommand before each step
       joint->SetVelocityCommand(0, 1);
       world->Step(output, state, input);
-      EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-2);
+      if (this->PhysicsEngineName(name) == "mujoco" && i < 1)
+      {
+        // MuJoCo needs some time to reach the commanded velocity
+        EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-1);
+      }
+      else
+      {
+        EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-2);
+      }
     }
 
     for (std::size_t i = 0; i < numSteps; ++i)
@@ -193,6 +208,23 @@ TYPED_TEST(JointFeaturesTest, JointSetCommand)
     {
       world->Step(output, state, input);
       EXPECT_LT(0.0, std::fabs(joint->GetVelocity(0)));
+    }
+
+    if (this->PhysicsEngineName(name) == "mujoco")
+    {
+      // Due to the way SetVelocityCommand is implemented in MuJoCo, a step
+      // command such as the one given above (0 -> 1) causes a large force to
+      // be applied on the joint by the internal velocity servo. Unlike the
+      // velocity constraint based method used in DART and bullet-featherstone,
+      // this does not take into account the dynamics of the lower link
+      // connected to a passive revolute joint. The large force causes a large
+      // angular velocity on the lower link which acts like a whipping action
+      // that moves the entire pendulum. Therefore, we have to wait for a few
+      // iterations for the base link to settle back to the ground.
+      for (std::size_t i = 0; i < 1000; ++i)
+      {
+        world->Step(output, state, input);
+      }
     }
 
     // Check that invalid velocity commands don't cause collisions to fail
