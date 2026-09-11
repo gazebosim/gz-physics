@@ -87,11 +87,24 @@ int ContactFilterCallback(const mjModel *m, mjData *d, int g1, int g2)
 void resolveJointIndices(WorldInfo &_worldInfo)
 {
   const auto &m = _worldInfo.mjModelObj;
+  auto resolveSensorId = [m](const mjsSensor *_spec) -> std::optional<int>
+  {
+    if (!_spec)
+      return std::nullopt;
+    int id = mjs_getId(_spec->element);
+    return (id >= 0 && id < m->nsensor) ? std::optional<int>(id) : std::nullopt;
+  };
+
   for (const auto &model : _worldInfo.models.idToObject)
   {
     for (auto &joint : model.second->joints.idToObject)
     {
       auto &jointInfo = joint.second;
+
+      // Resolve force & torque sensor compiled IDs
+      jointInfo->forceSensorId = resolveSensorId(jointInfo->forceSensorSpec);
+      jointInfo->torqueSensorId = resolveSensorId(jointInfo->torqueSensorSpec);
+
       if (!jointInfo->joint)
       {
         // Fixed joint
