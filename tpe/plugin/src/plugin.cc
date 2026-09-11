@@ -22,6 +22,7 @@
 #include "CustomFeatures.hh"
 #include "EntityManagementFeatures.hh"
 #include "FreeGroupFeatures.hh"
+#include "JointFeatures.hh"
 #include "KinematicsFeatures.hh"
 #include "SDFFeatures.hh"
 #include "ShapeFeatures.hh"
@@ -35,6 +36,7 @@ struct TpePluginFeatures : FeatureList<
   CustomFeatureList,
   EntityManagementFeatureList,
   FreeGroupFeatureList,
+  JointFeatureList,
   KinematicsFeatureList,
   SDFFeatureList,
   ShapeFeatureList,
@@ -47,6 +49,7 @@ class Plugin :
   public virtual CustomFeatures,
   public virtual EntityManagementFeatures,
   public virtual FreeGroupFeatures,
+  public virtual JointFeatures,
   public virtual KinematicsFeatures,
   public virtual SDFFeatures,
   public virtual ShapeFeatures,

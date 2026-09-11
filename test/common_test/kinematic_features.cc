@@ -99,6 +99,10 @@ TYPED_TEST(KinematicFeaturesTest, JointFrameSemantics)
 {
   for (const std::string &name : this->pluginNames)
   {
+    // TPE exposes joint features as stubs for DetachableJoint support,
+    // but doesn't support actual joint construction from SDF
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe")
+
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
 
