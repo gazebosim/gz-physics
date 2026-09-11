@@ -1109,11 +1109,25 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
   auto *worldInfo = jointInfo->worldInfo;
   if (worldInfo->specDirty)
   {
-    this->RecompileSpec(*worldInfo);
+    if (!this->RecompileSpec(*worldInfo))
+    {
+      gzerr << "Failed to recompile spec.\n";
+      return {};
+    }
   }
 
   if (!jointInfo->forceSensorId || !jointInfo->torqueSensorId)
   {
+    if (jointInfo->weldEqIndex)
+    {
+      gzerr << "MuJoCo currently does not support wrench queries on detachable "
+               "joints\n";
+    }
+    else
+    {
+      gzerr << "Unkown error: Force and torque sensor IDs have not been "
+               "resolved\n";
+    }
     return {};
   }
 

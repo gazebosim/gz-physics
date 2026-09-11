@@ -687,7 +687,8 @@ struct ModelKinematicStructure
       _base.frames[jointInfo->entityId] =
           std::make_shared<FrameInfo>(jointSite, worldInfo);
 
-      auto addSiteSensor = [&](mjtSensor _type, const std::string &_suffix) {
+      auto addSiteSensor = [&](mjtSensor _type, const std::string &_suffix)
+      {
         auto *sensor = mjs_addSensor(_spec);
         sensor->type = _type;
         sensor->objtype = mjOBJ_SITE;
