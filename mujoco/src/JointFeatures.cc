@@ -1122,6 +1122,8 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
     {
       gzerr << "MuJoCo currently does not support wrench queries on detachable "
                "joints\n";
+      // TODO(azeey): Use constraint forces exposed by MuJoCo to compute
+      // wrenches on weld constraints.
     }
     else
     {
