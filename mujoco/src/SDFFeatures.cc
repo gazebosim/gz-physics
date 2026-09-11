@@ -971,7 +971,24 @@ struct ModelKinematicStructure
         geom->conaffinity = static_cast<int>(conaffinity);
 
         if (mu.has_value())
+        {
+          // In MuJoCo's pyramidal friction model, contact normal compliance
+          // scales quadratically with friction:
+          //   R_py = 2 * (mu^2 / impratio) * R_normal
+          // Values of mu > 1.0 cause contact softening, excessive penetration,
+          // and prolonged contact oscillations under load.
+          constexpr double kMaxMu = 1.0;
+          if (*mu > kMaxMu)
+          {
+            gzwarn << "Friction value [" << *mu << "] in collision ["
+                   << collision->Name()
+                   << "] exceeds maximum recommended value [" << kMaxMu
+                   << "] in MuJoCo. Setting mu to " << kMaxMu
+                   << " to prevent contact softening.\n";
+            mu = kMaxMu;
+          }
           geom->friction[0] = mu.value();
+        }
         if (spinningFriction.has_value())
         {
           // set condim (contact dimensionality) to enable spinning

@@ -1084,7 +1084,7 @@ TEST_P(SDFFeatures_TEST, SurfaceFriction)
             <surface>
               <friction>
                 <ode>
-                  <mu>1.5</mu>
+                  <mu>0.5</mu>
                 </ode>
                 <bullet>
                   <rolling_friction>0.02</rolling_friction>
@@ -1129,7 +1129,7 @@ TEST_P(SDFFeatures_TEST, SurfaceFriction)
     ASSERT_NE(nullptr, geom);
 
     // Sliding
-    EXPECT_DOUBLE_EQ(1.5, geom->friction[0]);
+    EXPECT_DOUBLE_EQ(0.5, geom->friction[0]);
     // Torsional
     EXPECT_DOUBLE_EQ(0.003, geom->friction[1]);
     // Rolling
@@ -1144,7 +1144,8 @@ TEST_P(SDFFeatures_TEST, SurfaceFriction)
     ASSERT_NE(nullptr, geom);
 
     // Sliding
-    EXPECT_DOUBLE_EQ(2.5, geom->friction[0]);
+    // MuJoCo caps friction to a max value of 1.0
+    EXPECT_DOUBLE_EQ(1.0, geom->friction[0]);
     // Torsional - not specified in SDF so should use default value
     EXPECT_DOUBLE_EQ(0.005, geom->friction[1]);
     // Rolling
