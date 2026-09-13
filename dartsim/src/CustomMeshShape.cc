@@ -22,6 +22,7 @@
 
 #include <gz/common/Console.hh>
 #include <gz/common/SubMesh.hh>
+#include <gz/common/Profiler.hh>
 
 namespace gz {
 namespace physics {
@@ -101,6 +102,7 @@ CustomMeshShape::CustomMeshShape(
     const Eigen::Vector3d &_scale)
   : dart::dynamics::MeshShape(_scale, nullptr)
 {
+  GZ_PROFILE("CustomMeshShape::CustomMeshShape");
   // Create the root
   aiNode* node = new aiNode;
 
