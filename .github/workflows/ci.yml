@@ -23,6 +23,7 @@ jobs:
           # codecov-enabled: true
           cppcheck-enabled: true
           cpplint-enabled: true
+          doxygen-enabled: true
   resolute-ci:
     runs-on: ubuntu-latest
     name: Ubuntu Resolute CI
@@ -36,3 +37,4 @@ jobs:
           gzdev-project-name: rotary
           cppcheck-enabled: true
           cpplint-enabled: true
+          doxygen-enabled: true

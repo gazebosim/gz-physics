@@ -34,12 +34,14 @@
 ///  - An Entity class that includes the API of both the plain Joint class and
 ///    the CustomJointType, as defined by FeaturePolicy P and FeatureList F.
 ///
+/// \code
 /// template <F> class CustomJointType3d
 /// template <F> class CustomJointType2d
 /// template <F> class CustomJointType3f
 /// template <F> class CustomJointType2f
-///  - Similar to CustomJointType<P,F>, except P is replaced with the predefined
-///    Feature Policies.
+/// \endcode
+///  - Similar to `CustomJointType<P,F>`, except P is replaced with the
+///    predefined Feature Policies.
 ///
 /// Physics engine plugin developers must implement the virtual function
 ///
