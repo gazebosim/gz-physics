@@ -897,6 +897,11 @@ struct ModelKinematicStructure
         std::optional<uint16_t> contypeOpt;
 
         ::sdf::ElementPtr elem = collision->Element();
+
+        std::optional<double> mu;
+        std::optional<double> rollingFriction;
+        std::optional<double> spinningFriction;
+
         if (auto surfaceElem = elem->FindElement("surface"))
         {
           if (auto contactElem = surfaceElem->FindElement("contact"))
@@ -915,12 +920,89 @@ struct ModelKinematicStructure
                   collideBitmaskElem->Get<uint32_t>());
             }
           }
+
+          if (auto frictionElem = surfaceElem->FindElement("friction"))
+          {
+            auto bulletElem = frictionElem->FindElement("bullet");
+            // Get mu friction value from <ode>. If it does not exist,
+            // try <bullet>
+            if (auto odeElem = frictionElem->FindElement("ode"))
+            {
+              if (auto muElem = odeElem->FindElement("mu"))
+              {
+                mu = muElem->Get<double>();
+                gzmsg << "Parsed //friction/ode/mu: " << *mu << std::endl;
+              }
+            }
+            if (!mu.has_value() && bulletElem)
+            {
+              if (auto f1Elem = bulletElem->FindElement("friction"))
+              {
+                mu = f1Elem->Get<double>();
+                gzmsg << "Parsed //friction/bullet/friction: " << *mu
+                      << std::endl;
+              }
+            }
+
+            // Get rolling friction from <bullet> as <ode> does not have this
+            // param.
+            if (bulletElem)
+            {
+              if (auto rollingElem =
+                  bulletElem->FindElement("rolling_friction"))
+              {
+                rollingFriction = rollingElem->Get<double>();
+                gzmsg << "Parsed //friction/bullet/rolling_friction: "
+                      << *rollingFriction << std::endl;
+              }
+            }
+
+            // Parse torsional friction value
+            if (auto torsionalElem = frictionElem->FindElement("torsional"))
+            {
+              if (auto coeffElem = torsionalElem->FindElement("coefficient"))
+                spinningFriction = coeffElem->Get<double>();
+            }
+          }
         }
 
         uint16_t contype = contypeOpt.value_or(conaffinity);
-
         geom->contype = static_cast<int>(contype);
         geom->conaffinity = static_cast<int>(conaffinity);
+
+        if (mu.has_value())
+        {
+          // In MuJoCo's pyramidal friction model, contact normal compliance
+          // scales quadratically with friction:
+          //   R_py = 2 * (mu^2 / impratio) * R_normal
+          // Values of mu > 1.0 cause contact softening, excessive penetration,
+          // and prolonged contact oscillations under load.
+          constexpr double kMaxMu = 1.0;
+          if (*mu > kMaxMu)
+          {
+            gzwarn << "Friction value [" << *mu << "] in collision ["
+                   << collision->Name()
+                   << "] exceeds maximum recommended value [" << kMaxMu
+                   << "] in MuJoCo. Setting mu to " << kMaxMu
+                   << " to prevent contact softening.\n";
+            mu = kMaxMu;
+          }
+          geom->friction[0] = mu.value();
+        }
+        if (spinningFriction.has_value())
+        {
+          // set condim (contact dimensionality) to enable spinning
+          // (torsional) friction
+          geom->condim = std::max(geom->condim, 4);
+          geom->friction[1] = spinningFriction.value();
+        }
+        if (rollingFriction.has_value())
+        {
+          // set condim (contact dimensionality) to enable rolling friction
+          geom->condim = 6;
+          geom->friction[2] = rollingFriction.value();
+        }
+
         mjs_setName(geom->element,
                     ::sdf::JoinName(body_name, collision->Name()).c_str());
         auto shapeInfo =
