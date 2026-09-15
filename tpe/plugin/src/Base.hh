@@ -24,6 +24,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "lib/src/World.hh"
 #include "lib/src/Engine.hh"
@@ -200,18 +201,25 @@ class Base : public Implements3d<FeatureList<Feature>>
     if (nullptr == parentEntity)
       return false;
 
-    bool result = true;
-    for (std::size_t i = 0; i < modelInfoIt->second->model->GetChildCount();
-         ++i)
+    tpelib::Model *model = modelInfoIt->second->model;
+
+    // Collect the ids of the immediate nested models first. Recursive removal
+    // erases children from the same tpelib container, so walking it by an
+    // increasing index while removing would let each successor shift into the
+    // just-consumed slot and be skipped, leaving that child's bookkeeping
+    // record behind as a dangling pointer to freed backend memory.
+    std::vector<std::size_t> nestedModelIds;
+    for (std::size_t i = 0; i < model->GetChildCount(); ++i)
     {
-      // Get a reference so we can dynamic cast
-      auto &ent = modelInfoIt->second->model->GetChildByIndex(i);
-      auto modelEnt = dynamic_cast<tpelib::Model *>(&ent);
-      if (modelEnt)
-      {
-        result &= this->RemoveModelImpl(modelEnt->GetId());
-      }
+      auto &ent = model->GetChildByIndex(i);
+      if (dynamic_cast<tpelib::Model *>(&ent))
+        nestedModelIds.push_back(ent.GetId());
     }
+
+    bool result = true;
+    for (const std::size_t nestedModelId : nestedModelIds)
+      result &= this->RemoveModelImpl(nestedModelId);
+
     result &= this->RemoveModelFromParent(_modelID, parentEntity);
     return result;
   }
@@ -221,6 +229,33 @@ class Base : public Implements3d<FeatureList<Feature>>
   {
     if (nullptr == _parentEntity)
       return false;
+
+    // Removing the model frees its whole backend subtree, so erase the
+    // bookkeeping records for its links (and each link's collisions) first.
+    // Otherwise the links/collisions maps keep raw pointers into freed tpelib
+    // memory, which the per-step pose loop and the by-name lookups dereference.
+    auto modelInfoIt = this->models.find(_modelID);
+    if (modelInfoIt != this->models.end() &&
+        nullptr != modelInfoIt->second->model)
+    {
+      tpelib::Model *model = modelInfoIt->second->model;
+      for (std::size_t i = 0; i < model->GetChildCount(); ++i)
+      {
+        auto linkEnt = dynamic_cast<tpelib::Link *>(&model->GetChildByIndex(i));
+        if (nullptr == linkEnt)
+          continue;
+        for (std::size_t j = 0; j < linkEnt->GetChildCount(); ++j)
+        {
+          const std::size_t collisionId = linkEnt->GetChildByIndex(j).GetId();
+          this->collisions.erase(collisionId);
+          this->childIdToParentId.erase(collisionId);
+        }
+        const std::size_t linkId = linkEnt->GetId();
+        this->links.erase(linkId);
+        this->childIdToParentId.erase(linkId);
+      }
+    }
+
     bool result = this->models.erase(_modelID) == 1;
     result &= this->childIdToParentId.erase(_modelID) == 1;
     result &= _parentEntity->RemoveChildById(_modelID);
