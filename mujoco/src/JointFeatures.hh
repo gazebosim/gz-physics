@@ -40,8 +40,8 @@ struct JointFeatureList : FeatureList<
   AttachFixedJointFeature,
   DetachJointFeature,
   SetJointTransformFromParentFeature,
-  SetJointVelocityCommandFeature
-  // GetJointTransmittedWrench,
+  SetJointVelocityCommandFeature,
+  GetJointTransmittedWrench
   // GetPrismaticJointProperties,
   // GetRevoluteJointProperties,
   // SetFreeJointRelativeTransformFeature,
@@ -139,6 +139,10 @@ class JointFeatures :
       const Identity &_id, std::size_t _dof,
       double _value) override;
 
+  // ----- Transmitted wrench -----
+  public: Wrench3d GetJointTransmittedWrenchInJointFrame(
+      const Identity &_id) const override;
+
   #if 0
   // ----- Free Joint -----
   public: Identity CastToFreeJoint(
@@ -216,10 +220,6 @@ public: void SetJointDampingCoefficient(
   public: void SetJointSpringReference(
        const Identity &_id, std::size_t _dof,
        double _value) override;
-
-  // ----- Transmitted wrench -----
-  public: Wrench3d GetJointTransmittedWrenchInJointFrame(
-      const Identity &_id) const override;
 #endif
 };
 

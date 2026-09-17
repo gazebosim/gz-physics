@@ -678,10 +678,26 @@ struct ModelKinematicStructure
       }
 
       auto jointSite = mjs_addSite(child, nullptr);
+      const std::string scopedJointName =
+          ::sdf::JoinName(_modelInfo->name, sdfJoint->Name());
+      const std::string jointSiteName = scopedJointName + "_site";
+      mjs_setName(jointSite->element, jointSiteName.c_str());
       copyPos(jointPose.Pos(), jointSite->pos);
       copyQuat(jointPose.Rot(), jointSite->quat);
       _base.frames[jointInfo->entityId] =
           std::make_shared<FrameInfo>(jointSite, worldInfo);
+
+      auto addSiteSensor = [&](mjtSensor _type, const std::string &_suffix)
+      {
+        auto *sensor = mjs_addSensor(_spec);
+        sensor->type = _type;
+        sensor->objtype = mjOBJ_SITE;
+        mjs_setString(sensor->objname, jointSiteName.c_str());
+        mjs_setName(sensor->element, (scopedJointName + _suffix).c_str());
+        return sensor;
+      };
+      jointInfo->forceSensorSpec = addSiteSensor(mjSENS_FORCE, "_force");
+      jointInfo->torqueSensorSpec = addSiteSensor(mjSENS_TORQUE, "_torque");
 
       _modelInfo->joints.AddEntity(jointInfo->entityId, jointInfo,
                                    jointInfo->name, _modelInfo->entityId);
