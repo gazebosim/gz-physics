@@ -417,7 +417,14 @@ void JointFeatures::SetJointPosition(
   updateMimicJointFollowers(jointInfo, _dof, _value,
                             jointInfo->worldInfo->mjDataObj->qpos, true);
 
-  mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
+  // Only refresh the kinematics that queries read (see WorldForwardStep).
+  // mj_comPos is needed by mj_comVel since cdof depends on qpos. The rest of
+  // mj_forward is recomputed by the next mj_step.
+  auto *m = jointInfo->worldInfo->mjModelObj;
+  auto *d = jointInfo->worldInfo->mjDataObj;
+  mj_kinematics(m, d);
+  mj_comPos(m, d);
+  mj_comVel(m, d);
 }
 
 /////////////////////////////////////////////////
@@ -461,7 +468,10 @@ void JointFeatures::SetJointVelocity(
   updateMimicJointFollowers(jointInfo, _dof, _value,
                             jointInfo->worldInfo->mjDataObj->qvel, false);
 
-  mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
+  // Only qvel changed, so the frame arrays and cdof are still valid and just
+  // cvel needs to be refreshed. The rest of mj_forward is recomputed by the
+  // next mj_step.
+  mj_comVel(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
 
 /////////////////////////////////////////////////
