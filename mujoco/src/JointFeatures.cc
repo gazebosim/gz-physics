@@ -254,6 +254,8 @@ double JointFeatures::GetJointPosition(
     return math::NAN_D;
   }
 
+  this->RecompileSpec(*jointInfo->worldInfo);
+
   if (jointInfo->nq_index < 0)
     return math::NAN_D;
 
@@ -275,6 +277,8 @@ double JointFeatures::GetJointVelocity(
           << "] because it is a fixed joint.\n";
     return math::NAN_D;
   }
+
+  this->RecompileSpec(*jointInfo->worldInfo);
 
   if (jointInfo->nv_index < 0)
     return math::NAN_D;
@@ -298,6 +302,8 @@ double JointFeatures::GetJointAcceleration(
     return math::NAN_D;
   }
 
+  this->RecompileSpec(*jointInfo->worldInfo);
+
   if (jointInfo->nv_index < 0)
     return math::NAN_D;
 
@@ -320,6 +326,8 @@ double JointFeatures::GetJointForce(
           << "] because it is a fixed joint.\n";
     return gz::math::NAN_D;
   }
+
+  this->RecompileSpec(*jointInfo->worldInfo);
 
   if (jointInfo->nv_index < 0)
     return math::NAN_D;
@@ -398,6 +406,8 @@ void JointFeatures::SetJointPosition(
     return;
   }
 
+  this->RecompileSpec(*jointInfo->worldInfo);
+
   if (jointInfo->nq_index < 0)
     return;
 
@@ -448,6 +458,8 @@ void JointFeatures::SetJointVelocity(
           << "] because it is a fixed joint.\n";
     return;
   }
+
+  this->RecompileSpec(*jointInfo->worldInfo);
 
   if (jointInfo->nv_index < 0)
     return;
@@ -509,6 +521,12 @@ void JointFeatures::SetJointForce(
     gzerr << "No actuator set up for this joint\n";
     return;
   }
+
+  this->RecompileSpec(*jointInfo->worldInfo);
+
+  if (jointInfo->nv_index < 0)
+    return;
+
   const int ctrlIndex = mjs_getId(jointInfo->actuator->element);
   if (ctrlIndex < 0)
     return;
@@ -552,6 +570,9 @@ void JointFeatures::SetJointVelocityCommand(
     gzerr << "No actuator set up for this joint\n";
     return;
   }
+
+  this->RecompileSpec(*jointInfo->worldInfo);
+
   const int ctrlIndex = mjs_getId(jointInfo->actuator->element);
   if (ctrlIndex < 0)
     return;

@@ -378,6 +378,10 @@ class Base
   public: const std::string engineName{"mujoco"};
   public: const gz::math::SemanticVersion engineVersion{mj_versionString()};
 
+  /// \brief Recompile the model from the spec if it is dirty, refreshing the
+  /// cached joint indices and mjData buffers. Does nothing when current.
+  /// \param[in,out] _worldInfo World whose spec is recompiled if dirty.
+  /// \return True on success or if no recompile was needed.
   public: bool RecompileSpec(WorldInfo &_worldInfo) const;
 };
 }  // namespace mujoco
