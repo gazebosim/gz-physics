@@ -75,6 +75,7 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   // the case where there could be multiple free groups within a model
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
   auto worldInfo = modelInfo->worldInfo;
+  this->RecompileSpec(*worldInfo);
   auto *d = worldInfo->mjDataObj;
   auto *m = worldInfo->mjModelObj;
   const auto bodyId = mjs_getId(modelInfo->body->element);
@@ -94,6 +95,7 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   // the case where there could be multiple free groups within a model
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
   auto worldInfo = modelInfo->worldInfo;
+  this->RecompileSpec(*worldInfo);
   auto *d = worldInfo->mjDataObj;
   auto *m = worldInfo->mjModelObj;
   const auto bodyId = mjs_getId(modelInfo->body->element);
@@ -114,6 +116,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   // the case where there could be multiple free groups within a model
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
   auto worldInfo = modelInfo->worldInfo;
+  this->RecompileSpec(*worldInfo);
   auto *d = worldInfo->mjDataObj;
   auto *m = worldInfo->mjModelObj;
   if (!d || !m)
