@@ -75,6 +75,7 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
   // the case where there could be multiple free groups within a model
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
   auto worldInfo = modelInfo->worldInfo;
+  this->RecompileSpec(*worldInfo);
   auto *d = worldInfo->mjDataObj;
   auto *m = worldInfo->mjModelObj;
   const auto bodyId = mjs_getId(modelInfo->body->element);
@@ -83,7 +84,8 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
     return;
   const auto qveladr = m->jnt_dofadr[jntadr];
   mju_copy3(&d->qvel[qveladr] + 3, _angularVelocity.data());
-  mj_forward(m, d);
+  // Only qvel changed, so just cvel needs to be refreshed.
+  mj_comVel(m, d);
 }
 
 /////////////////////////////////////////////////
@@ -94,6 +96,7 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   // the case where there could be multiple free groups within a model
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
   auto worldInfo = modelInfo->worldInfo;
+  this->RecompileSpec(*worldInfo);
   auto *d = worldInfo->mjDataObj;
   auto *m = worldInfo->mjModelObj;
   const auto bodyId = mjs_getId(modelInfo->body->element);
@@ -102,7 +105,8 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
     return;
   const auto qveladr = m->jnt_dofadr[jntadr];
   mju_copy3(&d->qvel[qveladr], _linearVelocity.data());
-  mj_forward(m, d);
+  // Only qvel changed, so just cvel needs to be refreshed.
+  mj_comVel(m, d);
 }
 
 /////////////////////////////////////////////////
@@ -114,6 +118,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   // the case where there could be multiple free groups within a model
   const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_groupID);
   auto worldInfo = modelInfo->worldInfo;
+  this->RecompileSpec(*worldInfo);
   auto *d = worldInfo->mjDataObj;
   auto *m = worldInfo->mjModelObj;
   if (!d || !m)
@@ -184,7 +189,12 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
       mju_copy4(&d->qpos[qposadr] + 3, quatCoeffs);
     }
   }
-  mj_forward(m, d);
+  // Only refresh the kinematics that queries read (see WorldForwardStep).
+  // mj_comPos is needed by mj_comVel since cdof depends on the pose. The rest
+  // of mj_forward is recomputed by the next mj_step.
+  mj_kinematics(m, d);
+  mj_comPos(m, d);
+  mj_comVel(m, d);
 }
 }  // namespace mujoco
 }  // namespace physics

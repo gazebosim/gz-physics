@@ -254,6 +254,8 @@ double JointFeatures::GetJointPosition(
     return math::NAN_D;
   }
 
+  this->RecompileSpec(*jointInfo->worldInfo);
+
   if (jointInfo->nq_index < 0)
     return math::NAN_D;
 
@@ -275,6 +277,8 @@ double JointFeatures::GetJointVelocity(
           << "] because it is a fixed joint.\n";
     return math::NAN_D;
   }
+
+  this->RecompileSpec(*jointInfo->worldInfo);
 
   if (jointInfo->nv_index < 0)
     return math::NAN_D;
@@ -298,6 +302,8 @@ double JointFeatures::GetJointAcceleration(
     return math::NAN_D;
   }
 
+  this->RecompileSpec(*jointInfo->worldInfo);
+
   if (jointInfo->nv_index < 0)
     return math::NAN_D;
 
@@ -320,6 +326,8 @@ double JointFeatures::GetJointForce(
           << "] because it is a fixed joint.\n";
     return gz::math::NAN_D;
   }
+
+  this->RecompileSpec(*jointInfo->worldInfo);
 
   if (jointInfo->nv_index < 0)
     return math::NAN_D;
@@ -398,6 +406,8 @@ void JointFeatures::SetJointPosition(
     return;
   }
 
+  this->RecompileSpec(*jointInfo->worldInfo);
+
   if (jointInfo->nq_index < 0)
     return;
 
@@ -417,7 +427,14 @@ void JointFeatures::SetJointPosition(
   updateMimicJointFollowers(jointInfo, _dof, _value,
                             jointInfo->worldInfo->mjDataObj->qpos, true);
 
-  mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
+  // Only refresh the kinematics that queries read (see WorldForwardStep).
+  // mj_comPos is needed by mj_comVel since cdof depends on qpos. The rest of
+  // mj_forward is recomputed by the next mj_step.
+  auto *m = jointInfo->worldInfo->mjModelObj;
+  auto *d = jointInfo->worldInfo->mjDataObj;
+  mj_kinematics(m, d);
+  mj_comPos(m, d);
+  mj_comVel(m, d);
 }
 
 /////////////////////////////////////////////////
@@ -442,6 +459,8 @@ void JointFeatures::SetJointVelocity(
     return;
   }
 
+  this->RecompileSpec(*jointInfo->worldInfo);
+
   if (jointInfo->nv_index < 0)
     return;
 
@@ -461,7 +480,10 @@ void JointFeatures::SetJointVelocity(
   updateMimicJointFollowers(jointInfo, _dof, _value,
                             jointInfo->worldInfo->mjDataObj->qvel, false);
 
-  mj_forward(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
+  // Only qvel changed, so the frame arrays and cdof are still valid and just
+  // cvel needs to be refreshed. The rest of mj_forward is recomputed by the
+  // next mj_step.
+  mj_comVel(jointInfo->worldInfo->mjModelObj, jointInfo->worldInfo->mjDataObj);
 }
 
 /////////////////////////////////////////////////
@@ -499,6 +521,12 @@ void JointFeatures::SetJointForce(
     gzerr << "No actuator set up for this joint\n";
     return;
   }
+
+  this->RecompileSpec(*jointInfo->worldInfo);
+
+  if (jointInfo->nv_index < 0)
+    return;
+
   const int ctrlIndex = mjs_getId(jointInfo->actuator->element);
   if (ctrlIndex < 0)
     return;
@@ -542,6 +570,9 @@ void JointFeatures::SetJointVelocityCommand(
     gzerr << "No actuator set up for this joint\n";
     return;
   }
+
+  this->RecompileSpec(*jointInfo->worldInfo);
+
   const int ctrlIndex = mjs_getId(jointInfo->actuator->element);
   if (ctrlIndex < 0)
     return;
