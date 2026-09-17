@@ -17,6 +17,9 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
+#include <vector>
+
 #include <gz/plugin/Loader.hh>
 
 #include <gz/physics/RequestEngine.hh>
@@ -173,8 +176,67 @@ TEST(EntityManagement_TEST, RemoveEntities)
   EXPECT_TRUE(nestedModel4->Removed());
 }
 
+<<<<<<< HEAD
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
+=======
+// Removing a model must cascade to every immediate nested model
+TEST(EntityManagement_TEST, RemoveModelCascadesToEveryNestedModel)
+{
+  plugin::Loader loader;
+  loader.LoadLib(tpe_plugin_LIB);
+  auto engine = physics::RequestEngine3d<TestFeatureList>::From(
+      loader.Instantiate("gz::physics::tpeplugin::Plugin"));
+  ASSERT_NE(nullptr, engine);
+
+  auto world = engine->ConstructEmptyWorld("world");
+  auto parent = world->ConstructEmptyModel("parent");
+  ASSERT_NE(nullptr, parent);
+
+  std::vector<decltype(parent)> children;
+  for (std::size_t i = 0; i < 6; ++i)
+  {
+    auto child = parent->ConstructEmptyNestedModel(
+        "child_" + std::to_string(i));
+    ASSERT_NE(nullptr, child);
+    children.push_back(child);
+  }
+  EXPECT_EQ(6u, parent->GetNestedModelCount());
+
+  EXPECT_TRUE(parent->Remove());
+  for (std::size_t i = 0; i < children.size(); ++i)
+    EXPECT_TRUE(children[i]->Removed()) << "child_" << i << " was not removed";
+
+  EXPECT_EQ(nullptr, world->GetModel("child_1"));
+  EXPECT_EQ(nullptr, world->GetModel("parent"));
+}
+
+// Removing a model must also drop its links and their collisions from the
+// plugin's bookkeeping. Otherwise those maps keep raw pointers into freed
+// backend memory that the per-step pose loop and by-name lookups dereference.
+TEST(EntityManagement_TEST, RemoveModelDropsLinkAndCollisionRecords)
+{
+  plugin::Loader loader;
+  loader.LoadLib(tpe_plugin_LIB);
+  auto engine = physics::RequestEngine3d<TestFeatureList>::From(
+      loader.Instantiate("gz::physics::tpeplugin::Plugin"));
+  ASSERT_NE(nullptr, engine);
+
+  auto world = engine->ConstructEmptyWorld("world");
+  auto model = world->ConstructEmptyModel("m");
+  ASSERT_NE(nullptr, model);
+  auto link = model->ConstructEmptyLink("l");
+  ASSERT_NE(nullptr, link);
+
+  EXPECT_TRUE(model->Remove());
+  EXPECT_TRUE(model->Removed());
+
+  // Re-query links by name after removal. This walks the whole links map; a
+  // surviving stale record would dereference the freed link here.
+  auto model2 = world->ConstructEmptyModel("m2");
+  ASSERT_NE(nullptr, model2);
+  EXPECT_EQ(nullptr, model2->GetLink("l"));
+>>>>>>> 289ac1b (Fix dangling references when removing models in tpe plugin (#1091))
 }
