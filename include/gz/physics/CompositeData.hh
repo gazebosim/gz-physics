@@ -18,10 +18,11 @@
 #ifndef GZ_PHYSICS_COMPOSITEDATA_HH_
 #define GZ_PHYSICS_COMPOSITEDATA_HH_
 
+#include <cstring>
 #include <string>
 #include <map>
 #include <set>
-#include <typeindex>
+#include <typeinfo>
 
 #include <gz/utils/SuppressWarning.hh>
 
@@ -962,9 +963,32 @@ namespace gz
       /// \private
       public: struct DataEntry;
 
+      /// \brief Lightweight wrapper around typeid(Data).name() with a custom
+      /// comparator to match types safely across dynamically loaded shared
+      /// library boundaries without heap allocations.
+      /// \private
+      public: class TypeName
+      {
+        public: TypeName(const std::type_info& _info) : _name(_info.name()) {}
+        public: const char *name() const { return this->_name; }
+        public: bool operator<(const TypeName &_other) const
+        {
+          return std::strcmp(this->_name, _other._name) < 0;
+        }
+        public: bool operator==(const TypeName &_other) const
+        {
+          return std::strcmp(this->_name, _other._name) == 0;
+        }
+        public: bool operator!=(const TypeName &_other) const
+        {
+          return !(*this == _other);
+        }
+        private: const char *_name = "";
+      };
+
       // We make this typedef public so that helper functions can use it without
       // being friends of the class.
-      public: using MapOfData = std::map<std::type_index, DataEntry>;
+      public: using MapOfData = std::map<TypeName, DataEntry>;
 
       GZ_UTILS_WARN_IGNORE__DLL_INTERFACE_MISSING
       /// \brief Map from the label of a data object type to its entry

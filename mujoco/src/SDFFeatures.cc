@@ -984,6 +984,20 @@ Identity SDFFeatures::ConstructSdfNestedModel(const Identity &_parentID,
 }
 
 /////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfCollision(
+    const Identity &_linkID,
+    const ::sdf::Collision &_collision)
+{
+  Identity shape = this->GetShape(_linkID, _collision.Name());
+  if (!shape)
+  {
+    gzerr << "Dynamic collision construction is not supported in the MuJoCo "
+          << "plugin. Collision [" << _collision.Name() << "] was not added.\n";
+  }
+  return shape;
+}
+
+/////////////////////////////////////////////////
 Identity SDFFeatures::ConstructSdfModelImpl(Identity _parentID,
                                             const ::sdf::Model &_sdfModel)
 {

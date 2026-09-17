@@ -347,8 +347,9 @@ static ShapeAndTransform ConstructHeightmap(
   // TODO(mjcarroll) Allow dartsim to construct heightmaps internally rather
   // than relying on the physics consumer constructing and attaching:
   // https://github.com/gazebosim/gz-physics/issues/451
-  gzdbg << "Heightmap construction from an SDF has not been implemented yet "
-        << "for dartsim. Use AttachHeightmapShapeFeature to use heightmaps.\n";
+  gzdbg << "Dartsim did not construct the heightmap during this SDF "
+        << "construction stage. A physics consumer may still attach it later "
+        << "through AttachHeightmapShapeFeature.\n";
   return {nullptr};
 }
 
@@ -361,8 +362,9 @@ static ShapeAndTransform ConstructMesh(
   // TODO(mjcarroll) Allow dartsim to construct meshes internally rather
   // than relying on the physics consumer constructing and attaching:
   // https://github.com/gazebosim/gz-physics/issues/451
-  gzdbg << "Mesh construction from an SDF has not been implemented yet for "
-        << "dartsim. Use AttachMeshShapeFeature to use mesh shapes.\n";
+  gzdbg << "Dartsim did not construct the mesh during this SDF construction "
+        << "stage. A physics consumer may still attach it later through "
+        << "AttachMeshShapeFeature.\n";
   return {nullptr};
 }
 
@@ -893,8 +895,10 @@ Identity SDFFeatures::ConstructSdfCollision(
   if (!shape)
   {
     // The geometry element was empty, or the shape type is not supported
-    gzdbg << "The geometry element of collision [" << _collision.Name() << "] "
-          << "couldn't be created\n";
+    gzdbg << "ConstructSdfCollision did not create the geometry element of "
+          << "collision [" << _collision.Name() << "] at this stage. Mesh and "
+          << "heightmap geometry may still be attached later by the physics "
+          << "consumer.\n";
     return this->GenerateInvalidId();
   }
 
@@ -1237,11 +1241,6 @@ Identity SDFFeatures::ConstructSdfJoint(
       this->FullyScopedJointName(_modelID, jointName);
 
   const std::size_t jointID = this->AddJoint(joint, fullJointName, _modelID);
-  // Increment BodyNode version since the child could be moved to a new skeleton
-  // when a joint is created.
-  // TODO(azeey) Remove incrementVersion once DART has been updated to
-  // internally increment the BodyNode's version after Joint::moveTo.
-  _child->incrementVersion();
 
   return this->GenerateIdentity(jointID, this->joints.at(jointID));
 }

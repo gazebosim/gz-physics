@@ -2,6 +2,8 @@
 include(ExternalProject)
 set(MUJOCO_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/install")
 
+include(GNUInstallDirs)
+
 if(WIN32)
     set(MUJOCO_IMPLIB_FILE "${MUJOCO_INSTALL_DIR}/lib/mujoco.lib")
     set(MUJOCO_SHARED_FILE "${MUJOCO_INSTALL_DIR}/bin/mujoco.dll")
@@ -10,7 +12,7 @@ elseif(APPLE)
     set(MUJOCO_SHARED_FILE "${MUJOCO_INSTALL_DIR}/lib/libmujoco.dylib")
     set(MUJOCO_BYPRODUCTS "${MUJOCO_SHARED_FILE}")
 else()
-    set(MUJOCO_SHARED_FILE "${MUJOCO_INSTALL_DIR}/lib/libmujoco.so")
+    set(MUJOCO_SHARED_FILE "${MUJOCO_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/libmujoco.so")
     set(MUJOCO_BYPRODUCTS "${MUJOCO_SHARED_FILE}")
 endif()
 
@@ -51,6 +53,7 @@ ExternalProject_Add(
   CMAKE_ARGS
     -Wno-dev # Suppress any CMake warnings from mujoco
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    -DCMAKE_INSTALL_LIBDIR=${CMAKE_INSTALL_LIBDIR}
     -DBUILD_SHARED_LIBS=ON
     -DCMAKE_SHARED_LINKER_FLAGS=${MUJOCO_LINK_FLAGS}
     -DMUJOCO_BUILD_EXAMPLES=OFF
@@ -78,8 +81,8 @@ if(WIN32)
 else()
     # Unix links directly against the .so / .dylib
     target_link_libraries(mujoco_internal INTERFACE "${MUJOCO_SHARED_FILE}")
-    install(DIRECTORY "${MUJOCO_INSTALL_DIR}/lib/"
-            DESTINATION lib
+    install(DIRECTORY "${MUJOCO_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/"
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}
             FILES_MATCHING
             PATTERN "*mujoco.so*"
             PATTERN "*mujoco*.dylib*"

@@ -22,7 +22,11 @@ target_link_libraries(${bullet_plugin}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
     gz-common::gz-common
-    gz-math::eigen3)
+    gz-math::eigen3
+  PRIVATE
+    # We need to link this, even when the profiler isn't used to get headers.
+    gz-common::profiler
+)
 
 # Note that plugins are currently being installed in 2 places: /lib and the engine-plugins dir
 install(TARGETS ${bullet_plugin} DESTINATION ${GZ_PHYSICS_ENGINE_RELATIVE_INSTALL_DIR})

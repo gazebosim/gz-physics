@@ -22,10 +22,12 @@
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/RequestEngine.hh>
+#include <gz/physics/sdf/ConstructCollision.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 #include <gz/physics/sdf/ConstructNestedModel.hh>
 #include <gz/plugin/Loader.hh>
+#include <sdf/Collision.hh>
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 #include <test/Utils.hh>
@@ -41,9 +43,12 @@ struct TestFeatureList : physics::FeatureList<
     physics::GetEngineInfo,
     physics::GetWorldFromEngine,
     physics::GetModelFromWorld,
+    physics::GetLinkFromModel,
+    physics::GetShapeFromLink,
     physics::sdf::ConstructSdfModel,
     physics::sdf::ConstructSdfWorld,
     physics::sdf::ConstructSdfNestedModel,
+    physics::sdf::ConstructSdfCollision,
     physics::RemoveEntities
 > { };
 
@@ -51,6 +56,7 @@ using World = physics::World3d<TestFeatureList>;
 using WorldPtr = physics::World3dPtr<TestFeatureList>;
 using ModelPtr = physics::Model3dPtr<TestFeatureList>;
 using LinkPtr = physics::Link3dPtr<TestFeatureList>;
+using ShapePtr = physics::Shape3dPtr<TestFeatureList>;
 
 /////////////////////////////////////////////////
 auto LoadEngine()
@@ -1018,9 +1024,48 @@ TEST_P(SDFFeatures_TEST, NestedModelSelfCollideExclusions)
       "case3_parent_false_child_true::child_model::child_dropper_pc"));
 }
 
+/////////////////////////////////////////////////
+TEST_P(SDFFeatures_TEST, ConstructSdfCollision)
+{
+  const std::string worldStr = R"(
+  <sdf version="1.6">
+    <world name="default">
+      <model name="m1">
+        <link name="l1">
+          <collision name="c1">
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
 
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
 
+  auto model = world->GetModel("m1");
+  ASSERT_NE(nullptr, model);
 
+  auto link = model->GetLink("l1");
+  ASSERT_NE(nullptr, link);
+
+  EXPECT_EQ(1u, link->GetShapeCount());
+
+  sdf::Collision col;
+  col.SetName("c1");
+  auto shape = link->ConstructCollision(col);
+  ASSERT_NE(nullptr, shape);
+  EXPECT_EQ("c1", shape->GetName());
+
+  sdf::Collision nonExistentCol;
+  nonExistentCol.SetName("non_existent");
+  EXPECT_EQ(nullptr, link->ConstructCollision(nonExistentCol));
+
+  EXPECT_NE(nullptr, link->GetShape("c1"));
+  EXPECT_EQ(nullptr, link->GetShape("non_existent"));
+}
 
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
                         ::testing::Values(LoaderType::Whole));

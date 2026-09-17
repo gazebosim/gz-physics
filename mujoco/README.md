@@ -246,3 +246,19 @@ Not sure if this is needed for meshes.
     - Entity Management: Functions to find entities by name or get their index are stubbed.
     - Kinematics: Calculating frame data for shapes and joints is a TODO.
     - Simulation Step: Pose updates are inefficient (all links are reported as changed).
+
+## Joint Velocity Control: MuJoCo vs. LCP Engines
+
+Engines that use LCP constraint solvers (such as DART and Bullet-Featherstone)
+enforce joint velocity commands via hard algebraic constraints using rigid
+impulses ($M \Delta \dot{q} = J^T \lambda$). This allows them to reach target
+velocities instantaneously within a single timestep without injecting large,
+persistent reaction forces into the system.
+
+In contrast, MuJoCo enforces velocity commands using penalty-based velocity
+servos that integrate feedback torques over time. On coupled multibody systems
+(e.g., a double pendulum), a sudden step velocity command generates large
+transient reaction torques. This can cause the entire assembly—including an
+ungrounded base link resting on the ground—to lift off the ground and take
+several seconds to settle back down, a behavior not observed in DART or
+Bullet-Featherstone.

@@ -17,6 +17,8 @@
 
 #include "LinkFeatures.hh"
 
+#include <gz/common/Profiler.hh>
+
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
@@ -26,6 +28,7 @@ void LinkFeatures::AddLinkExternalForceInWorld(
     const Identity &_id, const LinearVectorType &_force,
     const LinearVectorType &_position)
 {
+  GZ_PROFILE("LinkFeatures::AddLinkExternalForceInWorld");
   auto *link = this->ReferenceInterface<LinkInfo>(_id);
   auto *model = this->ReferenceInterface<ModelInfo>(link->model);
 
@@ -57,6 +60,7 @@ void LinkFeatures::AddLinkExternalForceInWorld(
 void LinkFeatures::AddLinkExternalTorqueInWorld(
     const Identity &_id, const AngularVectorType &_torque)
 {
+  GZ_PROFILE("LinkFeatures::AddLinkExternalTorqueInWorld");
   auto *link = this->ReferenceInterface<LinkInfo>(_id);
   auto *model = this->ReferenceInterface<ModelInfo>(link->model);
 

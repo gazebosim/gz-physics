@@ -20,6 +20,7 @@
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
 
+#include <gz/common/Profiler.hh>
 #include <gz/math/Quaternion.hh>
 #include <gz/math/Vector3.hh>
 
@@ -45,6 +46,7 @@ namespace bullet_featherstone {
 bool GzCollisionFilterCallback::needBroadphaseCollision(
     btBroadphaseProxy *_proxy0, btBroadphaseProxy *_proxy1) const
 {
+  GZ_PROFILE("GzCollisionFilterCallback::needBroadphaseCollision");
   GzMultiBodyLinkCollider *col0 =
           static_cast<GzMultiBodyLinkCollider *>(
           _proxy0->m_clientObject);
@@ -88,6 +90,7 @@ GzCollisionDispatcher::GzCollisionDispatcher(
 bool GzCollisionDispatcher::needsCollision(const btCollisionObject *_body0,
     const btCollisionObject *_body1)
 {
+  GZ_PROFILE("GzCollisionDispatcher::needsCollision");
   const GzMultiBodyLinkCollider *col0 =
           static_cast<const GzMultiBodyLinkCollider *>(_body0);
   const GzMultiBodyLinkCollider *col1 =
@@ -117,6 +120,7 @@ bool GzCollisionDispatcher::needsCollision(const btCollisionObject *_body0,
 WorldInfo::WorldInfo(std::string name_)
   : name(std::move(name_))
 {
+  GZ_PROFILE("WorldInfo::WorldInfo");
   this->collisionConfiguration =
     std::make_unique<btDefaultCollisionConfiguration>();
   this->dispatcher =
@@ -157,6 +161,7 @@ void GzMultiBody::SetJointPosForDof(
   std::size_t _dof,
   btScalar _value)
 {
+  GZ_PROFILE("GzMultiBody::SetJointPosForDof");
   btScalar *positions =
       this->getJointPosMultiDof(_jointIndex);
 
@@ -202,6 +207,7 @@ void GzMultiBody::SetJointPosForDof(
 btScalar GzMultiBody::GetJointPosForDof(int _jointIndex, std::size_t _dof)
     const
 {
+  GZ_PROFILE("GzMultiBody::GetJointPosForDof");
   if (this->getLink(_jointIndex).m_jointType == btMultibodyLink::eSpherical)
   {
     // Ball joints store joint pos as a quaternion (4 floats) instead of one
@@ -219,12 +225,14 @@ btScalar GzMultiBody::GetJointPosForDof(int _jointIndex, std::size_t _dof)
 
 void GzMultiBody::SetBaseWorldTransform(const btTransform &_pose)
 {
+  GZ_PROFILE("GzMultiBody::SetBaseWorldTransform");
   this->setBaseWorldTransform(_pose);
   this->needsCollisionTransformsUpdate = true;
 }
 
 void GzMultiBody::UpdateCollisionTransformsIfNeeded()
 {
+  GZ_PROFILE("GzMultiBody::UpdateCollisionTransformsIfNeeded");
   if (this->needsCollisionTransformsUpdate)
   {
     btAlignedObjectArray<btQuaternion> scratchWorldToLocal;
@@ -238,6 +246,7 @@ void GzMultiBody::UpdateCollisionTransformsIfNeeded()
 void GzMultiBody::AddJointDampingStiffnessTorque(int _jointIndex,
     double _damping, double _springStiffness, double _springReference)
 {
+  GZ_PROFILE("GzMultiBody::AddJointDampingStiffnessTorque");
   const btMultibodyLink& link = this->getLink(_jointIndex);
 
   for (int dof = 0; dof < link.m_dofCount; ++dof)

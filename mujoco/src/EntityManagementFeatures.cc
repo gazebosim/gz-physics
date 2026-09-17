@@ -364,9 +364,6 @@ Identity EntityManagementFeatures::GetShape(
 Identity EntityManagementFeatures::GetShape(
   const Identity &_linkID, const std::string &_shapeName) const
 {
-  // TODO(azeey) Return an invalid ID here otherwise, gz-sim will incorrectly
-  // assume the ConstructSdfCollision feature is implemented (bug).
-  return this->GenerateInvalidId();
   const auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
   auto bodyName = mjs_getName(linkInfo->body->element);
   if (!bodyName)

@@ -1,0 +1,179 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="detachable_joint_contact">
+    <gravity>0 0 0</gravity>
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+    <model name="M1">
+      <self_collide>true</self_collide>
+      <pose>0 0 0.5 0 0 0</pose>
+      <link name="link1_base">
+        <collision name="c1_base">
+          <geometry>
+            <box><size>1.0 1.0 1.0</size></box>
+          </geometry>
+        </collision>
+        <visual name="v1_base">
+          <geometry>
+            <box><size>1.0 1.0 1.0</size></box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.1 0.1 1</ambient>
+            <diffuse>0.8 0.1 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <link name="link1_fixed">
+        <pose>0 0.8 0.8 0 0 0</pose>
+        <collision name="c1_fixed">
+          <geometry>
+            <box><size>0.5 0.5 0.5</size></box>
+          </geometry>
+        </collision>
+        <visual name="v1_fixed">
+          <geometry>
+            <box><size>0.5 0.5 0.5</size></box>
+          </geometry>
+          <material>
+            <ambient>0.1 0.8 0.1 1</ambient>
+            <diffuse>0.1 0.8 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <joint name="j1_fixed" type="fixed">
+        <parent>link1_base</parent>
+        <child>link1_fixed</child>
+      </joint>
+      <link name="link1_moving">
+        <pose>0.4 0 0.8 0 0 0</pose>
+        <collision name="c1_moving">
+          <geometry>
+            <box><size>0.5 0.5 0.5</size></box>
+          </geometry>
+        </collision>
+        <visual name="v1_moving">
+          <geometry>
+            <box><size>0.5 0.5 0.5</size></box>
+          </geometry>
+          <material>
+            <ambient>0.1 0.1 0.8 1</ambient>
+            <diffuse>0.1 0.1 0.8 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <joint name="j1_rev" type="revolute">
+        <parent>link1_fixed</parent>
+        <child>link1_moving</child>
+        <axis>
+          <xyz>0 1 0</xyz>
+          <limit>
+            <lower>-10</lower>
+            <upper>10</upper>
+          </limit>
+        </axis>
+      </joint>
+      <plugin filename="gz-sim-detachable-joint-system"
+              name="gz::sim::systems::DetachableJoint">
+        <parent_link>link1_base</parent_link>
+        <child_model>M2</child_model>
+        <child_link>link2_base</child_link>
+        <detach_topic>/M1/detach</detach_topic>
+        <attach_topic>/M1/attach</attach_topic>
+      </plugin>
+      <plugin filename="gz-sim-joint-position-controller-system"
+              name="gz::sim::systems::JointPositionController">
+        <joint_name>j1_rev</joint_name>
+        <p_gain>100</p_gain>
+        <i_gain>0.1</i_gain>
+        <d_gain>10</d_gain>
+      </plugin>
+    </model>
+    <model name="M2">
+      <self_collide>true</self_collide>
+      <pose>0.8 0 0.5 0 0 0</pose>
+      <link name="link2_base">
+        <collision name="c2_base">
+          <geometry>
+            <box><size>1.0 1.0 1.0</size></box>
+          </geometry>
+        </collision>
+        <visual name="v2_base">
+          <geometry>
+            <box><size>1.0 1.0 1.0</size></box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.1 1</ambient>
+            <diffuse>0.8 0.8 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <link name="link2_fixed">
+        <pose>0 -0.8 0.8 0 0 0</pose>
+        <collision name="c2_fixed">
+          <geometry>
+            <box><size>0.5 0.5 0.5</size></box>
+          </geometry>
+        </collision>
+        <visual name="v2_fixed">
+          <geometry>
+            <box><size>0.5 0.5 0.5</size></box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.1 0.8 1</ambient>
+            <diffuse>0.8 0.1 0.8 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <joint name="j2_fixed" type="fixed">
+        <parent>link2_base</parent>
+        <child>link2_fixed</child>
+      </joint>
+      <link name="link2_moving">
+        <pose>-0.4 0 1.5 0 0 0</pose>
+        <collision name="c2_moving">
+          <geometry>
+            <box><size>0.5 0.5 0.5</size></box>
+          </geometry>
+        </collision>
+        <visual name="v2_moving">
+          <geometry>
+            <box><size>0.5 0.5 0.5</size></box>
+          </geometry>
+          <material>
+            <ambient>0.1 0.8 0.8 1</ambient>
+            <diffuse>0.1 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <joint name="j2_prism" type="prismatic">
+        <parent>link2_fixed</parent>
+        <child>link2_moving</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-10</lower>
+            <upper>10</upper>
+          </limit>
+        </axis>
+      </joint>
+      <plugin filename="gz-sim-joint-position-controller-system"
+              name="gz::sim::systems::JointPositionController">
+        <joint_name>j2_prism</joint_name>
+        <p_gain>100</p_gain>
+        <i_gain>0.1</i_gain>
+        <d_gain>10</d_gain>
+      </plugin>
+    </model>
+  </world>
+</sdf>

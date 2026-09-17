@@ -39,8 +39,8 @@ struct JointFeatureList : FeatureList<
   SetMimicConstraintFeature,
   AttachFixedJointFeature,
   DetachJointFeature,
-  SetJointTransformFromParentFeature
-
+  SetJointTransformFromParentFeature,
+  SetJointVelocityCommandFeature
   // GetJointTransmittedWrench,
   // GetPrismaticJointProperties,
   // GetRevoluteJointProperties,
@@ -51,7 +51,6 @@ struct JointFeatureList : FeatureList<
   // SetJointPositionLimitsFeature,
   // SetJointSpringReferenceFeature,
   // SetJointSpringStiffnessFeature,
-  // SetJointVelocityCommandFeature,
   // SetJointVelocityLimitsFeature,
   // SetPrismaticJointProperties,
   // SetRevoluteJointProperties
@@ -134,6 +133,11 @@ class JointFeatures :
       const Identity &_childID,
       const BaseLink3dPtr &_parent,
       const std::string &_name) override;
+
+  // ----- Joint Commands -----
+  public: void SetJointVelocityCommand(
+      const Identity &_id, std::size_t _dof,
+      double _value) override;
 
   #if 0
   // ----- Free Joint -----

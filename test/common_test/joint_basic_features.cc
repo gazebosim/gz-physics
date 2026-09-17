@@ -300,6 +300,12 @@ TEST_F(BasicJointFeaturesTest, GetSetForceAccel)
     if (this->PhysicsEngineName(name) != "dartsim")
     {
       EXPECT_DOUBLE_EQ(kForceCmd * 10, this->joint->GetForce(0));
+
+      // This should also be true if the commanded force is 0.
+      this->Step();
+      EXPECT_GT(this->joint->GetForce(0), 0);
+      this->joint->SetForce(0, 0);
+      EXPECT_DOUBLE_EQ(0, this->joint->GetForce(0));
     }
   }
 }
