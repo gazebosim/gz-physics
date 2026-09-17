@@ -83,14 +83,13 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   //
   // 2. Contact consistency. mj_fwdPosition rebuilds the efc arrays through
   //    mj_makeConstraint, which allocates them on the arena without solving
-  //    them, so GetContactsFromLastStep ended up pairing contacts with
+  //    them, so GetContactsFromLastStep would end up pairing contacts with
   //    whatever the arena happened to hold. That surfaces as reported normal
   //    forces that are negative, which a solved contact can never be.
   //    Leaving d->contact as mj_step solved it keeps every reported contact
-  //    paired with the force that produced it. The trade-off is that contacts
-  //    now describe the pose the solver used, at the start of the step,
-  //    rather than the pose reached after integration, so contact sets change
-  //    one step later than before both on touchdown and on separation.
+  //    paired with the force that produced it. As in dartsim, contacts
+  //    describe the pose the solver used, at the start of the step, rather
+  //    than the pose reached after integration.
   mj_kinematics(m, d);  // xpos, xquat, xipos, ximat, geom_xpos, site_xpos/xmat
   mj_comPos(m, d);      // subtree_com, cdof, cinert
   mj_comVel(m, d);      // cvel, needed by mj_objectVelocity
