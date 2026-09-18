@@ -124,17 +124,30 @@ inline Eigen::Quaterniond convertQuat(const mjtNum *_src)
   return dst;
 }
 
+/// \brief Convert a pose given in a position and quaternion pair from MuJoCo
+/// to Eigen.
+/// \param[in] _pos Position array from MuJoCo
+/// \param[in] _quat Quaternion array from MuJoCo
+/// \return The constructed Eigen pose
 inline Eigen::Isometry3d convertPose(const mjtNum *_pos, const mjtNum *_quat)
 {
   return Eigen::Translation3d(convertPos(_pos)) * convertQuat(_quat);
 }
 
+/// \brief Convert pose from gz::math to Eigen
+/// \param[in] _pose Input gz::math pose
+/// \return Converted Eigen pose
 inline Eigen::Isometry3d convertPose(const gz::math::Pose3d &_pose)
 {
   return gz::math::eigen3::convert(_pose);
 }
 
-inline gz::math::Pose3d getBodyWorldPoseFromMjData(mjData *_d, int _bodyId)
+/// \brief Retrieve the pose of a body inside mjData as a gz::math pose.
+/// \param[in] _d mjData pointer
+/// \param[in] _bodyId The body ID
+/// \return Converted gz::math pose
+inline gz::math::Pose3d getBodyWorldPoseFromMjData(const mjData *_d, int
+                                                   _bodyId)
 {
   return gz::math::Pose3d(_d->xpos[3 * _bodyId],
                           _d->xpos[3 * _bodyId + 1],
@@ -145,6 +158,10 @@ inline gz::math::Pose3d getBodyWorldPoseFromMjData(mjData *_d, int _bodyId)
                           _d->xquat[4 * _bodyId + 3]);
 }
 
+/// \brief Retrieve the pose of a body inside mjData as an Eigen pose.
+/// \param[in] _d mjData pointer
+/// \param[in] _bodyId The body ID
+/// \return Converted Eigen pose
 inline Eigen::Isometry3d getBodyWorldPoseFromMjDataEigen(const mjData *_d,
                                                          int _bodyId)
 {
@@ -288,6 +305,7 @@ struct ModelInfo
 
 struct FrameInfo
 {
+  /// \brief Constructor
   FrameInfo(mjsBody *_body, const Eigen::Isometry3d &_offset,
             WorldInfo *_worldInfo)
       : body(_body), offset(_offset), worldInfo(_worldInfo)
@@ -295,11 +313,13 @@ struct FrameInfo
   }
 
   /// \brief Body this frame is rigidly attached to.
-  mjsBody *body{nullptr};
+  const mjsBody *body{nullptr};
 
   /// \brief Constant pose of this frame expressed in the body frame.
-  Eigen::Isometry3d offset{Eigen::Isometry3d::Identity()};
+  const Eigen::Isometry3d offset{Eigen::Isometry3d::Identity()};
 
+  /// \brief The worldInfo object associated with the body. Not const because
+  /// it might be used to Recompile the world
   WorldInfo *worldInfo{nullptr};
 };
 
