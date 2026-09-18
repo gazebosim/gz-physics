@@ -34,6 +34,7 @@
 #include <gz/math/Quaternion.hh>
 #include <gz/math/SemanticVersion.hh>
 #include <gz/math/Vector3.hh>
+#include <gz/math/eigen3/Conversions.hh>
 #include <gz/physics/Geometry.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
@@ -123,12 +124,30 @@ inline Eigen::Quaterniond convertQuat(const mjtNum *_src)
   return dst;
 }
 
+/// \brief Convert a pose given in a position and quaternion pair from MuJoCo
+/// to Eigen.
+/// \param[in] _pos Position array from MuJoCo
+/// \param[in] _quat Quaternion array from MuJoCo
+/// \return The constructed Eigen pose
 inline Eigen::Isometry3d convertPose(const mjtNum *_pos, const mjtNum *_quat)
 {
   return Eigen::Translation3d(convertPos(_pos)) * convertQuat(_quat);
 }
 
-inline gz::math::Pose3d getBodyWorldPoseFromMjData(mjData *_d, int _bodyId)
+/// \brief Convert pose from gz::math to Eigen
+/// \param[in] _pose Input gz::math pose
+/// \return Converted Eigen pose
+inline Eigen::Isometry3d convertPose(const gz::math::Pose3d &_pose)
+{
+  return gz::math::eigen3::convert(_pose);
+}
+
+/// \brief Retrieve the pose of a body inside mjData as a gz::math pose.
+/// \param[in] _d mjData pointer
+/// \param[in] _bodyId The body ID
+/// \return Converted gz::math pose
+inline gz::math::Pose3d getBodyWorldPoseFromMjData(const mjData *_d, int
+                                                   _bodyId)
 {
   return gz::math::Pose3d(_d->xpos[3 * _bodyId],
                           _d->xpos[3 * _bodyId + 1],
@@ -139,14 +158,20 @@ inline gz::math::Pose3d getBodyWorldPoseFromMjData(mjData *_d, int _bodyId)
                           _d->xquat[4 * _bodyId + 3]);
 }
 
-inline Eigen::Isometry3d getBodyWorldPoseFromMjDataEigen(mjData *_d,
+/// \brief Retrieve the pose of a body inside mjData as an Eigen pose.
+/// \param[in] _d mjData pointer
+/// \param[in] _bodyId The body ID
+/// \return Converted Eigen pose
+inline Eigen::Isometry3d getBodyWorldPoseFromMjDataEigen(const mjData *_d,
                                                          int _bodyId)
 {
-  return Eigen::Translation3d(_d->xpos[3 * _bodyId], _d->xpos[3 * _bodyId + 1],
-                              _d->xpos[3 * _bodyId + 2]) *
-         Eigen::Quaterniond(_d->xquat[4 * _bodyId], _d->xquat[4 * _bodyId + 1],
-                            _d->xquat[4 * _bodyId + 2],
-                            _d->xquat[4 * _bodyId + 3]);
+  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+  pose.linear() =
+      Eigen::Map<const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(
+          &_d->xmat[9 * _bodyId]);
+  pose.translation() =
+      Eigen::Map<const Eigen::Vector3d>(&_d->xpos[3 * _bodyId]);
+  return pose;
 }
 
 // Forward declarations
@@ -280,12 +305,26 @@ struct ModelInfo
 
 struct FrameInfo
 {
-  FrameInfo(mjsSite *_site, WorldInfo* _worldInfo)
-      : site(_site), worldInfo(_worldInfo)
+  /// \brief Constructor
+  /// \param[in] _body Body this frame is rigidly attached to
+  /// \param[in] _offset Offset of the frame relative to the body, expressed in
+  /// the body frame.
+  /// \param[in] _worldInfo The worldInfo object associated with the body
+  FrameInfo(const mjsBody *_body, const Eigen::Isometry3d &_offset,
+            WorldInfo *_worldInfo)
+      : body(_body), offset(_offset), worldInfo(_worldInfo)
   {
   }
-  mjsSite * site{nullptr};
-  WorldInfo* worldInfo;
+
+  /// \brief Body this frame is rigidly attached to.
+  const mjsBody *body{nullptr};
+
+  /// \brief Constant pose of this frame expressed in the body frame.
+  const Eigen::Isometry3d offset{Eigen::Isometry3d::Identity()};
+
+  /// \brief The worldInfo object associated with the body. Not const because
+  /// it might be used to Recompile the world
+  WorldInfo *worldInfo{nullptr};
 };
 
 struct WorldInfo
