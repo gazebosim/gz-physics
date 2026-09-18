@@ -62,6 +62,26 @@ void SimulationFeatures::WorldForwardStep(
     }
   }
   world->Step();
+
+  // Enforce fixed joint constraints (TPE has no constraint solver)
+  for (const auto &[_, joint] : this->joints)
+  {
+    if (!joint) continue;
+    math::Pose3d parentPose;
+    if (joint->parentLinkId.has_value())
+    {
+      auto pIt = this->links.find(joint->parentLinkId.value());
+      if (pIt == this->links.end() || !pIt->second) continue;
+      parentPose = pIt->second->link->GetWorldPose();
+    }
+    auto linkIt = this->links.find(joint->childLinkId);
+    auto modelIt = this->models.find(joint->childModelId);
+    if (linkIt == this->links.end() || !linkIt->second ||
+        modelIt == this->models.end() || !modelIt->second) continue;
+    math::Pose3d targetPose = parentPose * joint->poseFromParent;
+    modelIt->second->model->SetPose(targetPose * linkIt->second->link->GetPose().Inverse());
+  }
+
   this->Write(_h.Get<ChangedWorldPoses>());
 }
 
