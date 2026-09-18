@@ -145,14 +145,16 @@ inline gz::math::Pose3d getBodyWorldPoseFromMjData(mjData *_d, int _bodyId)
                           _d->xquat[4 * _bodyId + 3]);
 }
 
-inline Eigen::Isometry3d getBodyWorldPoseFromMjDataEigen(mjData *_d,
+inline Eigen::Isometry3d getBodyWorldPoseFromMjDataEigen(const mjData *_d,
                                                          int _bodyId)
 {
-  return Eigen::Translation3d(_d->xpos[3 * _bodyId], _d->xpos[3 * _bodyId + 1],
-                              _d->xpos[3 * _bodyId + 2]) *
-         Eigen::Quaterniond(_d->xquat[4 * _bodyId], _d->xquat[4 * _bodyId + 1],
-                            _d->xquat[4 * _bodyId + 2],
-                            _d->xquat[4 * _bodyId + 3]);
+  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+  pose.linear() =
+      Eigen::Map<const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(
+          &_d->xmat[9 * _bodyId]);
+  pose.translation() =
+      Eigen::Map<const Eigen::Vector3d>(&_d->xpos[3 * _bodyId]);
+  return pose;
 }
 
 // Forward declarations

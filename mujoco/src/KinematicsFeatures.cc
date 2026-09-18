@@ -59,17 +59,7 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     return data;
   }
 
-  // World pose of the owning body, then apply the constant frame offset.
-  // Read the orientation from xmat rather than xquat to avoid a
-  // quaternion -> matrix conversion in this hot path.
-  Eigen::Isometry3d bodyPose = Eigen::Isometry3d::Identity();
-  // Eigen defaults to column-major, so we first create a map with row-major
-  bodyPose.linear() =
-      Eigen::Map<const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(
-          &d->xmat[9 * bodyId]);
-  bodyPose.translation() =
-      Eigen::Map<const Eigen::Vector3d>(&d->xpos[3 * bodyId]);
-
+  const Eigen::Isometry3d bodyPose = getBodyWorldPoseFromMjDataEigen(d, bodyId);
   data.pose = bodyPose * frame.offset;
 
   if (m->body_weldid[bodyId] == 0)
