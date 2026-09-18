@@ -41,21 +41,52 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   }
   auto worldInfo = it->second->worldInfo;
   this->RecompileSpec(*worldInfo);
-  auto * site = it->second->site;
-  auto siteId = mjs_getId(site->element);
 
-  auto d = worldInfo->mjDataObj;
-  data.pose.translation() =
-      Eigen::Map<Eigen::Vector3d>(&d->site_xpos[3 * siteId]);
-  // Eigen defaults to column-major, so we first create a map
-  Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> rotMatMap(
-      &d->site_xmat[9 * siteId]);
-  data.pose.linear() = rotMatMap;
+  auto *m = worldInfo->mjModelObj;
+  auto *d = worldInfo->mjDataObj;
+  const auto &frame = *it->second;
 
-  mjtNum velocity[6];
-  mj_objectVelocity(worldInfo->mjModelObj, d, mjOBJ_SITE, siteId, velocity, 0);
-  mju_copy3(data.angularVelocity.data(), velocity);
-  mju_copy3(data.linearVelocity.data(), velocity+3);
+  if (!frame.body)
+  {
+    gzerr << "Frame [" << _id.ID() << "] has a null body pointer\n";
+    return data;
+  }
+
+  const int bodyId = mjs_getId(frame.body->element);
+  if (bodyId < 0 || bodyId >= m->nbody)
+  {
+    gzerr << "Frame [" << _id.ID() << "] has an invalid body id\n";
+    return data;
+  }
+
+  // World pose of the owning body, then apply the constant frame offset.
+  // Read the orientation from xmat rather than xquat to avoid a
+  // quaternion -> matrix conversion in this hot path.
+  Eigen::Isometry3d bodyPose = Eigen::Isometry3d::Identity();
+  // Eigen defaults to column-major, so we first create a map with row-major
+  bodyPose.linear() =
+      Eigen::Map<const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(
+          &d->xmat[9 * bodyId]);
+  bodyPose.translation() =
+      Eigen::Map<const Eigen::Vector3d>(&d->xpos[3 * bodyId]);
+
+  data.pose = bodyPose * frame.offset;
+
+  if (m->body_weldid[bodyId] == 0)
+  {
+    // Static bodies have zero velocity.
+    data.linearVelocity.setZero();
+    data.angularVelocity.setZero();
+  }
+  else
+  {
+    mjtNum velocity[6];
+    mju_transformSpatial(velocity, &d->cvel[6 * bodyId], 0,
+                         data.pose.translation().data(),
+                         &d->subtree_com[3 * m->body_rootid[bodyId]], nullptr);
+    mju_copy3(data.angularVelocity.data(), velocity);
+    mju_copy3(data.linearVelocity.data(), velocity + 3);
+  }
   return data;
 }
 

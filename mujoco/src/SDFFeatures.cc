@@ -677,11 +677,8 @@ struct ModelKinematicStructure
             jointInfo->worldInfo->ballJointPositionsCache.size() - 1;
       }
 
-      auto jointSite = mjs_addSite(child, nullptr);
-      copyPos(jointPose.Pos(), jointSite->pos);
-      copyQuat(jointPose.Rot(), jointSite->quat);
-      _base.frames[jointInfo->entityId] =
-          std::make_shared<FrameInfo>(jointSite, worldInfo);
+      _base.frames[jointInfo->entityId] = std::make_shared<FrameInfo>(
+          child, convertPose(jointPose), worldInfo);
 
       _modelInfo->joints.AddEntity(jointInfo->entityId, jointInfo,
                                    jointInfo->name, _modelInfo->entityId);
@@ -710,9 +707,8 @@ struct ModelKinematicStructure
     linkInfo->modelInfo = modelInfo;
     linkInfo->worldInfo = worldInfo;
 
-    auto childSite = mjs_addSite(child, nullptr);
-    _base.frames[linkInfo->entityId] =
-        std::make_shared<FrameInfo>(childSite, worldInfo);
+    _base.frames[linkInfo->entityId] = std::make_shared<FrameInfo>(
+        child, Eigen::Isometry3d::Identity(), worldInfo);
 
     modelInfo->links.AddEntity(linkInfo->entityId, linkInfo, child,
                                modelInfo->entityId);
@@ -773,12 +769,9 @@ struct ModelKinematicStructure
     {
       modelInfo->body = child;
 
-      auto modelFrameSite = mjs_addSite(child, nullptr);
       const auto modelFramePose = link->RawPose().Inverse();
-      copyPos(modelFramePose.Pos(), modelFrameSite->pos);
-      copyQuat(modelFramePose.Rot(), modelFrameSite->quat);
-      _base.frames[modelInfo->entityId] =
-          std::make_shared<FrameInfo>(modelFrameSite, worldInfo);
+      _base.frames[modelInfo->entityId] = std::make_shared<FrameInfo>(
+          child, convertPose(modelFramePose), worldInfo);
     }
 
     child->explicitinertial = true;
@@ -935,14 +928,11 @@ struct ModelKinematicStructure
         linkInfo->shapes.AddEntity(shapeInfo->entityId, shapeInfo, geom,
                                    linkInfo->entityId);
 
-        // Add a site for the shape and register it in the frames map. This is
-        // required for FrameSemantics to correctly transform the local
-        // axis-aligned bounding box of the shape.
-        auto shapeSite = mjs_addSite(child, nullptr);
-        mju_copy3(shapeSite->pos, geom->pos);
-        mju_copy4(shapeSite->quat, geom->quat);
-        _base.frames[shapeInfo->entityId] =
-            std::make_shared<FrameInfo>(shapeSite, worldInfo);
+        // Register the shape frame in the frames map. This is required for
+        // FrameSemantics to correctly transform the local axis-aligned
+        // bounding box of the shape.
+        _base.frames[shapeInfo->entityId] = std::make_shared<FrameInfo>(
+            child, convertPose(collisionPose), worldInfo);
       }
     }
 

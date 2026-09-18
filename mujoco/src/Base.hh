@@ -34,6 +34,7 @@
 #include <gz/math/Quaternion.hh>
 #include <gz/math/SemanticVersion.hh>
 #include <gz/math/Vector3.hh>
+#include <gz/math/eigen3/Conversions.hh>
 #include <gz/physics/Geometry.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
@@ -126,6 +127,11 @@ inline Eigen::Quaterniond convertQuat(const mjtNum *_src)
 inline Eigen::Isometry3d convertPose(const mjtNum *_pos, const mjtNum *_quat)
 {
   return Eigen::Translation3d(convertPos(_pos)) * convertQuat(_quat);
+}
+
+inline Eigen::Isometry3d convertPose(const gz::math::Pose3d &_pose)
+{
+  return gz::math::eigen3::convert(_pose);
 }
 
 inline gz::math::Pose3d getBodyWorldPoseFromMjData(mjData *_d, int _bodyId)
@@ -280,12 +286,19 @@ struct ModelInfo
 
 struct FrameInfo
 {
-  FrameInfo(mjsSite *_site, WorldInfo* _worldInfo)
-      : site(_site), worldInfo(_worldInfo)
+  FrameInfo(mjsBody *_body, const Eigen::Isometry3d &_offset,
+            WorldInfo *_worldInfo)
+      : body(_body), offset(_offset), worldInfo(_worldInfo)
   {
   }
-  mjsSite * site{nullptr};
-  WorldInfo* worldInfo;
+
+  /// \brief Body this frame is rigidly attached to.
+  mjsBody *body{nullptr};
+
+  /// \brief Constant pose of this frame expressed in the body frame.
+  Eigen::Isometry3d offset{Eigen::Isometry3d::Identity()};
+
+  WorldInfo *worldInfo{nullptr};
 };
 
 struct WorldInfo
