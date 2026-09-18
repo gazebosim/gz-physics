@@ -17,8 +17,10 @@
 
 #include <gtest/gtest.h>
 #include <set>
+#include <sstream>
 
 #include <gz/common/Console.hh>
+#include <gz/physics/ForwardStep.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/RequestEngine.hh>
@@ -40,6 +42,7 @@
 using namespace gz;
 
 struct TestFeatureList : physics::FeatureList<
+    physics::ForwardStep,
     physics::GetEngineInfo,
     physics::GetWorldFromEngine,
     physics::GetModelFromWorld,
@@ -1065,6 +1068,39 @@ TEST_P(SDFFeatures_TEST, ConstructSdfCollision)
 
   EXPECT_NE(nullptr, link->GetShape("c1"));
   EXPECT_EQ(nullptr, link->GetShape("non_existent"));
+}
+
+/////////////////////////////////////////////////
+// Verify that loading a world with thousands of static bodies (high nbody,
+// nv = 0) allocates sufficient arena memory for broadphase collision detection
+// and does not fail with mj_stackAlloc out of memory.
+TEST_P(SDFFeatures_TEST, ManyStaticModels)
+{
+  std::ostringstream sdfStream;
+  sdfStream << "<sdf version='1.6'><world name='static_shapes_world'>\n";
+  constexpr std::size_t kNumStaticModels = 3000;
+  for (std::size_t i = 0; i < kNumStaticModels; ++i)
+  {
+    sdfStream << "<model name='static_box_" << i << "'>\n"
+              << "  <static>true</static>\n"
+              << "  <pose>" << (i * 2.0) << " 0 0.5 0 0 0</pose>\n"
+              << "  <link name='link'>\n"
+              << "    <collision name='collision'>\n"
+              << "      <geometry><box><size>1 1 1</size></box></geometry>\n"
+              << "    </collision>\n"
+              << "  </link>\n"
+              << "</model>\n";
+  }
+  sdfStream << "</world></sdf>";
+
+  WorldPtr world = this->LoadWorldString(sdfStream.str());
+  ASSERT_NE(nullptr, world);
+  EXPECT_EQ(kNumStaticModels, world->GetModelCount());
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+  world->Step(output, state, input);
 }
 
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
