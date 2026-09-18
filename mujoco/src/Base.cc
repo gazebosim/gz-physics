@@ -182,8 +182,7 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
   _worldInfo.specDirty = false;
 
   if (rc != 0) {
-    std::cerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj)
-              << "\n";
+    gzerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj) << "\n";
     return false;
   }
 
@@ -201,9 +200,9 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
     _worldInfo.mjSpecObj->memory = requiredArena;
     rc = mj_recompile(_worldInfo.mjSpecObj, nullptr, _worldInfo.mjModelObj,
                       _worldInfo.mjDataObj);
-    if (rc != 0) {
-      std::cerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj)
-                << "\n";
+    if (rc != 0)
+    {
+      gzerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj) << "\n";
       return false;
     }
   }
