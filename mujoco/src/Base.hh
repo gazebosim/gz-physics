@@ -306,7 +306,11 @@ struct ModelInfo
 struct FrameInfo
 {
   /// \brief Constructor
-  FrameInfo(mjsBody *_body, const Eigen::Isometry3d &_offset,
+  /// \param[in] _body Body this frame is rigidly attached to
+  /// \param[in] _offset Offset of the frame relative to the body, expressed in
+  /// the body frame.
+  /// \param[in] _worldInfo The worldInfo object associated with the body
+  FrameInfo(const mjsBody *_body, const Eigen::Isometry3d &_offset,
             WorldInfo *_worldInfo)
       : body(_body), offset(_offset), worldInfo(_worldInfo)
   {
