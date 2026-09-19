@@ -17,6 +17,8 @@
 
 #include "CustomFeatures.hh"
 
+#include <gz/common/Profiler.hh>
+
 namespace gz {
 namespace physics {
 namespace dartsim {
@@ -26,6 +28,7 @@ namespace dartsim {
 dart::simulation::WorldPtr CustomFeatures::GetDartsimWorld(
     const Identity &_worldID)
 {
+  GZ_PROFILE("CustomFeatures::GetDartsimWorld");
   return this->worlds.at(_worldID);
 }
 //! [implementation]

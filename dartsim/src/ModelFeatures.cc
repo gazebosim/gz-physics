@@ -17,6 +17,8 @@
 
 #include "ModelFeatures.hh"
 
+#include <gz/common/Profiler.hh>
+
 namespace gz {
 namespace physics {
 namespace dartsim {
@@ -24,6 +26,7 @@ namespace dartsim {
 /////////////////////////////////////////////////
 void ModelFeatures::SetModelStatic(const Identity &_id, bool _static)
 {
+  GZ_PROFILE("ModelFeatures::SetModelStatic");
   auto modelInfo = this->GetModelInfo(_id);
   if (!modelInfo || !modelInfo->model)
     return;
@@ -50,6 +53,7 @@ void ModelFeatures::SetModelStatic(const Identity &_id, bool _static)
 /////////////////////////////////////////////////
 bool ModelFeatures::GetModelStatic(const Identity &_id) const
 {
+  GZ_PROFILE("ModelFeatures::GetModelStatic");
   const auto modelInfo = this->GetModelInfo(_id);
   if (!modelInfo || !modelInfo->model)
     return false;
@@ -60,6 +64,7 @@ bool ModelFeatures::GetModelStatic(const Identity &_id) const
 void ModelFeatures::SetModelCollisionEnabled(
     const Identity &_id, bool _enabled)
 {
+  GZ_PROFILE("ModelFeatures::SetModelCollisionEnabled");
   auto modelInfo = this->GetModelInfo(_id);
   if (!modelInfo || !modelInfo->model)
     return;
@@ -81,6 +86,7 @@ void ModelFeatures::SetModelCollisionEnabled(
 /////////////////////////////////////////////////
 bool ModelFeatures::GetModelCollisionEnabled(const Identity &_id) const
 {
+  GZ_PROFILE("ModelFeatures::GetModelCollisionEnabled");
   const auto modelInfo = this->GetModelInfo(_id);
   if (!modelInfo || !modelInfo->model)
     return true;
@@ -108,6 +114,7 @@ bool ModelFeatures::GetModelCollisionEnabled(const Identity &_id) const
 void ModelFeatures::SetModelGravityEnabled(
     const Identity &_id, bool _enabled)
 {
+  GZ_PROFILE("ModelFeatures::SetModelGravityEnabled");
   auto modelInfo = this->GetModelInfo(_id);
   if (!modelInfo || !modelInfo->model)
     return;
@@ -128,6 +135,7 @@ void ModelFeatures::SetModelGravityEnabled(
 /////////////////////////////////////////////////
 bool ModelFeatures::GetModelGravityEnabled(const Identity &_id) const
 {
+  GZ_PROFILE("ModelFeatures::GetModelGravityEnabled");
   const auto modelInfo = this->GetModelInfo(_id);
   if (!modelInfo || !modelInfo->model)
     return true;
