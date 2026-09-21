@@ -176,19 +176,13 @@ TEST(EntityManagement_TEST, RemoveEntities)
   EXPECT_TRUE(nestedModel4->Removed());
 }
 
-<<<<<<< HEAD
-int main(int argc, char *argv[])
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-=======
 // Removing a model must cascade to every immediate nested model
 TEST(EntityManagement_TEST, RemoveModelCascadesToEveryNestedModel)
 {
   plugin::Loader loader;
   loader.LoadLib(tpe_plugin_LIB);
   auto engine = physics::RequestEngine3d<TestFeatureList>::From(
-      loader.Instantiate("gz::physics::tpeplugin::Plugin"));
+      loader.Instantiate("ignition::physics::tpeplugin::Plugin"));
   ASSERT_NE(nullptr, engine);
 
   auto world = engine->ConstructEmptyWorld("world");
@@ -221,7 +215,7 @@ TEST(EntityManagement_TEST, RemoveModelDropsLinkAndCollisionRecords)
   plugin::Loader loader;
   loader.LoadLib(tpe_plugin_LIB);
   auto engine = physics::RequestEngine3d<TestFeatureList>::From(
-      loader.Instantiate("gz::physics::tpeplugin::Plugin"));
+      loader.Instantiate("ignition::physics::tpeplugin::Plugin"));
   ASSERT_NE(nullptr, engine);
 
   auto world = engine->ConstructEmptyWorld("world");
@@ -238,5 +232,10 @@ TEST(EntityManagement_TEST, RemoveModelDropsLinkAndCollisionRecords)
   auto model2 = world->ConstructEmptyModel("m2");
   ASSERT_NE(nullptr, model2);
   EXPECT_EQ(nullptr, model2->GetLink("l"));
->>>>>>> 289ac1b (Fix dangling references when removing models in tpe plugin (#1091))
+}
+
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
