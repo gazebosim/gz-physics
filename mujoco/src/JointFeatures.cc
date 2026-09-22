@@ -676,7 +676,7 @@ Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
   {
     Pose3d childInParent =
         convertPose(jointInfo->childBody->pos, jointInfo->childBody->quat);
-    Pose3d jointInChild = it->second->offset;
+    const Pose3d &jointInChild = it->second->offset;
 
     return childInParent * jointInChild;
   }
@@ -689,7 +689,7 @@ Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
   auto it = this->frames.find(_id.id);
   if (it != this->frames.end())
   {
-    Pose3d jointInChild = it->second->offset;
+    const Pose3d &jointInChild = it->second->offset;
     return jointInChild.inverse();
   }
   return {};
@@ -890,7 +890,7 @@ void JointFeatures::SetJointTransformFromParent(const Identity &_id,
     auto it = this->frames.find(_id);
     if (it != this->frames.end())
     {
-      const Pose3d jointInChild = it->second->offset;
+      const Pose3d &jointInChild = it->second->offset;
       const Pose3d childInParent = _pose * jointInChild.inverse();
 
       copyPos(childInParent.translation(), jointInfo->childBody->pos);
