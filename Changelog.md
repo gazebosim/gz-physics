@@ -1,5 +1,28 @@
 ## Gazebo Physics 9.x
 
+### Gazebo Physics 9.5.2 (2026-09-28)
+
+1. Fix dangling references when removing models in tpe plugin
+    * [Pull request #1091](https://github.com/gazebosim/gz-physics/pull/1091)
+
+1. Update BCR maintainers
+    * [Pull request #1069](https://github.com/gazebosim/gz-physics/pull/1069)
+
+1. use clang for bazel ci build
+    * [Pull request #1048) (#1060](https://github.com/gazebosim/gz-physics/pull/1048)
+
+1. [bazel] Fix build for //dartsim under clang
+    * [Pull request #988](https://github.com/gazebosim/gz-physics/pull/988)
+
+1. [bazel] Fix test targets build on macos
+    * [Pull request #989](https://github.com/gazebosim/gz-physics/pull/989)
+
+1. dartsim: Remove redundant incrementVersion() calls after moveTo
+    * [Pull request #1030) (#1058](https://github.com/gazebosim/gz-physics/pull/1030)
+
+1. GZ-PROFILE for bullet-featherstone
+    * [Pull request #996) (#1050](https://github.com/gazebosim/gz-physics/pull/996)
+
 ### Gazebo Physics 9.5.1 (2026-09-01)
 
 1. Use explicit element overload of Eigen::Vector3d
