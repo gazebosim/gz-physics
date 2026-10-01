@@ -33,6 +33,7 @@
 
 #include <gz/common/Mesh.hh>
 #include <gz/common/MeshManager.hh>
+#include <gz/common/Profiler.hh>
 
 #include "CustomConeMeshShape.hh"
 #include "CustomHeightmapShape.hh"
@@ -46,6 +47,7 @@ namespace dartsim {
 Pose3d ShapeFeatures::GetShapeRelativeTransform(
     const Identity &_shapeID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetShapeRelativeTransform");
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
   return shapeInfo->node->getRelativeTransform() *
          shapeInfo->tf_offset.inverse();
@@ -55,6 +57,7 @@ Pose3d ShapeFeatures::GetShapeRelativeTransform(
 void ShapeFeatures::SetShapeRelativeTransform(
     const Identity &_shapeID, const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::SetShapeRelativeTransform");
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
   shapeInfo->node->setRelativeTransform(_pose * shapeInfo->tf_offset);
 }
@@ -90,6 +93,7 @@ Identity ShapeFeatures::AttachBoxShape(
     const LinearVector3d &_size,
     const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::AttachBoxShape");
   auto box = std::make_shared<dart::dynamics::BoxShape>(_size);
 
   DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
@@ -149,6 +153,7 @@ Identity ShapeFeatures::AttachCapsuleShape(
     const double _length,
     const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::AttachCapsuleShape");
   auto capsule = std::make_shared<dart::dynamics::CapsuleShape>(
         _radius, _length);
 
@@ -211,6 +216,7 @@ Identity ShapeFeatures::AttachConeShape(
     const double _height,
     const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::AttachConeShape");
   gzwarn << "DART: Cone is not a supported collision geomerty"
          << " primitive, using generated mesh of a cone instead"
          << std::endl;
@@ -274,6 +280,7 @@ Identity ShapeFeatures::AttachCylinderShape(
     const double _height,
     const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::AttachCylinderShape");
   auto cylinder = std::make_shared<dart::dynamics::CylinderShape>(
         _radius, _height);
 
@@ -322,6 +329,7 @@ Identity ShapeFeatures::AttachEllipsoidShape(
     const Vector3d &_radii,
     const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::AttachEllipsoidShape");
   gzwarn << "DART: Ellipsoid is not a supported collision geomerty"
          << " primitive, using generated mesh of an ellipsoid instead"
          << std::endl;
@@ -382,6 +390,7 @@ Identity ShapeFeatures::AttachSphereShape(
     const double _radius,
     const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::AttachSphereShape");
   auto sphere = std::make_shared<dart::dynamics::SphereShape>(_radius);
 
   DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
@@ -433,6 +442,7 @@ Identity ShapeFeatures::AttachHeightmapShape(
     const LinearVector3d &_size,
     int _subSampling)
 {
+  GZ_PROFILE("ShapeFeatures::AttachHeightmapShape");
   auto heightmap = std::make_shared<CustomHeightmapShape>(_heightmapData,
       _size, _subSampling);
 
@@ -466,6 +476,7 @@ Identity ShapeFeatures::CastToMeshShape(
 LinearVector3d ShapeFeatures::GetMeshShapeSize(
     const Identity &_meshID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetMeshShapeSize");
   const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_meshID);
 
   const dart::dynamics::MeshShape *mesh =
@@ -496,6 +507,7 @@ Identity ShapeFeatures::AttachMeshShape(
     const Pose3d &_pose,
     const LinearVector3d &_scale)
 {
+  GZ_PROFILE("ShapeFeatures::AttachMeshShape");
   auto mesh = std::make_shared<CustomMeshShape>(_mesh, _scale);
 
   DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
@@ -556,6 +568,7 @@ Identity ShapeFeatures::AttachPlaneShape(
     const AngularVector3d &_normal,
     const LinearVector3d &_point)
 {
+  GZ_PROFILE("ShapeFeatures::AttachPlaneShape");
   auto plane = std::make_shared<dart::dynamics::PlaneShape>(_normal, _point);
 
   DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
@@ -572,6 +585,7 @@ Identity ShapeFeatures::AttachPlaneShape(
 AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
     const Identity &_shapeID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetShapeAxisAlignedBoundingBox");
   const auto &node = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
   const dart::math::BoundingBox &box = node->getShape()->getBoundingBox();
   return AlignedBox3d(box.getMin(), box.getMax());
