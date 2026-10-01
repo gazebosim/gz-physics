@@ -22,6 +22,8 @@
 #include <dart/dynamics/RevoluteJoint.hpp>
 #include <dart/dynamics/WeldJoint.hpp>
 
+#include <gz/common/Profiler.hh>
+
 #include "JointFeatures.hh"
 
 namespace gz {
@@ -67,6 +69,7 @@ Pose3d JointFeatures::GetJointTransform(const Identity &_id) const
 void JointFeatures::SetJointPosition(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointPosition");
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
   // Take extra care that the value is finite. A nan can cause the DART
@@ -86,6 +89,7 @@ void JointFeatures::SetJointPosition(
 void JointFeatures::SetJointVelocity(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointVelocity");
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
   // Take extra care that the value is finite. A nan can cause the DART
@@ -105,6 +109,7 @@ void JointFeatures::SetJointVelocity(
 void JointFeatures::SetJointAcceleration(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointAcceleration");
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
   // Take extra care that the value is finite. A nan can cause the DART
@@ -124,6 +129,7 @@ void JointFeatures::SetJointAcceleration(
 void JointFeatures::SetJointForce(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointForce");
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
   // Take extra care that the value is finite. A nan can cause the DART
@@ -147,6 +153,7 @@ void JointFeatures::SetJointForce(
 void JointFeatures::SetJointVelocityCommand(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointVelocityCommand");
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
   // Take extra care that the value is finite. A nan can cause the DART
@@ -188,6 +195,7 @@ void JointFeatures::SetJointVelocityCommand(
 void JointFeatures::SetJointMinPosition(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointMinPosition");
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
   // Take extra care that the value is valid. A nan can cause the DART
@@ -213,6 +221,7 @@ void JointFeatures::SetJointMinPosition(
 void JointFeatures::SetJointMaxPosition(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointMaxPosition");
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
   // Take extra care that the value is valid. A nan can cause the DART
@@ -238,6 +247,7 @@ void JointFeatures::SetJointMaxPosition(
 void JointFeatures::SetJointMinVelocity(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointMinVelocity");
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
   // Take extra care that the value is valid. A nan can cause the DART
@@ -263,6 +273,7 @@ void JointFeatures::SetJointMinVelocity(
 void JointFeatures::SetJointMaxVelocity(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointMaxVelocity");
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
   // Take extra care that the value is valid. A nan can cause the DART
@@ -288,6 +299,7 @@ void JointFeatures::SetJointMaxVelocity(
 void JointFeatures::SetJointMinEffort(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointMinEffort");
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
   // Take extra care that the value is valid. A nan can cause the DART
@@ -308,6 +320,7 @@ void JointFeatures::SetJointMinEffort(
 void JointFeatures::SetJointMaxEffort(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  GZ_PROFILE("JointFeatures::SetJointMaxEffort");
   auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
 
   // Take extra care that the value is valid. A nan can cause the DART
@@ -325,6 +338,96 @@ void JointFeatures::SetJointMaxEffort(
 }
 
 /////////////////////////////////////////////////
+<<<<<<< HEAD
+=======
+void JointFeatures::SetJointFriction(
+       const Identity &_id, std::size_t _dof, double _value)
+{
+  GZ_PROFILE("JointFeatures::SetJointFriction");
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid joint friction value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
+  joint->setCoulombFriction(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointDampingCoefficient(
+       const Identity &_id, std::size_t _dof, double _value)
+{
+  GZ_PROFILE("JointFeatures::SetJointDampingCoefficient");
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid joint damping value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
+  joint->setDampingCoefficient(_dof, _value);
+}
+
+////////////////////////////////////////////////
+void JointFeatures::SetJointSpringStiffness(
+       const Identity &_id, std::size_t _dof, double _value)
+{
+  GZ_PROFILE("JointFeatures::SetJointSpringStiffness");
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid joint spring stiffness value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
+  joint->setSpringStiffness(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+void JointFeatures::SetJointSpringReference(
+       const Identity &_id, std::size_t _dof, double _value)
+{
+  GZ_PROFILE("JointFeatures::SetJointSpringReference");
+  auto joint = this->ReferenceInterface<JointInfo>(_id)->joint;
+
+  // Take extra care that the value is valid. A nan can cause the DART
+  // constraint solver to fail, which will in turn either cause a crash or
+  // collisions to fail
+  if (std::isnan(_value))
+  {
+    gzerr << "Invalid joint spring stiffness value [" << _value
+           << "] commanded on joint [" << joint->getName() << " DOF " << _dof
+           << "]. The command will be ignored\n";
+    return;
+  }
+
+  joint->setRestPosition(_dof, _value);
+}
+
+/////////////////////////////////////////////////
+>>>>>>> bda246c (GZ-PROFILE for dartsim (#997))
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
   return this->ReferenceInterface<JointInfo>(_id)->joint->getNumDofs();
@@ -333,6 +436,7 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
 {
+  GZ_PROFILE("JointFeatures::GetJointTransformFromParent");
   return this->ReferenceInterface<JointInfo>(_id)
       ->joint->getTransformFromParentBodyNode();
 }
@@ -340,6 +444,7 @@ Pose3d JointFeatures::GetJointTransformFromParent(const Identity &_id) const
 /////////////////////////////////////////////////
 Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 {
+  GZ_PROFILE("JointFeatures::GetJointTransformToChild");
   return this->ReferenceInterface<JointInfo>(_id)
       ->joint->getTransformFromChildBodyNode().inverse();
 }
@@ -348,6 +453,7 @@ Pose3d JointFeatures::GetJointTransformToChild(const Identity &_id) const
 void JointFeatures::SetJointTransformFromParent(
     const Identity &_id, const Pose3d &_pose)
 {
+  GZ_PROFILE("JointFeatures::SetJointTransformFromParent");
   this->ReferenceInterface<JointInfo>(_id)
       ->joint->setTransformFromParentBodyNode(_pose);
 }
@@ -356,6 +462,7 @@ void JointFeatures::SetJointTransformFromParent(
 void JointFeatures::SetJointTransformToChild(
     const Identity &_id, const Pose3d &_pose)
 {
+  GZ_PROFILE("JointFeatures::SetJointTransformToChild");
   this->ReferenceInterface<JointInfo>(_id)
       ->joint->setTransformFromChildBodyNode(_pose.inverse());
 }
@@ -363,6 +470,7 @@ void JointFeatures::SetJointTransformToChild(
 /////////////////////////////////////////////////
 void JointFeatures::DetachJoint(const Identity &_jointId)
 {
+  GZ_PROFILE("JointFeatures::DetachJoint");
   auto joint = this->ReferenceInterface<JointInfo>(_jointId)->joint;
   if (joint->getType() == "FreeJoint")
   {
@@ -467,6 +575,7 @@ Identity JointFeatures::AttachFixedJoint(
     const BaseLink3dPtr &_parent,
     const std::string &_name)
 {
+  GZ_PROFILE("JointFeatures::AttachFixedJoint");
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
   DartBodyNode *bn = linkInfo->link.get();
   dart::dynamics::WeldJoint::Properties properties;
@@ -529,6 +638,7 @@ Identity JointFeatures::CastToFreeJoint(
 void JointFeatures::SetFreeJointRelativeTransform(
     const Identity &_jointID, const Pose3d &_pose)
 {
+  GZ_PROFILE("JointFeatures::SetFreeJointRelativeTransform");
   static_cast<dart::dynamics::FreeJoint *>(
       this->ReferenceInterface<JointInfo>(_jointID)->joint.get())
       ->setRelativeTransform(_pose);
@@ -572,6 +682,7 @@ Identity JointFeatures::AttachRevoluteJoint(
     const std::string &_name,
     const AngularVector3d &_axis)
 {
+  GZ_PROFILE("JointFeatures::AttachRevoluteJoint");
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
   DartBodyNode *const bn = linkInfo->link.get();
   dart::dynamics::RevoluteJoint::Properties properties;
@@ -647,6 +758,7 @@ Identity JointFeatures::AttachPrismaticJoint(
     const std::string &_name,
     const LinearVector3d &_axis)
 {
+  GZ_PROFILE("JointFeatures::AttachPrismaticJoint");
   auto linkInfo = this->ReferenceInterface<LinkInfo>(_childID);
   DartBodyNode *const bn = linkInfo->link.get();
   dart::dynamics::PrismaticJoint::Properties properties;
@@ -688,6 +800,7 @@ Identity JointFeatures::AttachPrismaticJoint(
 Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
     const Identity &_id) const
 {
+  GZ_PROFILE("JointFeatures::GetJointTransmittedWrenchInJointFrame");
   auto &joint = this->ReferenceInterface<JointInfo>(_id)->joint;
   auto *childBn = joint->getChildBodyNode();
   if (nullptr == childBn)
