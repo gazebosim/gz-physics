@@ -20,6 +20,7 @@
 #include <dart/constraint/ConstraintSolver.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
 #include <gz/common/Console.hh>
+#include <gz/common/Profiler.hh>
 
 namespace gz {
 namespace physics {
@@ -29,6 +30,7 @@ namespace dartsim {
 Identity FreeGroupFeatures::FindFreeGroupForModel(
     const Identity &_modelID) const
 {
+  GZ_PROFILE("FreeGroupFeatures::FindFreeGroupForModel");
   const auto modelInfo = this->models.at(_modelID);
   // Verify that the model qualifies as a FreeGroup
   const dart::dynamics::ConstSkeletonPtr &skeleton = modelInfo->model;
@@ -79,6 +81,7 @@ Identity FreeGroupFeatures::FindFreeGroupForModel(
 Identity FreeGroupFeatures::FindFreeGroupForLink(
     const Identity &_linkID) const
 {
+  GZ_PROFILE("FreeGroupFeatures::FindFreeGroupForLink");
   const dart::dynamics::BodyNode* bn = this->links.at(_linkID)->link;
 
   // Move towards the root of the tree looking for a FreeJoint
@@ -113,6 +116,7 @@ Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
 FreeGroupFeatures::FreeGroupInfo FreeGroupFeatures::GetCanonicalInfo(
     const Identity &_groupID) const
 {
+  GZ_PROFILE("FreeGroupFeatures::GetCanonicalInfo");
   const auto model_it = this->models.idToObject.find(_groupID);
   if (model_it != this->models.idToObject.end())
   {
@@ -151,6 +155,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
     const Identity &_groupID,
     const PoseType &_pose)
 {
+  GZ_PROFILE("FreeGroupFeatures::SetFreeGroupWorldPose");
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
@@ -199,6 +204,7 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
 void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
     const Identity &_groupID, const LinearVelocity &_linearVelocity)
 {
+  GZ_PROFILE("FreeGroupFeatures::SetFreeGroupWorldLinearVelocity");
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {
@@ -224,6 +230,7 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
 void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
     const Identity &_groupID, const AngularVelocity &_angularVelocity)
 {
+  GZ_PROFILE("FreeGroupFeatures::SetFreeGroupWorldAngularVelocity");
   const FreeGroupInfo &info = GetCanonicalInfo(_groupID);
   if (!info.model)
   {

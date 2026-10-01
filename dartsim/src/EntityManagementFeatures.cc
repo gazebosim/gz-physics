@@ -28,6 +28,8 @@
 #include <dart/collision/CollisionFilter.hpp>
 #include <dart/collision/CollisionObject.hpp>
 
+#include <gz/common/Profiler.hh>
+
 #include "GzCollisionDetector.hh"
 
 namespace gz {
@@ -50,6 +52,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
       DartCollisionConstPtr _object1,
       DartCollisionConstPtr _object2) const override
   {
+    GZ_PROFILE("BitmaskContactFilter::ignoresCollision");
     auto shapeNode1 = _object1->getShapeFrame()->asShapeNode();
     auto shapeNode2 = _object2->getShapeFrame()->asShapeNode();
 
@@ -84,6 +87,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 
   public: uint16_t GetIgnoredCollision(DartShapeConstPtr _shapePtr) const
   {
+    GZ_PROFILE("BitmaskContactFilter::GetIgnoredCollision");
     auto shapeIter = bitmaskMap.find(_shapePtr);
     if (shapeIter != bitmaskMap.end())
       return shapeIter->second;
@@ -92,6 +96,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 
   public: void RemoveIgnoredCollision(DartShapeConstPtr _shapePtr)
   {
+    GZ_PROFILE("BitmaskContactFilter::RemoveIgnoredCollision");
     auto shapeIter = bitmaskMap.find(_shapePtr);
     if (shapeIter != bitmaskMap.end())
       bitmaskMap.erase(shapeIter);
@@ -104,6 +109,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 
   public: uint16_t GetIgnoredCategory(DartShapeConstPtr _shapePtr) const
   {
+    GZ_PROFILE("BitmaskContactFilter::GetIgnoredCategory");
     auto shapeIter = categoryBitmaskMap.find(_shapePtr);
     if (shapeIter != categoryBitmaskMap.end())
       return shapeIter->second;
@@ -114,6 +120,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 
   public: void RemoveIgnoredCategory(DartShapeConstPtr _shapePtr)
   {
+    GZ_PROFILE("BitmaskContactFilter::RemoveIgnoredCategory");
     auto shapeIter = categoryBitmaskMap.find(_shapePtr);
     if (shapeIter != categoryBitmaskMap.end())
       categoryBitmaskMap.erase(shapeIter);
@@ -121,6 +128,7 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
 
   public: void RemoveSkeletonCollisions(dart::dynamics::SkeletonPtr _skelPtr)
   {
+    GZ_PROFILE("BitmaskContactFilter::RemoveSkeletonCollisions");
     for (std::size_t i = 0; i < _skelPtr->getNumShapeNodes(); ++i)
     {
       auto shapePtr = _skelPtr->getShapeNode(i);
@@ -153,6 +161,7 @@ static std::shared_ptr<BitmaskContactFilter> GetFilterPtr(
 static std::size_t GetWorldOfShapeNode(const EntityManagementFeatures *_emf,
     const dart::dynamics::ShapeNode* _shapeNode)
 {
+  GZ_PROFILE("dartsim::GetWorldOfShapeNode");
   // Get the body of the shape node
   const auto bn = _shapeNode->getBodyNodePtr();
   // Get the body node's skeleton
@@ -191,6 +200,7 @@ std::size_t EntityManagementFeatures::GetWorldCount(
 Identity EntityManagementFeatures::GetWorld(
     const Identity &, std::size_t _worldIndex) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetWorld(Index)");
   const std::size_t id =
       this->worlds.indexInContainerToID.begin()->second[_worldIndex];
   return this->GenerateIdentity(id, this->worlds.idToObject.at(id));
@@ -200,6 +210,7 @@ Identity EntityManagementFeatures::GetWorld(
 Identity EntityManagementFeatures::GetWorld(
     const Identity &, const std::string &_worldName) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetWorld(Name)");
   const std::size_t id = this->worlds.IdentityOf(_worldName);
   return this->GenerateIdentity(id, this->worlds.idToObject.at(id));
 }
@@ -230,6 +241,7 @@ Identity EntityManagementFeatures::GetEngineOfWorld(
 std::size_t EntityManagementFeatures::GetModelCount(
     const Identity &_worldID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetModelCount");
   // dart::simulation::World::getNumSkeletons returns all the skeletons in the
   // world, including nested ones. We use the size of the indexInContainerToID
   // vector associated with the _worldID to determine the number of models
@@ -241,6 +253,7 @@ std::size_t EntityManagementFeatures::GetModelCount(
 Identity EntityManagementFeatures::GetModel(
     const Identity &_worldID, const std::size_t _modelIndex) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetModel(Index)");
   const auto &indexInContainerToID =
       this->models.indexInContainerToID.at(_worldID);
 
@@ -266,6 +279,7 @@ Identity EntityManagementFeatures::GetModel(
 Identity EntityManagementFeatures::GetModel(
     const Identity &_worldID, const std::string &_modelName) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetModel(Name)");
   const DartSkeletonPtr &model =
       this->ReferenceInterface<DartWorld>(_worldID)->getSkeleton(_modelName);
 
@@ -293,6 +307,7 @@ const std::string &EntityManagementFeatures::GetModelName(
 std::size_t EntityManagementFeatures::GetModelIndex(
     const Identity &_modelID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetModelIndex");
   // If this is a model proxy of a world, we just return 0.
   auto modelProxy = this->modelProxiesToWorld.MaybeAt(_modelID);
   if (modelProxy)
@@ -321,6 +336,7 @@ Identity EntityManagementFeatures::GetWorldOfModel(
 std::size_t EntityManagementFeatures::GetNestedModelCount(
     const Identity &_modelID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetNestedModelCount");
   return this->ReferenceInterface<ModelInfo>(_modelID)->nestedModels.size();
 }
 
@@ -328,6 +344,7 @@ std::size_t EntityManagementFeatures::GetNestedModelCount(
 Identity EntityManagementFeatures::GetNestedModel(
     const Identity &_modelID, const std::size_t _modelIndex) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetNestedModel(Index)");
   const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   if (_modelIndex >= modelInfo->nestedModels.size())
   {
@@ -353,6 +370,7 @@ Identity EntityManagementFeatures::GetNestedModel(
 Identity EntityManagementFeatures::GetNestedModel(
     const Identity &_modelID, const std::string &_modelName) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetNestedModel(Name)");
   const auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
 
   const std::string fullName =
@@ -378,6 +396,7 @@ Identity EntityManagementFeatures::GetNestedModel(
 std::size_t EntityManagementFeatures::GetLinkCount(
     const Identity &_modelID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetLinkCount");
   return this->ReferenceInterface<ModelInfo>(_modelID)
       ->links.size();
 }
@@ -386,6 +405,7 @@ std::size_t EntityManagementFeatures::GetLinkCount(
 Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, const std::size_t _linkIndex) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetLink(Index)");
   auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
 
   if (_linkIndex >= modelInfo->links.size())
@@ -414,6 +434,7 @@ Identity EntityManagementFeatures::GetLink(
 Identity EntityManagementFeatures::GetLink(
     const Identity &_modelID, const std::string &_linkName) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetLink(Name)");
   const auto &modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   for (const auto &linkInfo : modelInfo->links)
   {
@@ -443,6 +464,7 @@ Identity EntityManagementFeatures::GetLink(
 std::size_t EntityManagementFeatures::GetJointCount(
     const Identity &_modelID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetJointCount");
   return this->ReferenceInterface<ModelInfo>(_modelID)->joints.size();
 }
 
@@ -450,6 +472,7 @@ std::size_t EntityManagementFeatures::GetJointCount(
 Identity EntityManagementFeatures::GetJoint(
     const Identity &_modelID, const std::size_t _jointIndex) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetJoint(Index)");
   auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
 
   if (_jointIndex >= modelInfo->joints.size())
@@ -481,6 +504,7 @@ Identity EntityManagementFeatures::GetJoint(
 Identity EntityManagementFeatures::GetJoint(
     const Identity &_modelID, const std::string &_jointName) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetJoint(Name)");
   const std::string fullJointName =
       this->FullyScopedJointName(_modelID, _jointName);
   if (fullJointName.empty())
@@ -511,6 +535,7 @@ Identity EntityManagementFeatures::GetJoint(
 const std::string &EntityManagementFeatures::GetLinkName(
     const Identity &_linkID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetLinkName");
   return this->ReferenceInterface<LinkInfo>(_linkID)->name;
 }
 
@@ -518,6 +543,7 @@ const std::string &EntityManagementFeatures::GetLinkName(
 std::size_t EntityManagementFeatures::GetLinkIndex(
     const Identity &_linkID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetLinkIndex");
   return this->links.idToIndexInContainer.at(_linkID);
 }
 
@@ -525,6 +551,7 @@ std::size_t EntityManagementFeatures::GetLinkIndex(
 Identity EntityManagementFeatures::GetModelOfLink(
     const Identity &_linkID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetModelOfLink");
   return GetModelOfLinkImpl(_linkID);
 }
 
@@ -532,6 +559,7 @@ Identity EntityManagementFeatures::GetModelOfLink(
 std::size_t EntityManagementFeatures::GetShapeCount(
     const Identity &_linkID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetShapeCount");
   return this->ReferenceInterface<LinkInfo>(_linkID)->link->getNumShapeNodes();
 }
 
@@ -539,6 +567,7 @@ std::size_t EntityManagementFeatures::GetShapeCount(
 Identity EntityManagementFeatures::GetShape(
     const Identity &_linkID, const std::size_t _shapeIndex) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetShape(Index)");
   DartShapeNode *const sn =
       this->ReferenceInterface<LinkInfo>(_linkID)->link->getShapeNode(
           _shapeIndex);
@@ -564,6 +593,7 @@ Identity EntityManagementFeatures::GetShape(
 Identity EntityManagementFeatures::GetShape(
     const Identity &_linkID, const std::string &_shapeName) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetShape(Name)");
   auto bn = this->ReferenceInterface<LinkInfo>(_linkID)->link;
 
   DartShapeNode *const sn = bn->getSkeleton()->getShapeNode(
@@ -590,6 +620,7 @@ Identity EntityManagementFeatures::GetShape(
 const std::string &EntityManagementFeatures::GetJointName(
     const Identity &_jointID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetJointName");
   return this->ReferenceInterface<JointInfo>(_jointID)->joint->getName();
 }
 
@@ -597,6 +628,7 @@ const std::string &EntityManagementFeatures::GetJointName(
 std::size_t EntityManagementFeatures::GetJointIndex(
     const Identity &_jointID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetJointIndex");
   return this->joints.idToIndexInContainer.at(_jointID);
 }
 
@@ -604,6 +636,7 @@ std::size_t EntityManagementFeatures::GetJointIndex(
 Identity EntityManagementFeatures::GetModelOfJoint(
     const Identity &_jointID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetModelOfJoint");
   const std::size_t modelID = this->joints.idToContainerID.at(_jointID);
   auto modelInfo = this->GetModelInfo(modelID);
 
@@ -624,6 +657,7 @@ Identity EntityManagementFeatures::GetModelOfJoint(
 const std::string &EntityManagementFeatures::GetShapeName(
     const Identity &_shapeID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetShapeName");
   const auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
   return shapeInfo->name;
 }
@@ -632,6 +666,7 @@ const std::string &EntityManagementFeatures::GetShapeName(
 std::size_t EntityManagementFeatures::GetShapeIndex(
     const Identity &_shapeID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetShapeIndex");
   const auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
   return shapeInfo->node->getIndexInBodyNode();
 }
@@ -640,6 +675,7 @@ std::size_t EntityManagementFeatures::GetShapeIndex(
 Identity EntityManagementFeatures::GetLinkOfShape(
     const Identity &_shapeID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetLinkOfShape");
   auto shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
   DartBodyNode *const bn = shapeInfo->node->getBodyNodePtr();
 
@@ -660,6 +696,7 @@ Identity EntityManagementFeatures::GetLinkOfShape(
 bool EntityManagementFeatures::RemoveModelByIndex(const Identity &_worldID,
                                                   std::size_t _modelIndex)
 {
+  GZ_PROFILE("EntityManagementFeatures::RemoveModelByIndex");
   auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
   const DartSkeletonPtr &model = world->getSkeleton(_modelIndex);
 
@@ -676,6 +713,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(const Identity &_worldID,
 bool EntityManagementFeatures::RemoveModelByName(const Identity &_worldID,
                                                  const std::string &_modelName)
 {
+  GZ_PROFILE("EntityManagementFeatures::RemoveModelByName");
   auto *const world = this->ReferenceInterface<DartWorld>(_worldID);
   const DartSkeletonPtr &model = world->getSkeleton(_modelName);
 
@@ -691,6 +729,7 @@ bool EntityManagementFeatures::RemoveModelByName(const Identity &_worldID,
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 {
+  GZ_PROFILE("EntityManagementFeatures::RemoveModel");
   if (this->models.HasEntity(_modelID))
   {
     auto worldID = this->GetWorldOfModelImpl(_modelID);
@@ -711,6 +750,7 @@ bool EntityManagementFeatures::RemoveModel(const Identity &_modelID)
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::ModelRemoved");
   auto modelProxy = this->modelProxiesToWorld.MaybeAt(_modelID);
   if (modelProxy)
   {
@@ -723,6 +763,7 @@ bool EntityManagementFeatures::ModelRemoved(const Identity &_modelID) const
 bool EntityManagementFeatures::RemoveNestedModelByIndex(
     const Identity &_modelID, std::size_t _nestedModelIndex)
 {
+  GZ_PROFILE("EntityManagementFeatures::RemoveNestedModelByIndex");
   auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   if (_nestedModelIndex >= modelInfo->nestedModels.size())
   {
@@ -744,6 +785,7 @@ bool EntityManagementFeatures::RemoveNestedModelByIndex(
 bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &_modelID,
                                                  const std::string &_modelName)
 {
+  GZ_PROFILE("EntityManagementFeatures::RemoveNestedModelByName");
   auto modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
   const std::string fullName =
       ::sdf::JoinName(modelInfo->model->getName(), _modelName);
@@ -763,6 +805,7 @@ bool EntityManagementFeatures::RemoveNestedModelByName(const Identity &_modelID,
 Identity EntityManagementFeatures::ConstructEmptyWorld(
     const Identity &/*_engineID*/, const std::string &_name)
 {
+  GZ_PROFILE("EntityManagementFeatures::ConstructEmptyWorld");
   const auto &world = std::make_shared<dart::simulation::World>(_name);
   auto collisionDetector = dart::collision::GzOdeCollisionDetector::create();
   world->getConstraintSolver()->setCollisionDetector(collisionDetector);
@@ -783,6 +826,7 @@ Identity EntityManagementFeatures::ConstructEmptyWorld(
 Identity EntityManagementFeatures::ConstructEmptyModel(
     const Identity &_worldID, const std::string &_name)
 {
+  GZ_PROFILE("EntityManagementFeatures::ConstructEmptyModel");
   dart::dynamics::SkeletonPtr model = dart::dynamics::Skeleton::create(_name);
 
   dart::dynamics::SimpleFramePtr modelFrame =
@@ -800,6 +844,7 @@ Identity EntityManagementFeatures::ConstructEmptyModel(
 Identity EntityManagementFeatures::ConstructEmptyNestedModel(
     const Identity &_parentModelID, const std::string &_name)
 {
+  GZ_PROFILE("EntityManagementFeatures::ConstructEmptyNestedModel");
   // find the world assocated with the model
   auto worldID = this->GetWorldOfModelImpl(_parentModelID);
   const auto &skel = this->GetModelInfo(_parentModelID)->model;
@@ -823,6 +868,7 @@ Identity EntityManagementFeatures::ConstructEmptyNestedModel(
 Identity EntityManagementFeatures::ConstructEmptyLink(
     const Identity &_modelID, const std::string &_name)
 {
+  GZ_PROFILE("EntityManagementFeatures::ConstructEmptyLink");
   // Return early if model is a proxy to the world.
   if (this->modelProxiesToWorld.MaybeAt(_modelID))
   {
@@ -861,6 +907,7 @@ Identity EntityManagementFeatures::ConstructEmptyLink(
 void EntityManagementFeatures::SetCollisionFilterMask(
     const Identity &_shapeID, uint16_t _mask)
 {
+  GZ_PROFILE("EntityManagementFeatures::SetCollisionFilterMask");
   const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
   const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
   const auto filterPtr = GetFilterPtr(this, worldID);
@@ -870,6 +917,7 @@ void EntityManagementFeatures::SetCollisionFilterMask(
 uint16_t EntityManagementFeatures::GetCollisionFilterMask(
     const Identity &_shapeID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetCollisionFilterMask");
   const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
   const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
   const auto filterPtr = GetFilterPtr(this, worldID);
@@ -879,6 +927,7 @@ uint16_t EntityManagementFeatures::GetCollisionFilterMask(
 void EntityManagementFeatures::RemoveCollisionFilterMask(
     const Identity &_shapeID)
 {
+  GZ_PROFILE("EntityManagementFeatures::RemoveCollisionFilterMask");
   const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
   const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
   const auto filterPtr = GetFilterPtr(this, worldID);
@@ -888,6 +937,7 @@ void EntityManagementFeatures::RemoveCollisionFilterMask(
 void EntityManagementFeatures::SetCategoryFilterMask(
     const Identity &_shapeID, uint16_t _mask)
 {
+  GZ_PROFILE("EntityManagementFeatures::SetCategoryFilterMask");
   const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
   const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
   const auto filterPtr = GetFilterPtr(this, worldID);
@@ -897,6 +947,7 @@ void EntityManagementFeatures::SetCategoryFilterMask(
 uint16_t EntityManagementFeatures::GetCategoryFilterMask(
     const Identity &_shapeID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetCategoryFilterMask");
   const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
   const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
   const auto filterPtr = GetFilterPtr(this, worldID);
@@ -906,6 +957,7 @@ uint16_t EntityManagementFeatures::GetCategoryFilterMask(
 void EntityManagementFeatures::RemoveCategoryFilterMask(
     const Identity &_shapeID)
 {
+  GZ_PROFILE("EntityManagementFeatures::RemoveCategoryFilterMask");
   const auto shapeNode = this->ReferenceInterface<ShapeInfo>(_shapeID)->node;
   const std::size_t worldID = GetWorldOfShapeNode(this, shapeNode);
   const auto filterPtr = GetFilterPtr(this, worldID);
@@ -914,6 +966,7 @@ void EntityManagementFeatures::RemoveCategoryFilterMask(
 
 Identity EntityManagementFeatures::GetWorldModel(const Identity &_worldID) const
 {
+  GZ_PROFILE("EntityManagementFeatures::GetWorldModel");
   auto modelID = this->modelProxiesToWorld.MaybeAt(_worldID);
   if (modelID)
   {

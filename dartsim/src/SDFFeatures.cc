@@ -46,6 +46,7 @@
 #include <gz/common/Console.hh>
 #include <gz/common/Mesh.hh>
 #include <gz/common/MeshManager.hh>
+#include <gz/common/Profiler.hh>
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Helpers.hh>
 
@@ -82,6 +83,7 @@ namespace {
 /// frame. If that fails, return the raw pose
 static Eigen::Isometry3d ResolveSdfPose(const ::sdf::SemanticPose &_semPose)
 {
+  GZ_PROFILE("dartsim::ResolveSdfPose");
   math::Pose3d pose;
   ::sdf::Errors errors = _semPose.Resolve(pose);
   if (!errors.empty())
@@ -135,6 +137,7 @@ static void CopyStandardJointAxisProperties(
     const int _index, Properties &_properties,
     const ::sdf::JointAxis *_sdfAxis)
 {
+  GZ_PROFILE("dartsim::CopyStandardJointAxisProperties");
   _properties.mDampingCoefficients[_index] = _sdfAxis->Damping();
   _properties.mFrictions[_index] = _sdfAxis->Friction();
   _properties.mRestPositions[_index] = _sdfAxis->SpringReference();
@@ -163,6 +166,7 @@ static Eigen::Vector3d ConvertJointAxis(
     const ModelInfo &_modelInfo,
     const Eigen::Isometry3d &_T_joint)
 {
+  GZ_PROFILE("dartsim::ConvertJointAxis");
   math::Vector3d resolvedAxis;
   ::sdf::Errors errors = _sdfAxis->ResolveXyz(resolvedAxis);
   if (errors.empty())
@@ -208,6 +212,7 @@ static JointType *ConstructSingleAxisJoint(
     dart::dynamics::BodyNode * const _child,
     const Eigen::Isometry3d &_T_joint)
 {
+  GZ_PROFILE("dartsim::ConstructSingleAxisJoint");
   typename JointType::Properties properties;
 
   const ::sdf::JointAxis * const sdfAxis = _sdfJoint.Axis(0);
@@ -230,6 +235,7 @@ static dart::dynamics::UniversalJoint *ConstructUniversalJoint(
     dart::dynamics::BodyNode * const _child,
     const Eigen::Isometry3d &_T_joint)
 {
+  GZ_PROFILE("dartsim::ConstructUniversalJoint");
   dart::dynamics::UniversalJoint::Properties properties;
 
   for (const std::size_t index : {0u, 1u})
@@ -247,6 +253,40 @@ static dart::dynamics::UniversalJoint *ConstructUniversalJoint(
 }
 
 /////////////////////////////////////////////////
+<<<<<<< HEAD
+=======
+template <typename JointType>
+static JointType *ConstructBallJoint(
+    const ModelInfo &/*_modelInfo*/,
+    const ::sdf::Joint &_sdfJoint,
+    dart::dynamics::BodyNode * const _parent,
+    dart::dynamics::BodyNode * const _child,
+    const Eigen::Isometry3d &/*_T_joint*/)
+{
+  GZ_PROFILE("dartsim::ConstructBallJoint");
+  // SDF does not support any of the properties for ball joint, besides the
+  // name and relative transforms to its parent and child.
+  //
+  // To set other properties like joint limits, stiffness, etc,
+  // apply values in <axis> to all 3 DoF.
+  typename JointType::Properties properties;
+
+  const ::sdf::JointAxis * const sdfAxis = _sdfJoint.Axis(0);
+
+  // use default properties if sdfAxis is not set, otherwise apply to all DoF
+  if (sdfAxis)
+  {
+    for (const std::size_t index : {0u, 1u, 2u})
+    {
+      CopyStandardJointAxisProperties(index, properties, sdfAxis);
+    }
+  }
+
+  return _child->moveTo<JointType>(_parent, properties);
+}
+
+/////////////////////////////////////////////////
+>>>>>>> bda246c (GZ-PROFILE for dartsim (#997))
 struct ShapeAndTransform
 {
   dart::dynamics::ShapePtr shape;
@@ -257,6 +297,7 @@ struct ShapeAndTransform
 static ShapeAndTransform ConstructBox(
     const ::sdf::Box &_box)
 {
+  GZ_PROFILE("dartsim::ConstructBox");
   return {std::make_shared<dart::dynamics::BoxShape>(
         math::eigen3::convert(_box.Size()))};
 }
@@ -265,6 +306,7 @@ static ShapeAndTransform ConstructBox(
 static ShapeAndTransform ConstructCylinder(
     const ::sdf::Cylinder &_cylinder)
 {
+  GZ_PROFILE("dartsim::ConstructCylinder");
   return {std::make_shared<dart::dynamics::CylinderShape>(
         _cylinder.Radius(), _cylinder.Length())};
 }
@@ -273,6 +315,7 @@ static ShapeAndTransform ConstructCylinder(
 static ShapeAndTransform ConstructSphere(
     const ::sdf::Sphere &_sphere)
 {
+  GZ_PROFILE("dartsim::ConstructSphere");
   return {std::make_shared<dart::dynamics::SphereShape>(_sphere.Radius())};
 }
 
@@ -280,6 +323,7 @@ static ShapeAndTransform ConstructSphere(
 static ShapeAndTransform ConstructCapsule(
     const ::sdf::Capsule &_capsule)
 {
+  GZ_PROFILE("dartsim::ConstructCapsule");
   return {std::make_shared<dart::dynamics::CapsuleShape>(
         _capsule.Radius(), _capsule.Length())};
 }
@@ -288,6 +332,7 @@ static ShapeAndTransform ConstructCapsule(
 static ShapeAndTransform ConstructPlane(
     const ::sdf::Plane &_plane)
 {
+  GZ_PROFILE("dartsim::ConstructPlane");
   // TODO(anyone): We use BoxShape until PlaneShape is completely supported in
   // DART. Please see: https://github.com/dartsim/dart/issues/114
   const Eigen::Vector3d z = Eigen::Vector3d::UnitZ();
@@ -341,6 +386,7 @@ static ShapeAndTransform ConstructMesh(
 static ShapeAndTransform ConstructGeometry(
     const ::sdf::Geometry &_geometry)
 {
+  GZ_PROFILE("dartsim::ConstructGeometry");
   if (_geometry.BoxShape())
     return ConstructBox(*_geometry.BoxShape());
   else if (_geometry.CapsuleShape())
@@ -403,6 +449,7 @@ dart::dynamics::BodyNode *SDFFeatures::FindBodyNode(
     const std::string &_worldName, const std::string &_jointModelName,
     const std::string &_linkRelativeName) const
 {
+  GZ_PROFILE("SDFFeatures::FindBodyNode");
   if (_linkRelativeName == "world")
     return nullptr;
 
@@ -424,7 +471,7 @@ SDFFeatures::FindParentAndChildOfJoint(std::size_t _worldID,
                                        const std::string &_parentName,
                                        const std::string &_parentType) const
 {
-
+  GZ_PROFILE("SDFFeatures::FindParentAndChildOfJoint");
   // Resolve parent and child frames to links
   std::string parentLinkName;
   ::sdf::Errors errors = _sdfJoint->ResolveParentLink(parentLinkName);
@@ -492,6 +539,7 @@ Identity SDFFeatures::ConstructSdfWorld(
     const Identity &_engine,
     const ::sdf::World &_sdfWorld)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfWorld");
   const Identity worldID = this->ConstructEmptyWorld(_engine, _sdfWorld.Name());
 
   const dart::simulation::WorldPtr &world = this->worlds.at(worldID);
@@ -557,6 +605,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     std::size_t _parentID,
     const ::sdf::Model &_sdfModel)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfModelImpl");
   auto worldID = _parentID;
   std::string modelName = _sdfModel.Name();
   const bool isNested = this->models.HasEntity(_parentID);
@@ -656,6 +705,7 @@ Identity SDFFeatures::ConstructSdfLink(
     const Identity &_modelID,
     const ::sdf::Link &_sdfLink)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfLink");
   // Return early if model is a proxy to the world.
   if (this->modelProxiesToWorld.MaybeAt(_modelID))
   {
@@ -769,6 +819,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     const Identity &_modelID,
     const ::sdf::Joint &_sdfJoint)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfJoint");
   const auto &modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
 
   if (_sdfJoint.ChildName() == "world")
@@ -850,6 +901,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     const Identity &_linkID,
     const ::sdf::Collision &_collision)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfCollision");
   if (!_collision.Geom())
   {
     gzerr << "The geometry element of collision [" << _collision.Name() << "] "
@@ -991,6 +1043,7 @@ Identity SDFFeatures::ConstructSdfVisual(
     const Identity &_linkID,
     const ::sdf::Visual &_visual)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfVisual");
   if (!_visual.Geom())
   {
     gzerr << "The geometry element of visual [" << _visual.Name() << "] was a "
@@ -1045,6 +1098,7 @@ dart::dynamics::BodyNode *SDFFeatures::FindOrConstructLink(
     const ::sdf::Model &_sdfModel,
     const std::string &_linkName)
 {
+  GZ_PROFILE("SDFFeatures::FindOrConstructLink");
   dart::dynamics::BodyNode * link = _model->getBodyNode(_linkName);
   if (link)
     return link;
@@ -1070,6 +1124,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     dart::dynamics::BodyNode * const _parent,
     dart::dynamics::BodyNode * const _child)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfJoint");
   const auto &_modelInfo = *this->ReferenceInterface<ModelInfo>(_modelID);
   // if a specified link is named "world" but cannot be found, we'll assume the
   // joint is connected to the world
