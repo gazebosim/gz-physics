@@ -58,6 +58,9 @@ class SimulationFeatures :
   public: void Write(WorldPoses &_worldPoses) const;
   public: void Write(ChangedWorldPoses &_changedPoses) const;
 
+  /// \brief Update the dynamic velocity servo gains based on current inertia
+  private: void UpdateVelocityServoGains(WorldInfo &_worldInfo);
+
   public: std::vector<ContactInternal> GetContactsFromLastStep(
       const Identity &_worldID) const override;
 };

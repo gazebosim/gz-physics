@@ -17,7 +17,6 @@
 
 #include <cassert>
 #include <utility>
-#include <typeindex>
 
 #include "gz/physics/CompositeData.hh"
 

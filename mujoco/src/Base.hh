@@ -26,6 +26,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <gz/math/AxisAlignedBox.hh>
@@ -33,9 +34,11 @@
 #include <gz/math/Quaternion.hh>
 #include <gz/math/SemanticVersion.hh>
 #include <gz/math/Vector3.hh>
+#include <gz/math/eigen3/Conversions.hh>
 #include <gz/physics/Geometry.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/detail/EntityStorage.hh>
+#include <gz/physics/mujoco-plugin/Export.hh>
 
 namespace gz
 {
@@ -43,6 +46,18 @@ namespace physics
 {
 namespace mujoco
 {
+/// \brief A magic number embedded in mjData->userdata to safely verify
+/// ownership of the stored pointer during the global ContactFilterCallback.
+/// The bytes spell out 'GZPHGZPH'.
+///
+/// Example of how this helps: MuJoCo's `mjcb_contactfilter` is a global
+/// callback that fires for *every* mjModel evaluated in the current process.
+/// If a user runs a different MuJoCo simulation (not managed by gz-physics)
+/// in the same process, and they happen to store a float value like `3.14` in
+/// `userdata`, the global callback would try to reinterpret `3.14` as a pointer
+/// and segfault. The magic number ensures we only unpack the pointer if the
+/// userdata was strictly injected by our plugin.
+constexpr uint64_t kUserDataMagicNumber = 0x475A5048475A5048ULL;
 
 /// \brief Format the scoped name of a joint axis, appending a suffix
 /// for secondary degrees of freedom if the axis index is greater than 0.
@@ -109,12 +124,30 @@ inline Eigen::Quaterniond convertQuat(const mjtNum *_src)
   return dst;
 }
 
+/// \brief Convert a pose given in a position and quaternion pair from MuJoCo
+/// to Eigen.
+/// \param[in] _pos Position array from MuJoCo
+/// \param[in] _quat Quaternion array from MuJoCo
+/// \return The constructed Eigen pose
 inline Eigen::Isometry3d convertPose(const mjtNum *_pos, const mjtNum *_quat)
 {
   return Eigen::Translation3d(convertPos(_pos)) * convertQuat(_quat);
 }
 
-inline gz::math::Pose3d getBodyWorldPoseFromMjData(mjData *_d, int _bodyId)
+/// \brief Convert pose from gz::math to Eigen
+/// \param[in] _pose Input gz::math pose
+/// \return Converted Eigen pose
+inline Eigen::Isometry3d convertPose(const gz::math::Pose3d &_pose)
+{
+  return gz::math::eigen3::convert(_pose);
+}
+
+/// \brief Retrieve the pose of a body inside mjData as a gz::math pose.
+/// \param[in] _d mjData pointer
+/// \param[in] _bodyId The body ID
+/// \return Converted gz::math pose
+inline gz::math::Pose3d getBodyWorldPoseFromMjData(const mjData *_d, int
+                                                   _bodyId)
 {
   return gz::math::Pose3d(_d->xpos[3 * _bodyId],
                           _d->xpos[3 * _bodyId + 1],
@@ -125,14 +158,20 @@ inline gz::math::Pose3d getBodyWorldPoseFromMjData(mjData *_d, int _bodyId)
                           _d->xquat[4 * _bodyId + 3]);
 }
 
-inline Eigen::Isometry3d getBodyWorldPoseFromMjDataEigen(mjData *_d,
+/// \brief Retrieve the pose of a body inside mjData as an Eigen pose.
+/// \param[in] _d mjData pointer
+/// \param[in] _bodyId The body ID
+/// \return Converted Eigen pose
+inline Eigen::Isometry3d getBodyWorldPoseFromMjDataEigen(const mjData *_d,
                                                          int _bodyId)
 {
-  return Eigen::Translation3d(_d->xpos[3 * _bodyId], _d->xpos[3 * _bodyId + 1],
-                              _d->xpos[3 * _bodyId + 2]) *
-         Eigen::Quaterniond(_d->xquat[4 * _bodyId], _d->xquat[4 * _bodyId + 1],
-                            _d->xquat[4 * _bodyId + 2],
-                            _d->xquat[4 * _bodyId + 3]);
+  Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+  pose.linear() =
+      Eigen::Map<const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(
+          &_d->xmat[9 * _bodyId]);
+  pose.translation() =
+      Eigen::Map<const Eigen::Vector3d>(&_d->xpos[3 * _bodyId]);
+  return pose;
 }
 
 // Forward declarations
@@ -266,12 +305,26 @@ struct ModelInfo
 
 struct FrameInfo
 {
-  FrameInfo(mjsSite *_site, WorldInfo* _worldInfo)
-      : site(_site), worldInfo(_worldInfo)
+  /// \brief Constructor
+  /// \param[in] _body Body this frame is rigidly attached to
+  /// \param[in] _offset Offset of the frame relative to the body, expressed in
+  /// the body frame.
+  /// \param[in] _worldInfo The worldInfo object associated with the body
+  FrameInfo(const mjsBody *_body, const Eigen::Isometry3d &_offset,
+            WorldInfo *_worldInfo)
+      : body(_body), offset(_offset), worldInfo(_worldInfo)
   {
   }
-  mjsSite * site{nullptr};
-  WorldInfo* worldInfo;
+
+  /// \brief Body this frame is rigidly attached to.
+  const mjsBody *body{nullptr};
+
+  /// \brief Constant pose of this frame expressed in the body frame.
+  const Eigen::Isometry3d offset{Eigen::Isometry3d::Identity()};
+
+  /// \brief The worldInfo object associated with the body. Not const because
+  /// it might be used to Recompile the world
+  WorldInfo *worldInfo{nullptr};
 };
 
 struct WorldInfo
@@ -300,6 +353,10 @@ struct WorldInfo
   // Key2 is the scoped name of the model, including the world name
   detail::EntityStorage<std::shared_ptr<ModelInfo>, std::string> models;
 
+  /// \brief Vector mapping each body_weldid to a dynamic cluster ID,
+  /// or -1 if the body is not part of any dynamic weld constraint.
+  std::vector<int> dynamicWeldClusterMap;
+
   // Vector of ShapeInfo, indexed by mujoco geom id
   std::vector<std::shared_ptr<ShapeInfo>> geomIdToShapeInfo{};
 
@@ -313,7 +370,27 @@ struct WorldInfo
   /// The cache is invalidated right before mj_step in
   /// SimulationFeatures::WorldForwardStep
   std::vector<std::optional<Eigen::Vector3d>> ballJointPositionsCache{};
+
+  /// \brief Store whether a joint command has been received in this step. This
+  /// is used to choose whether to return the current commanded force or the
+  /// computed force from the last step.
+  std::vector<uint8_t> jointForceCmdReceived;
+
+  /// \brief Recompute rigid cluster connected components from active fixed
+  /// joints. Updates dynamicWeldClusterMap.
+  void UpdateWeldExclusions();
 };
+
+/// \brief Compute the mapping from body_weldid to dynamic cluster ID based
+/// on current dynamic weld constraints.
+/// \param[in] extraEdges Optional list of additional (weld1, weld2) edges
+/// \return Vector of size m->nbody mapping body_weldid to dynamic cluster ID
+/// (-1 if none)
+// Make the symbol visible so that it can be called from a unit test.
+GZ_PHYSICS_MUJOCO_PLUGIN_VISIBLE
+std::vector<int> ComputeWeldExclusions(
+    const mjModel *_m, const mjData *_d,
+    const std::vector<std::pair<int, int>> &_extraEdges = {});
 
 class Base
 {
@@ -340,6 +417,10 @@ class Base
   public: const std::string engineName{"mujoco"};
   public: const gz::math::SemanticVersion engineVersion{mj_versionString()};
 
+  /// \brief Recompile the model from the spec if it is dirty, refreshing the
+  /// cached joint indices and mjData buffers. Does nothing when current.
+  /// \param[in,out] _worldInfo World whose spec is recompiled if dirty.
+  /// \return True on success or if no recompile was needed.
   public: bool RecompileSpec(WorldInfo &_worldInfo) const;
 };
 }  // namespace mujoco

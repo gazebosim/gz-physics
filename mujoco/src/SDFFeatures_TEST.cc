@@ -17,15 +17,19 @@
 
 #include <gtest/gtest.h>
 #include <set>
+#include <sstream>
 
 #include <gz/common/Console.hh>
+#include <gz/physics/ForwardStep.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/RequestEngine.hh>
+#include <gz/physics/sdf/ConstructCollision.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 #include <gz/physics/sdf/ConstructNestedModel.hh>
 #include <gz/plugin/Loader.hh>
+#include <sdf/Collision.hh>
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
 #include <test/Utils.hh>
@@ -38,12 +42,16 @@
 using namespace gz;
 
 struct TestFeatureList : physics::FeatureList<
+    physics::ForwardStep,
     physics::GetEngineInfo,
     physics::GetWorldFromEngine,
     physics::GetModelFromWorld,
+    physics::GetLinkFromModel,
+    physics::GetShapeFromLink,
     physics::sdf::ConstructSdfModel,
     physics::sdf::ConstructSdfWorld,
     physics::sdf::ConstructSdfNestedModel,
+    physics::sdf::ConstructSdfCollision,
     physics::RemoveEntities
 > { };
 
@@ -51,6 +59,7 @@ using World = physics::World3d<TestFeatureList>;
 using WorldPtr = physics::World3dPtr<TestFeatureList>;
 using ModelPtr = physics::Model3dPtr<TestFeatureList>;
 using LinkPtr = physics::Link3dPtr<TestFeatureList>;
+using ShapePtr = physics::Shape3dPtr<TestFeatureList>;
 
 /////////////////////////////////////////////////
 auto LoadEngine()
@@ -186,10 +195,12 @@ TEST_P(SDFFeatures_TEST, CheckMujocoData)
                    double springRest, double stiffness, double lower,
                    double upper, double maxForce)
   {
-    EXPECT_DOUBLE_EQ(damping, joint->damping);
+    // Element 0 of the damping/stiffness polynomials is the linear coefficient,
+    // which is the only one SDFormat populates.
+    EXPECT_DOUBLE_EQ(damping, joint->damping[0]);
     EXPECT_DOUBLE_EQ(friction, joint->frictionloss);
     EXPECT_DOUBLE_EQ(springRest, joint->springref);
-    EXPECT_DOUBLE_EQ(stiffness, joint->stiffness);
+    EXPECT_DOUBLE_EQ(stiffness, joint->stiffness[0]);
     EXPECT_DOUBLE_EQ(lower, joint->range[0]);
     EXPECT_DOUBLE_EQ(upper, joint->range[1]);
     EXPECT_DOUBLE_EQ(-maxForce, joint->actfrcrange[0]);
@@ -406,10 +417,12 @@ TEST_P(SDFFeatures_TEST, UniversalJoint)
                    double springRest, double stiffness, double lower,
                    double upper, double maxForce)
   {
-    EXPECT_DOUBLE_EQ(damping, joint->damping);
+    // Element 0 of the damping/stiffness polynomials is the linear coefficient,
+    // which is the only one SDFormat populates.
+    EXPECT_DOUBLE_EQ(damping, joint->damping[0]);
     EXPECT_DOUBLE_EQ(friction, joint->frictionloss);
     EXPECT_DOUBLE_EQ(springRest, joint->springref);
-    EXPECT_DOUBLE_EQ(stiffness, joint->stiffness);
+    EXPECT_DOUBLE_EQ(stiffness, joint->stiffness[0]);
     EXPECT_DOUBLE_EQ(lower, joint->range[0]);
     EXPECT_DOUBLE_EQ(upper, joint->range[1]);
     EXPECT_DOUBLE_EQ(-maxForce, joint->actfrcrange[0]);
@@ -1014,9 +1027,81 @@ TEST_P(SDFFeatures_TEST, NestedModelSelfCollideExclusions)
       "case3_parent_false_child_true::child_model::child_dropper_pc"));
 }
 
+/////////////////////////////////////////////////
+TEST_P(SDFFeatures_TEST, ConstructSdfCollision)
+{
+  const std::string worldStr = R"(
+  <sdf version="1.6">
+    <world name="default">
+      <model name="m1">
+        <link name="l1">
+          <collision name="c1">
+            <geometry>
+              <box><size>1 1 1</size></box>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
 
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
 
+  auto model = world->GetModel("m1");
+  ASSERT_NE(nullptr, model);
 
+  auto link = model->GetLink("l1");
+  ASSERT_NE(nullptr, link);
+
+  EXPECT_EQ(1u, link->GetShapeCount());
+
+  sdf::Collision col;
+  col.SetName("c1");
+  auto shape = link->ConstructCollision(col);
+  ASSERT_NE(nullptr, shape);
+  EXPECT_EQ("c1", shape->GetName());
+
+  sdf::Collision nonExistentCol;
+  nonExistentCol.SetName("non_existent");
+  EXPECT_EQ(nullptr, link->ConstructCollision(nonExistentCol));
+
+  EXPECT_NE(nullptr, link->GetShape("c1"));
+  EXPECT_EQ(nullptr, link->GetShape("non_existent"));
+}
+
+/////////////////////////////////////////////////
+// Verify that loading a world with thousands of static bodies (high nbody,
+// nv = 0) allocates sufficient arena memory for broadphase collision detection
+// and does not fail with mj_stackAlloc out of memory.
+TEST_P(SDFFeatures_TEST, ManyStaticModels)
+{
+  std::ostringstream sdfStream;
+  sdfStream << "<sdf version='1.6'><world name='static_shapes_world'>\n";
+  constexpr std::size_t kNumStaticModels = 3000;
+  for (std::size_t i = 0; i < kNumStaticModels; ++i)
+  {
+    sdfStream << "<model name='static_box_" << i << "'>\n"
+              << "  <static>true</static>\n"
+              << "  <pose>" << (i * 2.0) << " 0 0.5 0 0 0</pose>\n"
+              << "  <link name='link'>\n"
+              << "    <collision name='collision'>\n"
+              << "      <geometry><box><size>1 1 1</size></box></geometry>\n"
+              << "    </collision>\n"
+              << "  </link>\n"
+              << "</model>\n";
+  }
+  sdfStream << "</world></sdf>";
+
+  WorldPtr world = this->LoadWorldString(sdfStream.str());
+  ASSERT_NE(nullptr, world);
+  EXPECT_EQ(kNumStaticModels, world->GetModelCount());
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+  world->Step(output, state, input);
+}
 
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
                         ::testing::Values(LoaderType::Whole));

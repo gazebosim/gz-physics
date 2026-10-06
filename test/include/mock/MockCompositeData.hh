@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Open Source Robotics Foundation
+ * Copyright (C) 2026 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,24 +15,25 @@
  *
 */
 
-#include "CustomFeatures.hh"
+#ifndef GZ_PHYSICS_TEST_MOCKCOMPOSITEDATA_HH_
+#define GZ_PHYSICS_TEST_MOCKCOMPOSITEDATA_HH_
 
-#include <gz/common/Profiler.hh>
+#include <gz/physics/CompositeData.hh>
 
-namespace gz {
-namespace physics {
-namespace dartsim {
-
-/////////////////////////////////////////////////
-//! [implementation]
-dart::simulation::WorldPtr CustomFeatures::GetDartsimWorld(
-    const Identity &_worldID)
+namespace mock
 {
-  GZ_PROFILE("CustomFeatures::GetDartsimWorld");
-  return this->worlds.at(_worldID);
-}
-//! [implementation]
+  template <typename T>
+  struct MyCustomData
+  {
+    T depth;
+  };
 
+  using ExtraContactData = MyCustomData<double>;
+
+  class MockCompositeDataPlugin
+  {
+    public: virtual ~MockCompositeDataPlugin() = default;
+    public: virtual gz::physics::CompositeData GetCompositeData() const = 0;
+  };
 }
-}
-}
+#endif

@@ -137,17 +137,23 @@ void copyStandardJointAxisProperties(
     mjsJoint * _joint,
     const ::sdf::JointAxis *_sdfAxis)
 {
-  _joint->damping = _sdfAxis->Damping();
+  // Since MuJoCo 3.7.0, `damping` and `stiffness` are polynomial coefficient
+  // arrays. Element 0 is the linear coefficient, which is what SDFormat
+  // describes; the higher-order coefficients are left at their zero defaults.
+  _joint->damping[0] = _sdfAxis->Damping();
   _joint->frictionloss = _sdfAxis->Friction();
   _joint->springref = _sdfAxis->SpringReference();
-  _joint->stiffness = _sdfAxis->SpringStiffness();
-  _joint->limited = static_cast<int>(!std::isinf(_sdfAxis->Lower()) &&
-                                     !std::isinf(_sdfAxis->Upper()));
+  _joint->stiffness[0] = _sdfAxis->SpringStiffness();
+  _joint->limited = (!std::isinf(_sdfAxis->Lower()) &&
+                     !std::isinf(_sdfAxis->Upper()))
+                        ? mjLIMITED_TRUE
+                        : mjLIMITED_FALSE;
   _joint->range[0] = _sdfAxis->Lower();
   _joint->range[1] = _sdfAxis->Upper();
 
-  _joint->actfrclimited =
-      static_cast<int>(!std::isinf(infIfNeg(_sdfAxis->Effort())));
+  _joint->actfrclimited = !std::isinf(infIfNeg(_sdfAxis->Effort()))
+                              ? mjLIMITED_TRUE
+                              : mjLIMITED_FALSE;
 
   _joint->actfrcrange[0] = -infIfNeg(_sdfAxis->Effort());
   _joint->actfrcrange[1] = infIfNeg(_sdfAxis->Effort());
@@ -540,7 +546,7 @@ struct ModelKinematicStructure
           // premature solver clamping and massive numerical damping. By mapping
           // position limits purely onto the translational slide joint, we
           // ensure exact kinematic limit enforcement without solver resistance.
-          joint->limited = false;
+          joint->limited = mjLIMITED_FALSE;
         }
 
         joint2 = mjs_addJoint(child, nullptr);
@@ -553,9 +559,11 @@ struct ModelKinematicStructure
           // actuator effort limits are enforced purely on the primary
           // rotational hinge joint to avoid double-counting and physical unit
           // mismatches.
-          joint2->limited = static_cast<int>(!std::isinf(sdfAxis1->Lower()) &&
-                                             !std::isinf(sdfAxis1->Upper()));
-          if (joint2->limited)
+          joint2->limited = (!std::isinf(sdfAxis1->Lower()) &&
+                             !std::isinf(sdfAxis1->Upper()))
+                                ? mjLIMITED_TRUE
+                                : mjLIMITED_FALSE;
+          if (joint2->limited == mjLIMITED_TRUE)
           {
             const double pitch =
                 convertScrewThreadPitch(sdfJoint->ScrewThreadPitch());
@@ -669,11 +677,8 @@ struct ModelKinematicStructure
             jointInfo->worldInfo->ballJointPositionsCache.size() - 1;
       }
 
-      auto jointSite = mjs_addSite(child, nullptr);
-      copyPos(jointPose.Pos(), jointSite->pos);
-      copyQuat(jointPose.Rot(), jointSite->quat);
-      _base.frames[jointInfo->entityId] =
-          std::make_shared<FrameInfo>(jointSite, worldInfo);
+      _base.frames[jointInfo->entityId] = std::make_shared<FrameInfo>(
+          child, convertPose(jointPose), worldInfo);
 
       _modelInfo->joints.AddEntity(jointInfo->entityId, jointInfo,
                                    jointInfo->name, _modelInfo->entityId);
@@ -702,9 +707,8 @@ struct ModelKinematicStructure
     linkInfo->modelInfo = modelInfo;
     linkInfo->worldInfo = worldInfo;
 
-    auto childSite = mjs_addSite(child, nullptr);
-    _base.frames[linkInfo->entityId] =
-        std::make_shared<FrameInfo>(childSite, worldInfo);
+    _base.frames[linkInfo->entityId] = std::make_shared<FrameInfo>(
+        child, Eigen::Isometry3d::Identity(), worldInfo);
 
     modelInfo->links.AddEntity(linkInfo->entityId, linkInfo, child,
                                modelInfo->entityId);
@@ -765,12 +769,9 @@ struct ModelKinematicStructure
     {
       modelInfo->body = child;
 
-      auto modelFrameSite = mjs_addSite(child, nullptr);
       const auto modelFramePose = link->RawPose().Inverse();
-      copyPos(modelFramePose.Pos(), modelFrameSite->pos);
-      copyQuat(modelFramePose.Rot(), modelFrameSite->quat);
-      _base.frames[modelInfo->entityId] =
-          std::make_shared<FrameInfo>(modelFrameSite, worldInfo);
+      _base.frames[modelInfo->entityId] = std::make_shared<FrameInfo>(
+          child, convertPose(modelFramePose), worldInfo);
     }
 
     child->explicitinertial = true;
@@ -927,14 +928,11 @@ struct ModelKinematicStructure
         linkInfo->shapes.AddEntity(shapeInfo->entityId, shapeInfo, geom,
                                    linkInfo->entityId);
 
-        // Add a site for the shape and register it in the frames map. This is
-        // required for FrameSemantics to correctly transform the local
-        // axis-aligned bounding box of the shape.
-        auto shapeSite = mjs_addSite(child, nullptr);
-        mju_copy3(shapeSite->pos, geom->pos);
-        mju_copy4(shapeSite->quat, geom->quat);
-        _base.frames[shapeInfo->entityId] =
-            std::make_shared<FrameInfo>(shapeSite, worldInfo);
+        // Register the shape frame in the frames map. This is required for
+        // FrameSemantics to correctly transform the local axis-aligned
+        // bounding box of the shape.
+        _base.frames[shapeInfo->entityId] = std::make_shared<FrameInfo>(
+            child, convertPose(collisionPose), worldInfo);
       }
     }
 
@@ -973,6 +971,20 @@ Identity SDFFeatures::ConstructSdfNestedModel(const Identity &_parentID,
                                               const ::sdf::Model &_sdfModel)
 {
   return this->ConstructSdfModelImpl(_parentID, _sdfModel);
+}
+
+/////////////////////////////////////////////////
+Identity SDFFeatures::ConstructSdfCollision(
+    const Identity &_linkID,
+    const ::sdf::Collision &_collision)
+{
+  Identity shape = this->GetShape(_linkID, _collision.Name());
+  if (!shape)
+  {
+    gzerr << "Dynamic collision construction is not supported in the MuJoCo "
+          << "plugin. Collision [" << _collision.Name() << "] was not added.\n";
+  }
+  return shape;
 }
 
 /////////////////////////////////////////////////

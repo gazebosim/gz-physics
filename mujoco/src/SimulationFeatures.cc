@@ -60,18 +60,39 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   worldInfo->ballJointPositionsCache.assign(
       worldInfo->ballJointPositionsCache.size(), std::nullopt);
 
+  this->UpdateVelocityServoGains(*worldInfo);
+
   mj_step(m, d);
 
   // Synchronize Cartesian position and velocity kinematics for the new state.
   // In MuJoCo, the numerical integrator in mj_step (Stage 24) advances the
   // joint space variables (qpos/qvel) to the new state, but does not recompute
   // the corresponding Cartesian kinematic and frame variables (e.g. xpos,
-  // xipos, site_xpos, cvel, xvel). These are normally computed lazily at the
-  // start of the next step. Synchronizing them here ensures that immediate
-  // downstream state queries (like Link::FrameDataRelativeToWorld) return
-  // accurate, lag-free results for the current timestep.
-  mj_fwdPosition(m, d);
-  mj_fwdVelocity(m, d);
+  // xipos, site_xpos, cvel). These are normally computed lazily at the start of
+  // the next step. Synchronizing them here ensures that immediate downstream
+  // state queries (like Link::FrameDataRelativeToWorld) return accurate,
+  // lag-free results for the current timestep.
+  //
+  // Only these three stages are needed, and calling them directly rather than
+  // mj_fwdPosition/mj_fwdVelocity matters for two reasons:
+  //
+  // 1. Cost. mj_fwdPosition also runs collision detection, builds and
+  //    factorizes the mass matrix, and constructs the constraint set; all of
+  //    that is discarded and recomputed by the next mj_step, so it is pure
+  //    waste. Skipping it removes most of the plugin's per-step overhead.
+  //
+  // 2. Contact consistency. mj_fwdPosition rebuilds the efc arrays through
+  //    mj_makeConstraint, which allocates them on the arena without solving
+  //    them, so GetContactsFromLastStep would end up pairing contacts with
+  //    whatever the arena happened to hold. That surfaces as reported normal
+  //    forces that are negative, which a solved contact can never be.
+  //    Leaving d->contact as mj_step solved it keeps every reported contact
+  //    paired with the force that produced it. As in dartsim, contacts
+  //    describe the pose the solver used, at the start of the step, rather
+  //    than the pose reached after integration.
+  mj_kinematics(m, d);  // xpos, xquat, xipos, ximat, geom_xpos, site_xpos/xmat
+  mj_comPos(m, d);      // subtree_com, cdof, cinert
+  mj_comVel(m, d);      // cvel, needed by mj_objectVelocity
 
   // Clear joint control forces so that they are not applied in the next
   // timestep, which is the expected behavior in Gazebo.
@@ -81,8 +102,73 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   // in the next timestep, which is the expected behavior in Gazebo.
   std::fill(d->xfrc_applied, d->xfrc_applied + 6 * m->nbody, 0.0);
 
+  worldInfo->jointForceCmdReceived.assign(
+    worldInfo->jointForceCmdReceived.size(), 0);
   this->WriteRequiredData(_h);
   this->Write(_h.Get<ChangedWorldPoses>());
+}
+
+/////////////////////////////////////////////////
+void SimulationFeatures::UpdateVelocityServoGains(WorldInfo &_worldInfo)
+{
+  auto *m = _worldInfo.mjModelObj;
+  auto *d = _worldInfo.mjDataObj;
+
+  // Dynamically compute the actuator servo gain parameters based on the true
+  // joint composite rotational inertia to provide a uniform
+  // configuration-independent tracking response.
+  for (int i = 0; i < m->nu; ++i)
+  {
+    if (m->actuator_biastype[i] == mjBIAS_AFFINE)
+    {
+      const int jointId = m->actuator_trnid[i * 2];
+      const int dofIndex = m->jnt_dofadr[jointId];
+
+      // Extract effective diagonal inertia for this DOF.
+      // The Matrix M in MuJoCo is represented in a compressed sparse row (CSR)
+      // format.
+      double J = 0.0;
+      const int rowStart = m->M_rowadr[dofIndex];
+      const int rowNnz = m->M_rownnz[dofIndex];
+      for (int k = 0; k < rowNnz; ++k)
+      {
+        if (m->M_colind[rowStart + k] == dofIndex)
+        {
+          J = d->M[rowStart + k];
+          break;
+        }
+      }
+
+      // The time constant for the velocity servo controller as a fraction of
+      // the timestep (5%).
+      constexpr double kServoTimeConstantFraction = 0.05;
+
+      // Compute gain using a fixed time constant of 0.05 timesteps.
+      //
+      // In velocity servo mode (mjBIAS_AFFINE):
+      // - gainprm[0] is the gain coefficient (kv).
+      // - biasprm[2] is the velocity feedback coefficient (-kv).
+      //
+      // The net actuator force is computed as:
+      //   force = gainprm[0] * ctrl + biasprm[0]
+      //         + biasprm[1] * pos + biasprm[2] * vel
+      //         = kv * ctrl - kv * vel
+      //         = kv * (ctrl - vel)
+      // which implements a proportional velocity controller.
+      //
+      // Because MuJoCo integrates velocity damping (biasprm[2]) implicitly via
+      // semi-implicit Euler, we can use an arbitrarily large kv (tau < dt)
+      // without causing numerical instability. This attempts to mimic DART's
+      // 1-step LCP hard constraints, but can result in large forces applied to
+      // the sytem.
+      const double tau = kServoTimeConstantFraction * m->opt.timestep;
+      const double kv = J / tau;
+
+      // Statelessly update the actuator parameters
+      m->actuator_gainprm[i * mjNGAIN] = kv;
+      m->actuator_biasprm[i * mjNBIAS + 2] = -kv;
+    }
+  }
 }
 
 /////////////////////////////////////////////////

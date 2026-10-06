@@ -27,6 +27,8 @@
 
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 
+#include <gz/common/Profiler.hh>
+
 #include "GzCollisionDetector.hh"
 
 using namespace dart;
@@ -54,6 +56,7 @@ std::size_t GzCollisionDetector::GetCollisionPairMaxContacts() const
 void GzCollisionDetector::LimitCollisionPairMaxContacts(
     CollisionResult *_result)
 {
+  GZ_PROFILE("GzCollisionDetector::LimitCollisionPairMaxContacts");
   if (this->maxCollisionPairContacts ==
     std::numeric_limits<std::size_t>::max())
     return;
@@ -230,8 +233,10 @@ void NearCallbackODE(void *_data, dGeomID _o1, dGeomID _o2)
   {
 
       auto geomData = dGeomGetData(other);
-      rayHit.mNormal = Eigen::Vector3d(contact.normal);
-      rayHit.mPoint = Eigen::Vector3d(contact.pos);
+      rayHit.mNormal = Eigen::Vector3d(contact.normal[0], contact.normal[1],
+                                       contact.normal[2]);
+      rayHit.mPoint = Eigen::Vector3d(contact.pos[0], contact.pos[1],
+                                      contact.pos[2]);
       rayHit.mCollisionObject =
         static_cast<dart::collision::CollisionObject*>(geomData);
   };
@@ -239,7 +244,8 @@ void NearCallbackODE(void *_data, dGeomID _o1, dGeomID _o2)
   // param 3 makes sure that we only generate one collision per call
   if(dCollide(ray, other, 1, &contact, sizeof(dContactGeom)) > 0)
   {
-    Eigen::Vector3d contactPoint(contact.pos);
+    Eigen::Vector3d contactPoint(contact.pos[0], contact.pos[1],
+                                 contact.pos[2]);
 
     const double sqrDist = (*data->origin - contactPoint).squaredNorm();
     if(sqrDist > data->curContactDistSqr)
