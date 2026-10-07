@@ -17,6 +17,8 @@
 
 #include "SimulationFeatures.hh"
 
+#include <LinearMath/btTransformUtil.h>
+
 #include <gz/math/eigen3/Conversions.hh>
 
 #include <limits>
@@ -197,6 +199,36 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
+#if BT_BULLET_VERSION >= 307
+  struct KinematicBaseVel
+  {
+    GzMultiBody *body;
+    btVector3 linVel;
+    btVector3 angVel;
+  };
+  std::vector<KinematicBaseVel> kinematicBaseVels;
+
+  // Integrate base transform for kinematic root links that have velocity.
+  for (auto & model : this->models)
+  {
+    if (model.second->body && model.second->body->isLinkKinematic(-1))
+    {
+      const btVector3 linVel = model.second->body->getBaseVel();
+      const btVector3 angVel = model.second->body->getBaseOmega();
+      if (!linVel.isZero() || !angVel.isZero())
+      {
+        btTransform predictedTrans;
+        btTransformUtil::integrateTransform(
+            model.second->body->getBaseWorldTransform(),
+            linVel, angVel, static_cast<btScalar>(stepSize),
+            predictedTrans);
+        model.second->body->SetBaseWorldTransform(predictedTrans);
+        kinematicBaseVels.push_back({model.second->body.get(), linVel, angVel});
+      }
+    }
+  }
+#endif
+
   // Update fixed constraint behavior to weld child to parent.
   // Do this before stepping, i.e. before physics engine tries to solve and
   // enforce the constraint
@@ -252,6 +284,14 @@ void SimulationFeatures::WorldForwardStep(
   // size.
   worldInfo->world->stepSimulation(static_cast<btScalar>(stepSize), 1,
                                    static_cast<btScalar>(stepSize));
+
+#if BT_BULLET_VERSION >= 307
+  for (const auto &entry : kinematicBaseVels)
+  {
+    entry.body->setBaseVel(entry.linVel);
+    entry.body->setBaseOmega(entry.angVel);
+  }
+#endif
 
   // Reset joint velocity target after each step to be consistent with dart's
   // joint velocity command behavior
