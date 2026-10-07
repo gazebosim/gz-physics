@@ -222,7 +222,7 @@ void JointFeatures::SetJointVelocity(
   const Identity &_id, const std::size_t _dof, const double _value)
 {
   GZ_PROFILE("JointFeatures::SetJointVelocity");
-  const auto *joint = this->ReferenceInterface<JointInfo>(_id);
+  auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
   if (!identifier)
     return;
@@ -230,6 +230,8 @@ void JointFeatures::SetJointVelocity(
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
   model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] =
       static_cast<btScalar>(_value);
+  joint->kinematicJointVel = _value;
+  joint->kinematicJointVelCmd = std::nullopt;
   model->body->wakeUp();
 }
 
@@ -427,6 +429,8 @@ void JointFeatures::SetJointVelocityCommand(
   double velocity = std::clamp(_value,
       jointInfo->minVelocity, jointInfo->maxVelocity);
 
+  jointInfo->kinematicJointVel = 0.0;
+  jointInfo->kinematicJointVelCmd = velocity;
   jointInfo->motor->setVelocityTarget(static_cast<btScalar>(velocity));
   modelInfo->body->wakeUp();
 }

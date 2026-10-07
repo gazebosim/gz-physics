@@ -15,6 +15,8 @@
  *
 */
 
+#include <vector>
+
 #include <gz/common/Console.hh>
 #include <gz/common/Profiler.hh>
 #include "KinematicsFeatures.hh"
@@ -24,17 +26,39 @@ namespace physics {
 namespace bullet_featherstone {
 
 
-FrameData3d getNonBaseLinkFrameData(const ModelInfo *_modelInfo,
-                                    const LinkInfo *_linkInfo)
+FrameData3d getNonBaseLinkFrameData(
+    const ModelInfo *_modelInfo,
+    const LinkInfo *_linkInfo,
+    const Eigen::Isometry3d &_poseOffset = Eigen::Isometry3d::Identity())
 {
   GZ_PROFILE("bullet_featherstone::getNonBaseLinkFrameData");
   const auto index = _linkInfo->indexInModel.value();
   FrameData3d data;
-  data.pose = GetWorldTransformOfLink(*_modelInfo, *_linkInfo);
+  data.pose = GetWorldTransformOfLink(*_modelInfo, *_linkInfo) * _poseOffset;
 
-  const auto &link = _modelInfo->body->getLink(index);
-  data.linearVelocity = convert(link.m_absFrameTotVelocity.getLinear());
-  data.angularVelocity = convert(link.m_absFrameTotVelocity.getAngular());
+  const auto &body = *_modelInfo->body;
+  const int numLinks = body.getNumLinks();
+  std::vector<btVector3> localOmega(numLinks + 1);
+  std::vector<btVector3> localVel(numLinks + 1);
+  body.compTreeLinkVelocities(localOmega.data(), localVel.data());
+
+  const Eigen::Vector3d comAngVel =
+      convert(body.localDirToWorld(index, localOmega[index + 1]));
+  const Eigen::Vector3d comLinVel =
+      convert(body.localDirToWorld(index, localVel[index + 1]));
+  const Eigen::Vector3d comWorldPos =
+      convert(body.localPosToWorld(index, btVector3(0, 0, 0)));
+  const Eigen::Vector3d comToFrame = data.pose.translation() - comWorldPos;
+
+  data.angularVelocity = comAngVel;
+  data.linearVelocity = comLinVel + comAngVel.cross(comToFrame);
+
+  const auto &link = body.getLink(index);
+  const Eigen::Vector3d pivotWorldPos =
+      convert(body.localPosToWorld(index, -link.m_dVector));
+  const Eigen::Vector3d pivotToFrame = data.pose.translation() - pivotWorldPos;
+  data.linearAcceleration =
+      comAngVel.cross(comAngVel.cross(pivotToFrame));
   return data;
 }
 
@@ -82,9 +106,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
         // non-base link
         if (linkInfo2->indexInModel.has_value())
         {
-          auto data = getNonBaseLinkFrameData(model, linkInfo2.get());
-          data.pose = data.pose * jointPoseOffset;
-          return data;
+          return getNonBaseLinkFrameData(
+              model, linkInfo2.get(), jointPoseOffset);
         }
       }
     }
@@ -106,9 +129,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
           // non-base link
           if (linkInfo2->indexInModel.has_value())
           {
-            auto data = getNonBaseLinkFrameData(model, linkInfo2.get());
-            data.pose = data.pose * collisionPoseOffset;
-            return data;
+            return getNonBaseLinkFrameData(
+                model, linkInfo2.get(), collisionPoseOffset);
           }
         }
       }
@@ -130,16 +152,19 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   FrameData data;
   if (model && model->body)
   {
-    data.pose = convert(model->body->getBaseWorldTransform())
-        * model->baseInertiaToLinkFrame;
+    const btTransform &baseTf = model->body->getBaseWorldTransform();
+    data.pose = convert(baseTf) * model->baseInertiaToLinkFrame;
     if (isModel)
       data.pose = data.pose * model->rootLinkToModelTf;
     else if (isCollision)
       data.pose = data.pose * collisionPoseOffset;
     else if (isJoint)
       data.pose = data.pose * jointPoseOffset;
-    data.linearVelocity = convert(model->body->getBaseVel());
+    const Eigen::Vector3d comToFrame =
+        data.pose.translation() - convert(baseTf.getOrigin());
     data.angularVelocity = convert(model->body->getBaseOmega());
+    data.linearVelocity = convert(model->body->getBaseVel()) +
+        data.angularVelocity.cross(comToFrame);
   }
   return data;
 }

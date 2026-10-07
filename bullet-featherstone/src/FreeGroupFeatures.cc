@@ -145,7 +145,16 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
 
   if (model)
   {
-    model->body->setBaseOmega(convertVec(_angularVelocity));
+    const btTransform &baseTf = model->body->getBaseWorldTransform();
+    const btTransform linkTf =
+        baseTf * convertTf(model->baseInertiaToLinkFrame);
+    const btVector3 comToLink = linkTf.getOrigin() - baseTf.getOrigin();
+    const btVector3 linkLinVel =
+        model->body->getBaseVel() +
+        model->body->getBaseOmega().cross(comToLink);
+    const btVector3 newOmega = convertVec(_angularVelocity);
+    model->body->setBaseOmega(newOmega);
+    model->body->setBaseVel(linkLinVel - newOmega.cross(comToLink));
     model->body->wakeUp();
   }
 }
@@ -159,7 +168,13 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
   // Set Base Vel
   if (model)
   {
-    model->body->setBaseVel(convertVec(_linearVelocity));
+    const btTransform &baseTf = model->body->getBaseWorldTransform();
+    const btTransform linkTf =
+        baseTf * convertTf(model->baseInertiaToLinkFrame);
+    const btVector3 comToLink = linkTf.getOrigin() - baseTf.getOrigin();
+    const btVector3 omega = model->body->getBaseOmega();
+    model->body->setBaseVel(
+        convertVec(_linearVelocity) - omega.cross(comToLink));
     model->body->wakeUp();
   }
 }

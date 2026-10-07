@@ -238,6 +238,8 @@ struct LinkInfo
   std::unordered_map<std::string, std::size_t> collisionNameToEntityId = {};
   // Link is either static, fixed to world, or has zero dofs
   bool isStaticOrFixed = false;
+  // True if link is in kinematic mode
+  bool isKinematic = false;
   // Cached pose from the previous physics step for performance optimization
   mutable std::optional<math::Pose3d> prevPose = std::nullopt;
 };
@@ -305,6 +307,12 @@ struct JointInfo
   // True if the fixed constraint's child link is welded to parent link as if
   // they are part of the same body.
   bool fixedConstraintWeldChildToParent = false;
+
+  // Desired joint velocity and one-step velocity command for joints whose
+  // child link is kinematic.
+  double kinematicJointVel = 0.0;
+  std::optional<double> kinematicJointVelCmd = std::nullopt;
+  std::shared_ptr<btMultiBodyJointMotor> kinematicMotor = nullptr;
 
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
@@ -437,7 +445,10 @@ inline void makeColliderDynamic(LinkInfo *_linkInfo)
         btBroadphaseProxy::DefaultFilter;
     childProxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
 #if BT_BULLET_VERSION >= 307
-    childCollider->setDynamicType(btCollisionObject::CF_DYNAMIC_OBJECT);
+    int collisionFlags = _linkInfo->isKinematic ?
+        btCollisionObject::CF_KINEMATIC_OBJECT :
+        btCollisionObject::CF_DYNAMIC_OBJECT;
+    childCollider->setDynamicType(collisionFlags);
 #endif
   }
 }

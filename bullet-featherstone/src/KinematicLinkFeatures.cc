@@ -29,17 +29,49 @@ void KinematicLinkFeatures::SetLinkKinematic(
   auto *link = this->ReferenceInterface<LinkInfo>(_id);
   auto *model = this->ReferenceInterface<ModelInfo>(link->model);
 
+  link->isKinematic = _kinematic;
   int collisionFlags = _kinematic ? btCollisionObject::CF_KINEMATIC_OBJECT :
       btCollisionObject::CF_DYNAMIC_OBJECT;
 
   if (link->indexInModel.has_value())
   {
-    model->body->setLinkDynamicType(link->indexInModel.value(), collisionFlags);
+    const int idx = link->indexInModel.value();
+    model->body->setLinkDynamicType(idx, collisionFlags);
+    if (_kinematic)
+    {
+      for (int d = 0; d < model->body->getLink(idx).m_dofCount; ++d)
+      {
+        model->body->getJointVelMultiDof(idx)[d] = 0;
+      }
+      for (auto &jointPair : this->joints)
+      {
+        if (std::size_t(jointPair.second->childLinkID) == std::size_t(_id))
+        {
+          jointPair.second->kinematicJointVel = 0.0;
+          jointPair.second->kinematicJointVelCmd = std::nullopt;
+        }
+      }
+    }
+    else
+    {
+      auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+      for (auto &jointPair : this->joints)
+      {
+        if (std::size_t(jointPair.second->childLinkID) == std::size_t(_id) &&
+            jointPair.second->kinematicMotor)
+        {
+          world->world->removeMultiBodyConstraint(
+              jointPair.second->kinematicMotor.get());
+          jointPair.second->kinematicMotor.reset();
+        }
+      }
+    }
   }
   else
   {
     model->body->setBaseDynamicType(collisionFlags);
   }
+  model->body->wakeUp();
 }
 
 /////////////////////////////////////////////////

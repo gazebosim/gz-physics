@@ -213,19 +213,90 @@ void SimulationFeatures::WorldForwardStep(
   {
     if (model.second->body && model.second->body->isLinkKinematic(-1))
     {
-      const btVector3 linVel = model.second->body->getBaseVel();
-      const btVector3 angVel = model.second->body->getBaseOmega();
+      auto *body = model.second->body.get();
+      const btVector3 linVel = body->getBaseVel();
+      const btVector3 angVel = body->getBaseOmega();
       if (!linVel.isZero() || !angVel.isZero())
       {
-        btTransform predictedTrans;
+        const btTransform baseInertiaToLinkBt =
+            convertTf(model.second->baseInertiaToLinkFrame);
+        const btTransform &baseTf = body->getBaseWorldTransform();
+        const btTransform linkTf = baseTf * baseInertiaToLinkBt;
+        const btVector3 comToLink = linkTf.getOrigin() - baseTf.getOrigin();
+        const btVector3 linkLinVel = linVel + angVel.cross(comToLink);
+
+        btTransform predictedLinkTf;
         btTransformUtil::integrateTransform(
-            model.second->body->getBaseWorldTransform(),
-            linVel, angVel, static_cast<btScalar>(stepSize),
-            predictedTrans);
-        model.second->body->SetBaseWorldTransform(predictedTrans);
-        kinematicBaseVels.push_back({model.second->body.get(), linVel, angVel});
+            linkTf, linkLinVel, angVel, static_cast<btScalar>(stepSize),
+            predictedLinkTf);
+        const btTransform predictedBaseTf =
+            predictedLinkTf * baseInertiaToLinkBt.inverse();
+        const btVector3 newComToLink =
+            predictedLinkTf.getOrigin() - predictedBaseTf.getOrigin();
+        const btVector3 newBaseLinVel = linkLinVel - angVel.cross(newComToLink);
+
+        body->SetBaseWorldTransform(predictedBaseTf);
+        body->setBaseVel(newBaseLinVel);
+        kinematicBaseVels.push_back({body, newBaseLinVel, angVel});
       }
     }
+  }
+
+  struct KinematicJointVel
+  {
+    GzMultiBody *body;
+    int indexInBtModel;
+    btScalar vel;
+  };
+  std::vector<KinematicJointVel> kinematicJointVels;
+
+  // Integrate and lock/control joints whose child link is kinematic.
+  for (auto & joint : this->joints)
+  {
+    const auto *model =
+        this->ReferenceInterface<ModelInfo>(joint.second->model);
+    const auto *identifier =
+        std::get_if<InternalJoint>(&joint.second->identifier);
+    if (!model || !model->body || !identifier)
+      continue;
+
+    const int idx = identifier->indexInBtModel;
+    if (!model->body->isLinkKinematic(idx) ||
+        model->body->getLink(idx).m_dofCount == 0)
+    {
+      continue;
+    }
+
+    const double targetVel = joint.second->kinematicJointVelCmd.value_or(
+        joint.second->kinematicJointVel);
+    joint.second->kinematicJointVelCmd = std::nullopt;
+
+    if (!model->body->isLinkAndAllAncestorsKinematic(idx))
+    {
+      if (!joint.second->kinematicMotor)
+      {
+        joint.second->kinematicMotor = std::make_shared<btMultiBodyJointMotor>(
+            model->body.get(), idx, 0,
+            static_cast<btScalar>(targetVel),
+            static_cast<btScalar>(1e9));
+        worldInfo->world->addMultiBodyConstraint(
+            joint.second->kinematicMotor.get());
+      }
+      joint.second->kinematicMotor->setVelocityTarget(
+          static_cast<btScalar>(targetVel));
+    }
+
+    model->body->getJointVelMultiDof(idx)[0] =
+        static_cast<btScalar>(targetVel);
+    if (std::abs(targetVel) > 0.0)
+    {
+      const btScalar curPos = model->body->GetJointPosForDof(idx, 0);
+      model->body->SetJointPosForDof(
+          idx, 0, curPos + static_cast<btScalar>(targetVel * stepSize));
+      model->body->wakeUp();
+    }
+    kinematicJointVels.push_back(
+        {model->body.get(), idx, static_cast<btScalar>(targetVel)});
   }
 #endif
 
@@ -290,6 +361,11 @@ void SimulationFeatures::WorldForwardStep(
   {
     entry.body->setBaseVel(entry.linVel);
     entry.body->setBaseOmega(entry.angVel);
+    entry.body->wakeUp();
+  }
+  for (const auto &entry : kinematicJointVels)
+  {
+    entry.body->getJointVelMultiDof(entry.indexInBtModel)[0] = entry.vel;
   }
 #endif
 
