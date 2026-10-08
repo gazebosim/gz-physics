@@ -45,6 +45,28 @@ void KinematicLinkFeatures::SetLinkKinematic(
       {
         model->body->getJointVelMultiDof(idx)[d] = 0;
       }
+      for (auto &jointPair : this->joints)
+      {
+        if (std::size_t(jointPair.second->childLinkID) == std::size_t(_id))
+        {
+          jointPair.second->kinematicJointVel = 0.0;
+          jointPair.second->kinematicJointVelCmd = std::nullopt;
+        }
+      }
+    }
+    else
+    {
+      auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+      for (auto &jointPair : this->joints)
+      {
+        if (std::size_t(jointPair.second->childLinkID) == std::size_t(_id) &&
+            jointPair.second->kinematicMotor)
+        {
+          world->world->removeMultiBodyConstraint(
+              jointPair.second->kinematicMotor.get());
+          jointPair.second->kinematicMotor.reset();
+        }
+      }
     }
   }
   else

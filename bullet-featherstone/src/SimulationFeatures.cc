@@ -21,9 +21,11 @@
 
 #include <gz/math/eigen3/Conversions.hh>
 
+#include <cmath>
 #include <limits>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include <gz/common/Profiler.hh>
 
@@ -229,6 +231,89 @@ void SimulationFeatures::WorldForwardStep(
       kinematicBaseVels.push_back({body, linVel, angVel});
     }
   }
+
+  struct KinematicJointVel
+  {
+    GzMultiBody *body;
+    int indexInBtModel;
+    int dofCount;
+    // Velocity of the first dof. All other dofs are held at zero velocity.
+    btScalar vel;
+  };
+  std::vector<KinematicJointVel> kinematicJointVels;
+
+  // Integrate and lock/control joints whose child link is kinematic.
+  for (auto & joint : this->joints)
+  {
+    const auto *model =
+        this->ReferenceInterface<ModelInfo>(joint.second->model);
+    const auto *identifier =
+        std::get_if<InternalJoint>(&joint.second->identifier);
+    if (!model || !model->body || !identifier ||
+        std::size_t(model->world) != std::size_t(_worldID))
+    {
+      continue;
+    }
+
+    const int idx = identifier->indexInBtModel;
+    const int dofCount = model->body->getLink(idx).m_dofCount;
+    if (!model->body->isLinkKinematic(idx) || dofCount == 0)
+    {
+      continue;
+    }
+
+    double targetVel = joint.second->kinematicJointVelCmd.value_or(
+        joint.second->kinematicJointVel);
+    joint.second->kinematicJointVelCmd = std::nullopt;
+
+    if (dofCount == 1)
+    {
+      // Bullet does not integrate the position of kinematic links, so
+      // integrate the joint position here.
+      if (std::abs(targetVel) > 0.0)
+      {
+        const double curPos = model->body->GetJointPosForDof(idx, 0);
+        model->body->SetJointPosForDof(idx, 0,
+            static_cast<btScalar>(curPos + targetVel * stepSize));
+        model->body->wakeUp();
+      }
+
+      if (!model->body->isLinkAndAllAncestorsKinematic(idx))
+      {
+        // Bullet does not lock the joint of a kinematic link that has a
+        // dynamic ancestor, so use a motor to lock or drive the joint.
+        if (!joint.second->kinematicMotor)
+        {
+          joint.second->kinematicMotor =
+              std::make_shared<btMultiBodyJointMotor>(
+                  model->body.get(), idx, 0,
+                  static_cast<btScalar>(targetVel),
+                  static_cast<btScalar>(1e9));
+          worldInfo->world->addMultiBodyConstraint(
+              joint.second->kinematicMotor.get());
+        }
+        joint.second->kinematicMotor->setVelocityTarget(
+            static_cast<btScalar>(targetVel));
+      }
+
+      model->body->getJointVelMultiDof(idx)[0] =
+          static_cast<btScalar>(targetVel);
+    }
+    else
+    {
+      // \todo(iche033) Driving multi-dof kinematic child joints (e.g. ball
+      // joints) is not supported, which matches the dof support of
+      // JointFeatures::SetJointVelocityCommand. Hold the joint at its
+      // current position instead.
+      targetVel = 0.0;
+      for (int d = 0; d < dofCount; ++d)
+      {
+        model->body->getJointVelMultiDof(idx)[d] = btScalar(0);
+      }
+    }
+    kinematicJointVels.push_back({model->body.get(), idx, dofCount,
+        static_cast<btScalar>(targetVel)});
+  }
 #endif
 
   // Update fixed constraint behavior to weld child to parent.
@@ -297,6 +382,18 @@ void SimulationFeatures::WorldForwardStep(
   {
     entry.body->setBaseVel(entry.linVel);
     entry.body->setBaseOmega(entry.angVel);
+  }
+  // Bullet does not reset the joint velocities of kinematic links and the
+  // motor used to lock a kinematic link under a dynamic ancestor leaves small
+  // residuals, so pin the joint velocities to the commanded values.
+  for (const auto &entry : kinematicJointVels)
+  {
+    btScalar *jointVel = entry.body->getJointVelMultiDof(entry.indexInBtModel);
+    jointVel[0] = entry.vel;
+    for (int d = 1; d < entry.dofCount; ++d)
+    {
+      jointVel[d] = btScalar(0);
+    }
   }
 #endif
 
