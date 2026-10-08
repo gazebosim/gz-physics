@@ -17,6 +17,8 @@
 
 #include "SimulationFeatures.hh"
 
+#include <LinearMath/btTransformUtil.h>
+
 #include <gz/math/eigen3/Conversions.hh>
 
 #include <limits>
@@ -197,6 +199,53 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
+<<<<<<< HEAD
+=======
+#if BT_BULLET_VERSION >= 307
+  struct KinematicBaseVel
+  {
+    GzMultiBody *body;
+    btVector3 linVel;
+    btVector3 angVel;
+  };
+  std::vector<KinematicBaseVel> kinematicBaseVels;
+
+  // Integrate base transform for kinematic root links that have velocity.
+  for (int i = 0; i < worldInfo->world->getNumMultibodies(); ++i)
+  {
+    // All multibodies are created as GzMultiBody in SDFFeatures
+    auto *body = static_cast<GzMultiBody *>(worldInfo->world->getMultiBody(i));
+    if (!body || !body->isBaseKinematic())
+      continue;
+
+    const btVector3 linVel = body->getBaseVel();
+    const btVector3 angVel = body->getBaseOmega();
+    if (!linVel.isZero() || !angVel.isZero())
+    {
+      btTransform predictedTrans;
+      btTransformUtil::integrateTransform(
+          body->getBaseWorldTransform(),
+          linVel, angVel, static_cast<btScalar>(stepSize),
+          predictedTrans);
+      body->SetBaseWorldTransform(predictedTrans);
+      kinematicBaseVels.push_back({body, linVel, angVel});
+    }
+  }
+#endif
+
+  // Update fixed constraint behavior to weld child to parent.
+  // Do this before stepping, i.e. before physics engine tries to solve and
+  // enforce the constraint
+  for (auto & joint : this->joints)
+  {
+    if (joint.second->fixedConstraint &&
+        joint.second->fixedConstraintWeldChildToParent)
+    {
+      enforceFixedConstraint(joint.second->fixedConstraint.get());
+    }
+  }
+
+>>>>>>> 4e2af8c (Implement kinematic velocity commands in bullet-featherstone (#1105))
   // Bullet updates collision transforms *after* forward integration. But in
   // some case (e.g. if joint positions were updated), collision transforms may
   // need to be manually updated before stepping the Bullet simulation.
@@ -240,6 +289,19 @@ void SimulationFeatures::WorldForwardStep(
   // size.
   worldInfo->world->stepSimulation(static_cast<btScalar>(stepSize), 1,
                                    static_cast<btScalar>(stepSize));
+
+#if BT_BULLET_VERSION >= 307
+  // In Featherstone's spatial algebra, setting the base spatial acceleration
+  // to zero (for a kinematic base) yields a classical world-frame linear
+  // acceleration of (omega x v), which Bullet adds to m_realBuf[3..5] each
+  // step in computeAccelerationsArticulatedBodyAlgorithmMultiDof. Restore the
+  // world-frame base velocities so they remain constant in the world frame.
+  for (const auto &entry : kinematicBaseVels)
+  {
+    entry.body->setBaseVel(entry.linVel);
+    entry.body->setBaseOmega(entry.angVel);
+  }
+#endif
 
   // Reset joint velocity target after each step to be consistent with dart's
   // joint velocity command behavior
