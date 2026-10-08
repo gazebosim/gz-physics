@@ -21,6 +21,7 @@
 
 #include <gz/math/eigen3/Conversions.hh>
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -239,13 +240,27 @@ std::optional<KinematicJointVel> updateKinematicJoint(
   if (dofCount == 1)
   {
     // Bullet does not integrate the position of kinematic links, so
-    // integrate the joint position here.
-    if (std::abs(targetVel) > 0.0)
+    // integrate the joint position here. The joint stops at its position
+    // limits instead of moving further into them.
+    if (std::abs(targetVel) > 0.0 && _stepSize > 0.0)
     {
       const double curPos = _body->GetJointPosForDof(idx, 0);
-      _body->SetJointPosForDof(idx, 0,
-          static_cast<btScalar>(curPos + targetVel * _stepSize));
-      _body->wakeUp();
+      double newPos = curPos + targetVel * _stepSize;
+      if (targetVel > 0.0 && newPos > _joint->axisUpper)
+      {
+        newPos = std::max(curPos, _joint->axisUpper);
+        targetVel = (newPos - curPos) / _stepSize;
+      }
+      else if (targetVel < 0.0 && newPos < _joint->axisLower)
+      {
+        newPos = std::min(curPos, _joint->axisLower);
+        targetVel = (newPos - curPos) / _stepSize;
+      }
+      if (std::abs(targetVel) > 0.0)
+      {
+        _body->SetJointPosForDof(idx, 0, static_cast<btScalar>(newPos));
+        _body->wakeUp();
+      }
     }
 
     if (!_body->isLinkAndAllAncestorsKinematic(idx))
