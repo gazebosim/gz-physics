@@ -29,6 +29,7 @@ void KinematicLinkFeatures::SetLinkKinematic(
   auto *link = this->ReferenceInterface<LinkInfo>(_id);
   auto *model = this->ReferenceInterface<ModelInfo>(link->model);
 
+  link->isKinematic = _kinematic;
   int collisionFlags = _kinematic ? btCollisionObject::CF_KINEMATIC_OBJECT :
       btCollisionObject::CF_DYNAMIC_OBJECT;
 
@@ -73,6 +74,10 @@ void KinematicLinkFeatures::SetLinkKinematic(
   {
     model->body->setBaseDynamicType(collisionFlags);
   }
+  // Changing the dynamic type does not wake up a sleeping body in bullet, so
+  // a body that fell asleep while kinematic would otherwise not start moving
+  // when it is made dynamic.
+  model->body->wakeUp();
 }
 
 /////////////////////////////////////////////////
