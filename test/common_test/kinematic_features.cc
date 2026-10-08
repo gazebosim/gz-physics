@@ -425,7 +425,7 @@ TEST_F(SetKinematicTestFeaturesList, SetKinematic)
     EXPECT_NEAR(expectedPosZ + cmdLinVel.Z() * time,
                 frameData.pose.translation().z(), 1e-2);
     const gz::math::Quaterniond actualRot =
-        gz::math::eigen3::convert(Eigen::Quaterniond(frameData.pose.linear()));
+        gz::math::eigen3::convert(frameData.pose).Rot();
     EXPECT_NEAR(0.0, actualRot.Roll(), 1e-2);
     EXPECT_NEAR(0.0, actualRot.Pitch(), 1e-2);
     EXPECT_NEAR(cmdAngVel.Z() * time, actualRot.Yaw(), 1e-2);

@@ -209,22 +209,24 @@ void SimulationFeatures::WorldForwardStep(
   std::vector<KinematicBaseVel> kinematicBaseVels;
 
   // Integrate base transform for kinematic root links that have velocity.
-  for (auto & model : this->models)
+  for (int i = 0; i < worldInfo->world->getNumMultibodies(); ++i)
   {
-    if (model.second->body && model.second->body->isLinkKinematic(-1))
+    // All multibodies are created as GzMultiBody in SDFFeatures
+    auto *body = static_cast<GzMultiBody *>(worldInfo->world->getMultiBody(i));
+    if (!body || !body->isBaseKinematic())
+      continue;
+
+    const btVector3 linVel = body->getBaseVel();
+    const btVector3 angVel = body->getBaseOmega();
+    if (!linVel.isZero() || !angVel.isZero())
     {
-      const btVector3 linVel = model.second->body->getBaseVel();
-      const btVector3 angVel = model.second->body->getBaseOmega();
-      if (!linVel.isZero() || !angVel.isZero())
-      {
-        btTransform predictedTrans;
-        btTransformUtil::integrateTransform(
-            model.second->body->getBaseWorldTransform(),
-            linVel, angVel, static_cast<btScalar>(stepSize),
-            predictedTrans);
-        model.second->body->SetBaseWorldTransform(predictedTrans);
-        kinematicBaseVels.push_back({model.second->body.get(), linVel, angVel});
-      }
+      btTransform predictedTrans;
+      btTransformUtil::integrateTransform(
+          body->getBaseWorldTransform(),
+          linVel, angVel, static_cast<btScalar>(stepSize),
+          predictedTrans);
+      body->SetBaseWorldTransform(predictedTrans);
+      kinematicBaseVels.push_back({body, linVel, angVel});
     }
   }
 #endif
@@ -286,6 +288,11 @@ void SimulationFeatures::WorldForwardStep(
                                    static_cast<btScalar>(stepSize));
 
 #if BT_BULLET_VERSION >= 307
+  // In Featherstone's spatial algebra, setting the base spatial acceleration
+  // to zero (for a kinematic base) yields a classical world-frame linear
+  // acceleration of (omega x v), which Bullet adds to m_realBuf[3..5] each
+  // step in computeAccelerationsArticulatedBodyAlgorithmMultiDof. Restore the
+  // world-frame base velocities so they remain constant in the world frame.
   for (const auto &entry : kinematicBaseVels)
   {
     entry.body->setBaseVel(entry.linVel);
