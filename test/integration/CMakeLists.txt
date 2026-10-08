@@ -1,6 +1,6 @@
 gz_get_sources(tests)
 
-if (NOT DART_FOUND)
+if (NOT DART_FOUND OR NOT DART_utils-urdf_FOUND)
   list(REMOVE_ITEM tests DoublePendulum.cc)
 endif()
 
@@ -28,7 +28,7 @@ if (BUILD_TESTING)
         MockEntities
         MockFrames
         MockJoints)
-    if (DART_FOUND)
+    if (DART_FOUND AND DART_utils-urdf_FOUND)
       list(APPEND mock_plugins MockDoublePendulum)
     endif()
 
