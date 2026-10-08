@@ -950,6 +950,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     if (linkSdf->Kinematic())
     {
       auto *linkInfo = this->ReferenceInterface<LinkInfo>(linkID);
+      linkInfo->isKinematic = true;
       int indexInModel = linkInfo->indexInModel.value_or(-1);
       model->body->setLinkDynamicType(indexInModel,
           btCollisionObject::CF_KINEMATIC_OBJECT);
