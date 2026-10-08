@@ -356,13 +356,36 @@ void SimulationFeatures::WorldForwardStep(
     const btVector3 angVel = body->getBaseOmega();
     if (!linVel.isZero() || !angVel.isZero())
     {
-      btTransform predictedTrans;
+      // The base transform is the center of mass frame of the root link
+      // while the velocity of a free group is the velocity of the root link
+      // frame. Integrate the root link frame so that it moves with the
+      // requested velocity even when it is offset from the center of mass,
+      // and derive the center of mass velocity at the new pose from it.
+      // btMultiBody user index stores the gz-physics model root link id
+      const std::size_t rootID =
+          static_cast<std::size_t>(body->getUserIndex());
+      const auto *model = this->ReferenceInterface<ModelInfo>(
+          this->links.at(rootID)->model);
+      const btTransform baseInertiaToLinkBt =
+          convertTf(model->baseInertiaToLinkFrame);
+      const btTransform &baseTf = body->getBaseWorldTransform();
+      const btTransform linkTf = baseTf * baseInertiaToLinkBt;
+      const btVector3 comToLink = linkTf.getOrigin() - baseTf.getOrigin();
+      const btVector3 linkLinVel = linVel + angVel.cross(comToLink);
+
+      btTransform predictedLinkTf;
       btTransformUtil::integrateTransform(
-          body->getBaseWorldTransform(),
-          linVel, angVel, static_cast<btScalar>(stepSize),
-          predictedTrans);
-      body->SetBaseWorldTransform(predictedTrans);
-      kinematicBaseVels.push_back({body, linVel, angVel});
+          linkTf, linkLinVel, angVel, static_cast<btScalar>(stepSize),
+          predictedLinkTf);
+      const btTransform predictedBaseTf =
+          predictedLinkTf * baseInertiaToLinkBt.inverse();
+      const btVector3 newComToLink =
+          predictedLinkTf.getOrigin() - predictedBaseTf.getOrigin();
+      const btVector3 newBaseLinVel = linkLinVel - angVel.cross(newComToLink);
+
+      body->SetBaseWorldTransform(predictedBaseTf);
+      body->setBaseVel(newBaseLinVel);
+      kinematicBaseVels.push_back({body, newBaseLinVel, angVel});
     }
   }
 
@@ -450,6 +473,10 @@ void SimulationFeatures::WorldForwardStep(
   {
     entry.body->setBaseVel(entry.linVel);
     entry.body->setBaseOmega(entry.angVel);
+    // A kinematic base moving slower than bullet's sleep threshold would be
+    // put to sleep after the sleep timeout even though it is moving, which
+    // would freeze the dynamic links attached to it.
+    entry.body->wakeUp();
   }
   // Pin the joint velocities of kinematic child joints to the commanded
   // values.
