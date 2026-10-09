@@ -184,6 +184,12 @@ struct ModelInfo
   /// constraints.
   std::unordered_set<std::size_t> external_constraints;
 
+  /// \brief Buffers for btMultiBody::compTreeLinkVelocities, sized to the
+  /// number of links + 1. Kept here so that link velocity queries, which may
+  /// happen for every link at every step, do not allocate.
+  mutable std::vector<btVector3> linkOmega;
+  mutable std::vector<btVector3> linkVel;
+
   ModelInfo(
     std::string _name,
     Identity _world,
