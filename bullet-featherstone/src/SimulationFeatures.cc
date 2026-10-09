@@ -23,6 +23,7 @@
 
 #include <cmath>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <unordered_map>
 #include <utility>
