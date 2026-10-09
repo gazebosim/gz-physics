@@ -980,6 +980,103 @@ TEST_F(KinematicJointTestFeaturesList, DynamicParentKinematicChildCommands)
 }
 
 /////////////////////////////////////////////////
+TEST_F(KinematicJointTestFeaturesList, DynamicParentKinematicChildReaction)
+{
+  // The dynamic slider has to react to the kinematic arm being driven. The
+  // slider joint has no friction and gravity is perpendicular to it, so the
+  // momentum of slider and arm along the slider axis is conserved:
+  //   m_slider * v_slider + m_arm * (v_slider - 0.5 * sin(q) * qdot) = P
+  // With both masses equal to 1 kg and P = 0 when starting from rest,
+  //   v_slider = 0.25 * sin(q) * qdot
+  // The test also covers that a joint velocity set once persists, that a
+  // velocity command followed by SetVelocity does not disturb the slider and
+  // that a nan velocity is rejected.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<KinematicJointFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, kDynamicParentKinematicChildSdf);
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto sliderJoint = model->GetJoint("slider_joint");
+    ASSERT_NE(nullptr, sliderJoint);
+    auto armJoint = model->GetJoint("arm_joint");
+    ASSERT_NE(nullptr, armJoint);
+
+    // Slider velocity expected from the momentum balance
+    auto expectedSliderVel = [&](double _qdot)
+    {
+      return 0.25 * std::sin(armJoint->GetPosition(0)) * _qdot;
+    };
+    const double velTol = 5e-3;
+
+    // 1. A joint velocity set once persists and the slider follows the
+    // momentum balance while the arm turns. The arm starts at q = 0 where the
+    // arm velocity has no component along the slider axis, so setting the
+    // velocity directly does not inject momentum.
+    armJoint->SetVelocity(0, 1.0);
+    StepKinematicWorld(world, 250);
+    EXPECT_NEAR(0.25, armJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(expectedSliderVel(1.0), sliderJoint->GetVelocity(0), velTol);
+    StepKinematicWorld(world, 250);
+    EXPECT_NEAR(0.5, armJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_LT(0.1, sliderJoint->GetVelocity(0));
+    EXPECT_NEAR(expectedSliderVel(1.0), sliderJoint->GetVelocity(0), velTol);
+
+    // 2. Sudden stop through a velocity command. The arm stops within one
+    // step and the reaction brings the slider to rest. The command replaces
+    // the persistent velocity, so the arm stays locked afterwards.
+    const double qStop = armJoint->GetPosition(0);
+    armJoint->SetVelocityCommand(0, 0.0);
+    StepKinematicWorld(world, 1);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), velTol);
+    StepKinematicWorld(world, 100);
+    EXPECT_NEAR(qStop, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), velTol);
+
+    // 3. Sudden start through a velocity command. The arm reaches the
+    // commanded velocity within one step and the slider reacts immediately.
+    armJoint->SetVelocityCommand(0, 1.0);
+    StepKinematicWorld(world, 1);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_LT(0.1, sliderJoint->GetVelocity(0));
+    EXPECT_NEAR(expectedSliderVel(1.0), sliderJoint->GetVelocity(0), velTol);
+
+    // 4. Velocity command followed by SetVelocity with the same velocity.
+    // Both have to drive the same joint motor; conflicting motors would push
+    // the slider with a large spurious force.
+    armJoint->SetVelocity(0, 1.0);
+    StepKinematicWorld(world, 200);
+    EXPECT_NEAR(qStop + 0.201, armJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(expectedSliderVel(1.0), sliderJoint->GetVelocity(0), velTol);
+
+    // 5. A nan joint velocity is ignored.
+    armJoint->SetVelocity(0, std::nan(""));
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    StepKinematicWorld(world, 1);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(expectedSliderVel(1.0), sliderJoint->GetVelocity(0), velTol);
+  }
+}
+
+/////////////////////////////////////////////////
 TEST_F(KinematicJointTestFeaturesList, KinematicLinksPrismaticJointCommands)
 {
   // Two kinematic links connected by a vertical prismatic joint. Gravity acts

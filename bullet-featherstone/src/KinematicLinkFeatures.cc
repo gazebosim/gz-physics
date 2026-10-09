@@ -45,27 +45,27 @@ void KinematicLinkFeatures::SetLinkKinematic(
       {
         model->body->getJointVelMultiDof(idx)[d] = 0;
       }
-      for (auto &jointPair : this->joints)
-      {
-        if (std::size_t(jointPair.second->childLinkID) == std::size_t(_id))
-        {
-          jointPair.second->kinematicJointVel = 0.0;
-          jointPair.second->kinematicJointVelCmd = std::nullopt;
-        }
-      }
     }
-    else
+    auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+    for (auto &jointPair : this->joints)
     {
-      auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-      for (auto &jointPair : this->joints)
+      auto &joint = *jointPair.second;
+      if (std::size_t(joint.childLinkID) != std::size_t(_id))
+        continue;
+
+      if (_kinematic)
       {
-        if (std::size_t(jointPair.second->childLinkID) == std::size_t(_id) &&
-            jointPair.second->kinematicMotor)
-        {
-          world->world->removeMultiBodyConstraint(
-              jointPair.second->kinematicMotor.get());
-          jointPair.second->kinematicMotor.reset();
-        }
+        joint.kinematicJointVel = 0.0;
+        joint.kinematicJointVelCmd = std::nullopt;
+      }
+      else if (joint.motor)
+      {
+        // WorldForwardStep may have turned the joint motor into the lock of
+        // the kinematic link, with an unlimited impulse. Remove it so that
+        // the dynamic link moves freely. The next velocity command recreates
+        // it with the joint effort limit.
+        world->world->removeMultiBodyConstraint(joint.motor.get());
+        joint.motor.reset();
       }
     }
   }

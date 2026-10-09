@@ -186,6 +186,15 @@ void clearCollisionCache(btMultiBodyDynamicsWorld *_world)
 }
 
 #if BT_BULLET_VERSION >= 307
+/// \brief Velocity of a kinematic base that needs to be restored after a
+/// step.
+struct KinematicBaseVel
+{
+  GzMultiBody *body;
+  btVector3 linVel;
+  btVector3 angVel;
+};
+
 /// \brief Joint velocity of a kinematic child joint that needs to be
 /// restored after a step.
 struct KinematicJointVel
@@ -204,13 +213,33 @@ struct KinematicJointVel
   btScalar vel;
 };
 
+/// \brief Max impulse of the motor that locks or drives the joint of a
+/// kinematic link under a dynamic ancestor. Effectively unlimited so that the
+/// joint follows the commanded velocity exactly.
+constexpr btScalar kKinematicJointMotorMaxImpulse = 1e9;
+
+/////////////////////////////////////////////////
+/// \brief Set the velocity of the first dof of a joint and zero the velocity
+/// of its other dofs.
+void setKinematicJointVel(GzMultiBody *_body, int _indexInBtModel,
+    int _dofCount, btScalar _vel)
+{
+  btScalar *jointVel = _body->getJointVelMultiDof(_indexInBtModel);
+  jointVel[0] = _vel;
+  for (int d = 1; d < _dofCount; ++d)
+  {
+    jointVel[d] = btScalar(0);
+  }
+}
+
 /////////////////////////////////////////////////
 /// \brief Integrate and lock / drive a joint whose child link is kinematic.
 /// Bullet does not integrate the position of kinematic links and does not
 /// lock the joint of a kinematic link that has a dynamic ancestor, so the
 /// joint position is integrated here from the joint velocity (or one-step
-/// velocity command) and a motor is used to lock or drive the joint when the
-/// link has a dynamic ancestor. Must be called before stepping the world.
+/// velocity command) and the joint motor is used to lock or drive the joint
+/// when the link has a dynamic ancestor. Must be called before stepping the
+/// world.
 /// \param[in] _world Bullet world the multibody belongs to.
 /// \param[in] _joint Joint to update.
 /// \param[in] _body Multibody the joint belongs to.
@@ -222,7 +251,6 @@ std::optional<KinematicJointVel> updateKinematicJoint(
     btMultiBodyDynamicsWorld *_world, JointInfo *_joint, GzMultiBody *_body,
     double _stepSize)
 {
-  GZ_PROFILE("bullet_featherstone::updateKinematicJoint");
   const auto *identifier = std::get_if<InternalJoint>(&_joint->identifier);
   if (!identifier)
     return std::nullopt;
@@ -251,19 +279,41 @@ std::optional<KinematicJointVel> updateKinematicJoint(
     if (!_body->isLinkAndAllAncestorsKinematic(idx))
     {
       // Bullet does not lock the joint of a kinematic link that has a
-      // dynamic ancestor, so use a motor to lock or drive the joint.
-      if (!_joint->kinematicMotor)
+      // dynamic ancestor, so use the joint motor to lock or drive the joint.
+      // The joint velocity is deliberately not set here: the motor changes it
+      // during the step so that the dynamic ancestor feels the reaction of a
+      // change in the commanded velocity. The same motor is used by
+      // JointFeatures::SetJointVelocityCommand, which only records the
+      // command while the link is kinematic.
+      if (!_joint->motor)
       {
-        _joint->kinematicMotor = std::make_shared<btMultiBodyJointMotor>(
+        _joint->motor = std::make_shared<btMultiBodyJointMotor>(
             _body, idx, 0, static_cast<btScalar>(targetVel),
-            static_cast<btScalar>(1e9));
-        _world->addMultiBodyConstraint(_joint->kinematicMotor.get());
+            kKinematicJointMotorMaxImpulse);
+        _world->addMultiBodyConstraint(_joint->motor.get());
       }
-      _joint->kinematicMotor->setVelocityTarget(
+      else if (_joint->motor->getMaxAppliedImpulse() <
+          kKinematicJointMotorMaxImpulse)
+      {
+        // Motor created by a velocity command with the joint effort limit.
+        _joint->motor->setMaxAppliedImpulse(kKinematicJointMotorMaxImpulse);
+      }
+      _joint->motor->setVelocityTarget(static_cast<btScalar>(targetVel));
+    }
+    else
+    {
+      // Fully kinematic chain: there are no dynamics, so set the joint
+      // velocity directly. A motor left over from a velocity command or from
+      // the time an ancestor was dynamic has no effect on a fully kinematic
+      // chain, remove it.
+      if (_joint->motor)
+      {
+        _world->removeMultiBodyConstraint(_joint->motor.get());
+        _joint->motor.reset();
+      }
+      setKinematicJointVel(_body, idx, dofCount,
           static_cast<btScalar>(targetVel));
     }
-
-    _body->getJointVelMultiDof(idx)[0] = static_cast<btScalar>(targetVel);
   }
   else
   {
@@ -272,10 +322,7 @@ std::optional<KinematicJointVel> updateKinematicJoint(
     // JointFeatures::SetJointVelocityCommand. Hold the joint at its
     // current position instead.
     targetVel = 0.0;
-    for (int d = 0; d < dofCount; ++d)
-    {
-      _body->getJointVelMultiDof(idx)[d] = btScalar(0);
-    }
+    setKinematicJointVel(_body, idx, dofCount, btScalar(0));
   }
   return KinematicJointVel{_body, idx, dofCount,
       static_cast<btScalar>(targetVel)};
@@ -292,12 +339,8 @@ void restoreKinematicJointVelocities(
 {
   for (const auto &entry : _jointVels)
   {
-    btScalar *jointVel = entry.body->getJointVelMultiDof(entry.indexInBtModel);
-    jointVel[0] = entry.vel;
-    for (int d = 1; d < entry.dofCount; ++d)
-    {
-      jointVel[d] = btScalar(0);
-    }
+    setKinematicJointVel(entry.body, entry.indexInBtModel, entry.dofCount,
+        entry.vel);
   }
 }
 #endif
@@ -321,12 +364,6 @@ void SimulationFeatures::WorldForwardStep(
   }
 
 #if BT_BULLET_VERSION >= 307
-  struct KinematicBaseVel
-  {
-    GzMultiBody *body;
-    btVector3 linVel;
-    btVector3 angVel;
-  };
   std::vector<KinematicBaseVel> kinematicBaseVels;
 
   // Integrate base transform for kinematic root links that have velocity.
@@ -353,19 +390,22 @@ void SimulationFeatures::WorldForwardStep(
 
   // Integrate and lock/control joints whose child link is kinematic.
   std::vector<KinematicJointVel> kinematicJointVels;
-  for (auto & joint : this->joints)
   {
-    const auto *model =
-        this->ReferenceInterface<ModelInfo>(joint.second->model);
-    if (!model || !model->body ||
-        std::size_t(model->world) != std::size_t(_worldID))
+    GZ_PROFILE("bullet_featherstone::updateKinematicJoints");
+    for (auto & joint : this->joints)
     {
-      continue;
+      const auto *model =
+          this->ReferenceInterface<ModelInfo>(joint.second->model);
+      if (!model || !model->body ||
+          std::size_t(model->world) != std::size_t(_worldID))
+      {
+        continue;
+      }
+      const auto jointVel = updateKinematicJoint(worldInfo->world.get(),
+          joint.second.get(), model->body.get(), stepSize);
+      if (jointVel.has_value())
+        kinematicJointVels.push_back(*jointVel);
     }
-    const auto jointVel = updateKinematicJoint(worldInfo->world.get(),
-        joint.second.get(), model->body.get(), stepSize);
-    if (jointVel.has_value())
-      kinematicJointVels.push_back(*jointVel);
   }
 #endif
 

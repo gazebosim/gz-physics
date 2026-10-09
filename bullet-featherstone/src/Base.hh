@@ -312,12 +312,16 @@ struct JointInfo
   // they are part of the same body.
   bool fixedConstraintWeldChildToParent = false;
 
-  // Desired joint velocity and one-step velocity command for joints whose
-  // child link is kinematic.
+  // Joint velocity and one-step velocity command of the first dof of a joint
+  // whose child link is kinematic. The velocity persists until it is set
+  // again, the command is consumed by the next step. Only the first dof can
+  // be driven.
   double kinematicJointVel = 0.0;
   std::optional<double> kinematicJointVelCmd = std::nullopt;
-  std::shared_ptr<btMultiBodyJointMotor> kinematicMotor = nullptr;
 
+  // Velocity motor of the first dof. Created by SetJointVelocityCommand with
+  // the joint effort limit, or by WorldForwardStep with an unlimited impulse
+  // to lock / drive the joint of a kinematic link under a dynamic ancestor.
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
   std::shared_ptr<btMultiBodyFixedConstraint> fixedConstraint = nullptr;
@@ -665,10 +669,6 @@ class Base : public Implements3d<FeatureList<Feature>>
       if (joint->motor)
       {
         world->world->removeMultiBodyConstraint(joint->motor.get());
-      }
-      if (joint->kinematicMotor)
-      {
-        world->world->removeMultiBodyConstraint(joint->kinematicMotor.get());
       }
       if (joint->fixedConstraint)
       {
