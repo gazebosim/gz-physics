@@ -34,7 +34,18 @@ void KinematicLinkFeatures::SetLinkKinematic(
 
   if (link->indexInModel.has_value())
   {
-    model->body->setLinkDynamicType(link->indexInModel.value(), collisionFlags);
+    const int idx = link->indexInModel.value();
+    model->body->setLinkDynamicType(idx, collisionFlags);
+    if (_kinematic)
+    {
+      // Bullet stops integrating the joint position of a kinematic link but
+      // keeps its joint velocity. Zero the velocity so that the link, which
+      // no longer moves, does not report a stale velocity.
+      for (int d = 0; d < model->body->getLink(idx).m_dofCount; ++d)
+      {
+        model->body->getJointVelMultiDof(idx)[d] = 0;
+      }
+    }
   }
   else
   {

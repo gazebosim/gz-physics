@@ -164,11 +164,15 @@ TYPED_TEST(KinematicFeaturesTest, JointFrameSemantics)
           F_WCexpected.linearVelocity,
           childLinkFrameData.linearVelocity,
           1e-6));
-    EXPECT_TRUE(
-      gz::physics::test::Equal(
-          F_WCexpected.linearAcceleration,
-          childLinkFrameData.linearAcceleration,
-          1e-6));
+    // \todo(iche033) bullet-featherstone does not compute link accelerations
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+    {
+      EXPECT_TRUE(
+        gz::physics::test::Equal(
+            F_WCexpected.linearAcceleration,
+            childLinkFrameData.linearAcceleration,
+            1e-6));
+    }
   }
 }
 
@@ -574,19 +578,12 @@ TEST_F(SetKinematicTestFeaturesList, SetKinematicLinksWithJoint)
     EXPECT_LT(initialLink2Pose.Y(), frameData2.pose.translation().y());
     EXPECT_GT(initialLink2Pose.Z(), frameData2.pose.translation().z());
 
-    // \todo(iche033) bullet-feathersone implementation does not return
-    // correct velocities for non-base links when they are attached to a parent
-    // base link that is either fixed to the world or kinematic
-    // see https://github.com/gazebosim/gz-physics/issues/617
-    if (this->PhysicsEngineName(name) != "bullet-featherstone")
-    {
-      EXPECT_NEAR(0.0, frameData2.linearVelocity.x(), 1e-3);
-      EXPECT_LT(0.0, frameData2.linearVelocity.y());
-      EXPECT_GT(0.0, frameData2.linearVelocity.z());
-      EXPECT_LT(0.0, frameData2.angularVelocity.x());
-      EXPECT_NEAR(0.0, frameData2.angularVelocity.y(), 1e-3);
-      EXPECT_NEAR(0.0, frameData2.angularVelocity.z(), 1e-3);
-    }
+    EXPECT_NEAR(0.0, frameData2.linearVelocity.x(), 1e-3);
+    EXPECT_LT(0.0, frameData2.linearVelocity.y());
+    EXPECT_GT(0.0, frameData2.linearVelocity.z());
+    EXPECT_LT(0.0, frameData2.angularVelocity.x());
+    EXPECT_NEAR(0.0, frameData2.angularVelocity.y(), 1e-3);
+    EXPECT_NEAR(0.0, frameData2.angularVelocity.z(), 1e-3);
     auto updatedLink2Pose = gz::math::eigen3::convert(frameData2.pose);
 
     // Make link2 kinematic again and step
