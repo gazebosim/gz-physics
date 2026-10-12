@@ -878,6 +878,10 @@ struct ModelKinematicStructure
           break;
         }
         case ::sdf::GeometryType::HEIGHTMAP:
+          // The caller loads the heightmap data and attaches it with
+          // AttachHeightmapShape after the model is constructed, as gz-sim
+          // does.
+          continue;
         case ::sdf::GeometryType::POLYLINE:
         default:
           gzwarn << "Shape type " << static_cast<int>(shape->Type())

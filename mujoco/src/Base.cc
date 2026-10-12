@@ -181,9 +181,17 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
                         _worldInfo.mjDataObj);
   _worldInfo.specDirty = false;
 
-  if (rc != 0) {
+  auto compileFailed = [&_worldInfo]()
+  {
     gzerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj) << "\n";
+    // mj_recompile has freed the model and data.
+    _worldInfo.mjModelObj = nullptr;
+    _worldInfo.mjDataObj = nullptr;
     return false;
+  };
+
+  if (rc != 0) {
+    return compileFailed();
   }
 
   // Broadphase collision buffers scale quadratically with nbody (~6*nbody^2
@@ -202,8 +210,7 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
                       _worldInfo.mjDataObj);
     if (rc != 0)
     {
-      gzerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj) << "\n";
-      return false;
+      return compileFailed();
     }
   }
 
