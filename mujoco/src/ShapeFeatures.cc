@@ -20,8 +20,13 @@
 #include <mujoco/mujoco.h>
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <memory>
+#include <utility>
 #include <gz/common/Console.hh>
 #include <gz/math/eigen3/Conversions.hh>
+#include <gz/physics/heightmap/detail/SampleHeightmap.hh>
 
 namespace gz {
 namespace physics {
@@ -221,6 +226,25 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
       return *shapeInfo->cachedAABB;
       break;
     }
+    case mjGEOM_HFIELD:
+    {
+      const int hfieldId = m->geom_dataid[geomId];
+      if (hfieldId < 0 || hfieldId >= m->nhfield)
+      {
+        gzerr << "Invalid hfieldId " << hfieldId << " for geom "
+              << geomId << std::endl;
+        break;
+      }
+      // (radius_x, radius_y, elevation_z, base_z). The base box extends
+      // below the lowest point, which is at heightmapMinHeight in the shape
+      // frame.
+      const mjtNum *hsize = m->hfield_size +
+                            static_cast<ptrdiff_t>(4) * hfieldId;
+      const double z0 = shapeInfo->heightmapMinHeight;
+      min = Vector3d(-hsize[0], -hsize[1], z0 - hsize[3]);
+      max = Vector3d(hsize[0], hsize[1], z0 + hsize[2]);
+      break;
+    }
     default:
     {
       gzwarn << "Bounding box for geom type " << geomType
@@ -230,6 +254,152 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
   }
 
   return AlignedBox3d(min, max);
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::CastToHeightmapShape(const Identity &_shapeID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_shapeID);
+  if (shapeInfo && shapeInfo->hfield)
+  {
+    return _shapeID;
+  }
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+LinearVector3d ShapeFeatures::GetHeightmapShapeSize(
+    const Identity &_heightmapID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<ShapeInfo>(_heightmapID);
+  if (!shapeInfo || !shapeInfo->hfield)
+  {
+    return LinearVector3d::Zero();
+  }
+  const double *size = shapeInfo->hfield->size;
+  return LinearVector3d(2 * size[0], 2 * size[1],
+                        shapeInfo->heightmapHeight);
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::AttachHeightmapShape(
+    const Identity &_linkID,
+    const std::string &_name,
+    const common::HeightmapData &_heightmapData,
+    const Pose3d &_pose,
+    const LinearVector3d &_size,
+    int _subSampling)
+{
+  const auto *linkInfoPtr = this->ReferenceInterface<LinkInfo>(_linkID);
+  const auto modelInfo =
+      linkInfoPtr ? linkInfoPtr->modelInfo.lock() : nullptr;
+  if (!modelInfo || !linkInfoPtr->body || !linkInfoPtr->worldInfo)
+  {
+    gzerr << "Unable to attach heightmap [" << _name << "]: invalid link."
+          << std::endl;
+    return this->GenerateInvalidId();
+  }
+  auto linkInfo = modelInfo->links.at(linkInfoPtr->entityId);
+  WorldInfo *worldInfo = linkInfo->worldInfo;
+
+  // Leave the world as it was if the heightmap can't be attached:
+  // mj_recompile frees the world's model and data when compiling fails, so
+  // reject everything that would make it fail before changing the spec.
+  // Compile pending changes first: once the spec has been compiled,
+  // mjs_findElement only finds compiled elements.
+  if (!this->RecompileSpec(*worldInfo) || !worldInfo->mjModelObj)
+  {
+    gzerr << "Unable to attach heightmap [" << _name << "]: failed to "
+          << "recompile the world." << std::endl;
+    return this->GenerateInvalidId();
+  }
+
+  // MuJoCo only supports height fields on bodies that are welded to the world.
+  const int bodyId = mjs_getId(linkInfo->body->element);
+  if (bodyId < 0 || worldInfo->mjModelObj->body_weldid[bodyId] != 0)
+  {
+    gzerr << "Unable to attach heightmap [" << _name << "] to link ["
+          << linkInfo->name << "], which is not static. MuJoCo only "
+          << "supports heightmaps on static links." << std::endl;
+    return this->GenerateInvalidId();
+  }
+
+  mjSpec *spec = worldInfo->mjSpecObj;
+  const auto *bodyName = mjs_getName(linkInfo->body->element);
+  const std::string geomName =
+      JoinNames(bodyName ? *bodyName : std::string(), _name);
+  const std::string hfieldName = geomName + "::hfield";
+  if (mjs_findElement(spec, mjOBJ_GEOM, geomName.c_str()) ||
+      mjs_findElement(spec, mjOBJ_HFIELD, hfieldName.c_str()))
+  {
+    gzerr << "Unable to attach heightmap [" << _name << "]: the name is "
+          << "taken." << std::endl;
+    return this->GenerateInvalidId();
+  }
+
+  // MuJoCo's row 0 is the -y edge.
+  auto sampled = heightmap::detail::SampleHeightmap(
+      _heightmapData, _size, _subSampling, true);
+  if (!sampled)
+  {
+    gzerr << "Unable to attach heightmap [" << _name << "]: invalid size, "
+          << "heightmap data or too many samples." << std::endl;
+    return this->GenerateInvalidId();
+  }
+  const double minHeight = sampled->minHeight;
+  const double maxHeight = sampled->maxHeight;
+
+  // MuJoCo rescales the data to [0, 1] when it compiles the model, and size[2]
+  // scales it back.
+  mjsHField *hfield = mjs_addHField(spec);
+  mjs_setName(hfield->element, hfieldName.c_str());
+  hfield->nrow = static_cast<int>(sampled->vertSize);
+  hfield->ncol = static_cast<int>(sampled->vertSize);
+  // MuJoCo spaces the samples size / (vertSize - 1) apart, so the height
+  // field spans the full size.
+  hfield->size[0] = _size.x() / 2.0;
+  hfield->size[1] = _size.y() / 2.0;
+  // MuJoCo requires positive sizes: use a placeholder for a flat heightmap,
+  // whose normalized heights are all 0, and keep any other range.
+  const double heightRange = maxHeight - minHeight;
+  hfield->size[2] = heightRange > 0 ? heightRange : 1e-6;
+  // Depth of the solid base below the lowest point.
+  hfield->size[3] = std::max(hfield->size[2], 0.1);
+  *hfield->userdata = std::move(sampled->heights);
+
+  mjsGeom *geom = mjs_addGeom(linkInfo->body, nullptr);
+  geom->type = mjGEOM_HFIELD;
+  mjs_setString(geom->hfieldname, hfieldName.c_str());
+  mjs_setName(geom->element, geomName.c_str());
+  geom->contype = std::numeric_limits<uint16_t>::max();
+  geom->conaffinity = std::numeric_limits<uint16_t>::max();
+  copyPos(Eigen::Vector3d(_pose * Eigen::Vector3d(0, 0, minHeight)), geom->pos);
+  copyQuat(Eigen::Quaterniond(_pose.linear()), geom->quat);
+
+  auto shapeInfo = std::make_shared<ShapeInfo>(this->GetNextEntity(), linkInfo);
+  shapeInfo->worldInfo = worldInfo;
+  shapeInfo->geom = geom;
+  shapeInfo->name = _name;
+  shapeInfo->hfield = hfield;
+  // Like dartsim, report the height range of the sampled terrain, which
+  // hfield->size[2] doesn't hold for a flat heightmap.
+  shapeInfo->heightmapHeight = heightRange;
+  shapeInfo->heightmapMinHeight = minHeight;
+  linkInfo->shapes.AddEntity(shapeInfo->entityId, shapeInfo, geom,
+                             linkInfo->entityId);
+  this->frames[shapeInfo->entityId] =
+      std::make_shared<FrameInfo>(linkInfo->body, _pose, worldInfo);
+
+  // Recompile right away, so that GetShape finds the new geom.
+  worldInfo->specDirty = true;
+  if (!this->RecompileSpec(*worldInfo))
+  {
+    gzerr << "Unable to attach heightmap [" << _name << "]: failed to "
+          << "recompile the world." << std::endl;
+    return this->GenerateInvalidId();
+  }
+
+  return this->GenerateIdentity(shapeInfo->entityId, shapeInfo);
 }
 
 }  // namespace mujoco

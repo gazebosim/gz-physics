@@ -604,6 +604,12 @@ bool EntityManagementFeatures::RemoveModelImpl(const std::size_t _worldID,
     for (const auto &[shapeId, shapeInfo] : linkInfo->shapes.idToObject)
     {
       this->frames.erase(shapeId);
+      // Height field assets are not part of the body, so they would outlive
+      // it and clash with the assets of a model spawned with the same name.
+      if (shapeInfo->hfield)
+      {
+        mjs_delete(worldInfo->mjSpecObj, shapeInfo->hfield->element);
+      }
     }
     this->frames.erase(linkId);
   }
