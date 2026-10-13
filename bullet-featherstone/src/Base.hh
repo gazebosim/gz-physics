@@ -244,7 +244,9 @@ struct LinkInfo
   std::unordered_map<std::string, std::size_t> collisionNameToEntityId = {};
   // Link is either static, fixed to world, or has zero dofs
   bool isStaticOrFixed = false;
-  // True if link is in kinematic mode
+  // True if the link is kinematic, as requested with <kinematic> in SDF or
+  // SetKinematic. The collider of a kinematic link is temporarily static
+  // while the link is welded to a static link (see makeColliderStatic).
   bool isKinematic = false;
   // Cached pose from the previous physics step for performance optimization
   mutable std::optional<math::Pose3d> prevPose = std::nullopt;
@@ -466,7 +468,7 @@ inline void makeColliderDynamic(LinkInfo *_linkInfo)
         btBroadphaseProxy::DefaultFilter;
     childProxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
 #if BT_BULLET_VERSION >= 307
-    int collisionFlags = _linkInfo->isKinematic ?
+    const int collisionFlags = _linkInfo->isKinematic ?
         btCollisionObject::CF_KINEMATIC_OBJECT :
         btCollisionObject::CF_DYNAMIC_OBJECT;
     childCollider->setDynamicType(collisionFlags);
