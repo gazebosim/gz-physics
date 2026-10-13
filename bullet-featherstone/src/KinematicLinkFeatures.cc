@@ -57,6 +57,7 @@ void KinematicLinkFeatures::SetLinkKinematic(
       {
         joint.kinematicJointVel = 0.0;
         joint.kinematicJointVelCmd = std::nullopt;
+        joint.kinematicJointVelPinned = 0.0;
       }
       else if (joint.motor)
       {

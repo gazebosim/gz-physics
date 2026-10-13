@@ -728,6 +728,7 @@ using KinematicJointFeaturesList = gz::physics::FeatureList<
   gz::physics::GetJointFromModel,
   gz::physics::GetBasicJointState,
   gz::physics::SetBasicJointState,
+  gz::physics::SetJointPositionLimitsFeature,
   gz::physics::SetJointVelocityCommandFeature,
   gz::physics::KinematicLink,
   gz::physics::LinkFrameSemantics
@@ -1596,62 +1597,6 @@ TEST_F(KinematicJointTestFeaturesList, KinematicJointLimits)
       </model>
     </sdf>)");
 
-    ConstructModelFromString(world, R"(
-    <sdf version="1.6">
-      <model name="M_dyn">
-        <pose>5 0 1 0 0 0</pose>
-        <link name="anchor">
-          <inertial>
-            <mass>1.0</mass>
-            <inertia>
-              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
-            </inertia>
-          </inertial>
-        </link>
-        <link name="slider">
-          <inertial>
-            <mass>1.0</mass>
-            <inertia>
-              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
-            </inertia>
-          </inertial>
-        </link>
-        <link name="arm">
-          <kinematic>true</kinematic>
-          <pose>0 0.5 0 0 0 0</pose>
-          <inertial>
-            <mass>1.0</mass>
-            <inertia>
-              <ixx>0.084</ixx><iyy>0.0017</iyy><izz>0.084</izz>
-            </inertia>
-          </inertial>
-        </link>
-        <joint name="world_joint" type="fixed">
-          <parent>world</parent>
-          <child>anchor</child>
-        </joint>
-        <joint name="slider_joint" type="prismatic">
-          <parent>anchor</parent>
-          <child>slider</child>
-          <axis>
-            <xyz>0 1 0</xyz>
-          </axis>
-        </joint>
-        <joint name="arm_joint" type="revolute">
-          <pose>0 -0.5 0 0 0 0</pose>
-          <parent>slider</parent>
-          <child>arm</child>
-          <axis>
-            <xyz>1 0 0</xyz>
-            <limit>
-              <lower>-0.4</lower>
-              <upper>0.6</upper>
-            </limit>
-          </axis>
-        </joint>
-      </model>
-    </sdf>)");
-
     // 1. Prismatic joint between kinematic links
     auto kinModel = world->GetModel("M_kin");
     ASSERT_NE(nullptr, kinModel);
@@ -1703,34 +1648,114 @@ TEST_F(KinematicJointTestFeaturesList, KinematicJointLimits)
     EXPECT_NEAR(0.35, joint->GetPosition(0), 1e-3);
     EXPECT_NEAR(-1.0, joint->GetVelocity(0), 1e-3);
 
-    // 2. Revolute joint between a dynamic parent and a kinematic child
-    auto dynModel = world->GetModel("M_dyn");
+    // 2. Revolute joint between a dynamic parent and a kinematic child, with
+    // the limits set at run time. The slider joint has no friction, so the
+    // slider must be at rest whenever the arm is at rest (see
+    // DynamicParentKinematicChildReaction) and must not be pushed by an arm
+    // that cannot move.
+    ConstructModelFromString(world, kDynamicParentKinematicChildSdf);
+    auto dynModel = world->GetModel("M1");
     ASSERT_NE(nullptr, dynModel);
     auto slider = dynModel->GetLink("slider");
     ASSERT_NE(nullptr, slider);
     auto arm = dynModel->GetLink("arm");
     ASSERT_NE(nullptr, arm);
+    auto sliderJoint = dynModel->GetJoint("slider_joint");
+    ASSERT_NE(nullptr, sliderJoint);
     auto armJoint = dynModel->GetJoint("arm_joint");
     ASSERT_NE(nullptr, armJoint);
+    armJoint->SetMinPosition(0, -0.4);
+    armJoint->SetMaxPosition(0, 0.6);
     // The pivot is at the slider link origin and the arm rotates about X.
     auto expectedArmPose = [&](double _q)
     {
       return LinkWorldPose(slider) * gz::math::Pose3d(0, 0, 0, _q, 0, 0) *
           gz::math::Pose3d(0, 0.5, 0, 0, 0, 0);
     };
+    auto armAngVelX = [&]()
+    {
+      return arm->FrameDataRelativeToWorld().angularVelocity.x();
+    };
+    const double sliderVelTol = 5e-3;
 
+    // Drive into the upper limit and stop there
     armJoint->SetVelocity(0, 1.0);
-    StepKinematicWorld(world, 1000);
+    StepKinematicWorld(world, 300);
+    EXPECT_NEAR(0.3, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(1.0, armAngVelX(), 1e-3);
+    StepKinematicWorld(world, 700);
     EXPECT_NEAR(0.6, armJoint->GetPosition(0), 1e-3);
     EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, armAngVelX(), 1e-3);
     EXPECT_TRUE(PoseNear(expectedArmPose(0.6), LinkWorldPose(arm), 1e-3));
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);
 
-    armJoint->SetVelocity(0, -1.0);
-    StepKinematicWorld(world, 1500);
+    // Raising the limit at run time lets the arm continue with the joint
+    // velocity that was set earlier and persists, until it reaches the new
+    // limit.
+    armJoint->SetMaxPosition(0, 0.9);
+    StepKinematicWorld(world, 400);
+    EXPECT_NEAR(0.9, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);
+
+    // Driving into the limit, with a joint velocity set before every step or
+    // with velocity commands, neither moves the arm nor pushes the slider.
+    double sliderPos = sliderJoint->GetPosition(0);
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      armJoint->SetVelocity(0, 1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      armJoint->SetVelocityCommand(0, 1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(0.9, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(sliderPos, sliderJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);
+
+    // A joint placed beyond its limit is not pushed back and cannot be driven
+    // further out, which must not push the slider either, but it can move
+    // back in.
+    armJoint->SetPosition(0, 1.2);
+    sliderPos = sliderJoint->GetPosition(0);
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      armJoint->SetVelocity(0, 1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(1.2, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(sliderPos, sliderJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      armJoint->SetVelocityCommand(0, -1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(1.1, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(-1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(-1.0, armAngVelX(), 1e-3);
+
+    // Drive into the lower limit and stop there
+    for (std::size_t i = 0; i < 1600; ++i)
+    {
+      armJoint->SetVelocityCommand(0, -1.0);
+      StepKinematicWorld(world, 1);
+    }
     EXPECT_NEAR(-0.4, armJoint->GetPosition(0), 1e-3);
     EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, armAngVelX(), 1e-3);
     EXPECT_TRUE(PoseNear(expectedArmPose(-0.4), LinkWorldPose(arm), 1e-3));
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);
 
+    // Moving away from a limit works
     for (std::size_t i = 0; i < 100; ++i)
     {
       armJoint->SetVelocityCommand(0, 1.0);

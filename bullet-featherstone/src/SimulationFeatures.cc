@@ -209,8 +209,8 @@ struct KinematicJointVel
   /// \brief Number of dofs of the joint.
   int dofCount;
 
-  /// \brief Velocity of the first dof. All other dofs are held at zero
-  /// velocity.
+  /// \brief Velocity of the first dof after clamping to the position limits
+  /// of the joint. All other dofs are held at zero velocity.
   btScalar vel;
 };
 
@@ -239,15 +239,17 @@ void setKinematicJointVel(GzMultiBody *_body, int _indexInBtModel,
 /// lock the joint of a kinematic link that has a dynamic ancestor, so the
 /// joint position is integrated here from the joint velocity (or one-step
 /// velocity command) and the joint motor is used to lock or drive the joint
-/// when the link has a dynamic ancestor. Must be called before stepping the
-/// world.
+/// when the link has a dynamic ancestor. The joint stops at its position
+/// limits: the velocity is reduced to what is needed to reach a limit and is
+/// zero while the joint sits at a limit and is driven into it. Must be called
+/// before stepping the world.
 /// \param[in] _world Bullet world the multibody belongs to.
 /// \param[in] _joint Joint to update.
 /// \param[in] _body Multibody the joint belongs to.
 /// \param[in] _stepSize Step size in seconds.
-/// \return Joint velocity to restore after the step with
-/// restoreKinematicJointVelocities, or nullopt if the joint's child link is
-/// not kinematic.
+/// \return Joint velocity, clamped to the position limits, to restore after
+/// the step with restoreKinematicJointVelocities, or nullopt if the joint's
+/// child link is not kinematic.
 std::optional<KinematicJointVel> updateKinematicJoint(
     btMultiBodyDynamicsWorld *_world, JointInfo *_joint, GzMultiBody *_body,
     double _stepSize)
@@ -267,28 +269,38 @@ std::optional<KinematicJointVel> updateKinematicJoint(
 
   if (dofCount == 1)
   {
+    const double curPos = _body->GetJointPosForDof(idx, 0);
+    // The joint velocity was set from outside (SetJointVelocity) if it differs
+    // from the velocity written after the last step.
+    const bool velOverridden = std::abs(
+        _body->getJointVelMultiDof(idx)[0] - _joint->kinematicJointVelPinned)
+        > 0.0;
+
     // Bullet does not integrate the position of kinematic links, so
     // integrate the joint position here. The joint stops at its position
-    // limits instead of moving further into them.
-    if (std::abs(targetVel) > 0.0 && _stepSize > 0.0)
+    // limits instead of moving further into them. A joint that already sits
+    // beyond a limit is not snapped back, but it can move back in.
+    bool clamped = false;
+    if ((targetVel > 0.0 && curPos >= _joint->axisUpper) ||
+        (targetVel < 0.0 && curPos <= _joint->axisLower))
     {
-      const double curPos = _body->GetJointPosForDof(idx, 0);
-      double newPos = curPos + targetVel * _stepSize;
-      if (targetVel > 0.0 && newPos > _joint->axisUpper)
+      // The joint cannot move into a limit it sits at, whatever the step size
+      targetVel = 0.0;
+      clamped = true;
+    }
+    else if (std::abs(targetVel) > 0.0 && _stepSize > 0.0)
+    {
+      const double newPos = curPos + targetVel * _stepSize;
+      const double clampedPos = std::clamp(newPos,
+          std::min(curPos, _joint->axisLower),
+          std::max(curPos, _joint->axisUpper));
+      if (std::abs(clampedPos - newPos) > 0.0)
       {
-        newPos = std::max(curPos, _joint->axisUpper);
-        targetVel = (newPos - curPos) / _stepSize;
+        targetVel = (clampedPos - curPos) / _stepSize;
+        clamped = true;
       }
-      else if (targetVel < 0.0 && newPos < _joint->axisLower)
-      {
-        newPos = std::min(curPos, _joint->axisLower);
-        targetVel = (newPos - curPos) / _stepSize;
-      }
-      if (std::abs(targetVel) > 0.0)
-      {
-        _body->SetJointPosForDof(idx, 0, static_cast<btScalar>(newPos));
-        _body->wakeUp();
-      }
+      _body->SetJointPosForDof(idx, 0, static_cast<btScalar>(clampedPos));
+      _body->wakeUp();
     }
 
     if (!_body->isLinkAndAllAncestorsKinematic(idx))
@@ -297,7 +309,8 @@ std::optional<KinematicJointVel> updateKinematicJoint(
       // dynamic ancestor, so use the joint motor to lock or drive the joint.
       // The joint velocity is deliberately not set here: the motor changes it
       // during the step so that the dynamic ancestor feels the reaction of a
-      // change in the commanded velocity. The same motor is used by
+      // change in the commanded velocity, including a joint that is stopped
+      // by its limit while moving. The same motor is used by
       // JointFeatures::SetJointVelocityCommand, which only records the
       // command while the link is kinematic.
       if (!_joint->motor)
@@ -314,6 +327,16 @@ std::optional<KinematicJointVel> updateKinematicJoint(
         _joint->motor->setMaxAppliedImpulse(kKinematicJointMotorMaxImpulse);
       }
       _joint->motor->setVelocityTarget(static_cast<btScalar>(targetVel));
+
+      if (velOverridden && clamped)
+      {
+        // The joint velocity was set from outside to a value the joint cannot
+        // follow because of its limits. Correct it before the step: the joint
+        // never moved with that velocity, so the motor must not brake it and
+        // push the dynamic ancestor.
+        setKinematicJointVel(_body, idx, dofCount,
+            static_cast<btScalar>(targetVel));
+      }
     }
     else
     {
@@ -329,6 +352,8 @@ std::optional<KinematicJointVel> updateKinematicJoint(
       setKinematicJointVel(_body, idx, dofCount,
           static_cast<btScalar>(targetVel));
     }
+    // restoreKinematicJointVelocities writes this velocity after the step
+    _joint->kinematicJointVelPinned = targetVel;
   }
   else
   {
