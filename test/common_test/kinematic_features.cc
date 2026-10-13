@@ -32,6 +32,7 @@
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/FindFeatures.hh>
 #include <gz/physics/ForwardStep.hh>
+#include <gz/physics/FreeGroup.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/Link.hh>
 #include <gz/physics/RequestEngine.hh>
@@ -272,11 +273,13 @@ TYPED_TEST(KinematicFeaturesTest, LinkFrameSemanticsPose)
 using SetKinematicFeaturesList = gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfModel,
   gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::FindFreeGroupFeature,
   gz::physics::ForwardStep,
   gz::physics::GetLinkFromModel,
   gz::physics::GetModelFromWorld,
   gz::physics::KinematicLink,
-  gz::physics::LinkFrameSemantics
+  gz::physics::LinkFrameSemantics,
+  gz::physics::SetFreeGroupWorldVelocity
 >;
 
 using SetKinematicTestFeaturesList =
@@ -390,17 +393,8 @@ TEST_F(SetKinematicTestFeaturesList, SetKinematic)
       world->Step(output, state, input);
     }
     frameData = link->FrameDataRelativeToWorld();
-    time += 1.0;
-    distZ = 0.5 * gravity * time * time;
+    expectedPosZ += expectedVelZ * time;
 
-    // \todo(iche033) Kinematic links with linear / angular velocities do not
-    // move in bullet-feathersone yet. Bullet will report that the bodies have
-    // velocities but they remain still.
-    // https://github.com/gazebosim/gz-physics/issues/773
-    if (this->PhysicsEngineName(name) != "bullet-featherstone")
-    {
-      expectedPosZ =  initialPose.Pos().Z() + distZ;
-    }
     EXPECT_NEAR(0.0, frameData.pose.translation().x(), 1e-3);
     EXPECT_NEAR(0.0, frameData.pose.translation().y(), 1e-3);
     EXPECT_NEAR(expectedPosZ,
@@ -411,6 +405,32 @@ TEST_F(SetKinematicTestFeaturesList, SetKinematic)
     EXPECT_NEAR(expectedVelZ, frameData.linearVelocity.z(), 1e-2);
     EXPECT_EQ(gz::math::Vector3d::Zero,
               gz::math::eigen3::convert(frameData.angularVelocity));
+
+    // Command linear and angular velocity on the kinematic link
+    auto freeGroup = link->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+    const gz::math::Vector3d cmdLinVel(1.5, -2.0, 0.5);
+    const gz::math::Vector3d cmdAngVel(0.0, 0.0, 1.2);
+    freeGroup->SetWorldLinearVelocity(gz::math::eigen3::convert(cmdLinVel));
+    freeGroup->SetWorldAngularVelocity(gz::math::eigen3::convert(cmdAngVel));
+
+    for (std::size_t i = 0; i < steps; ++i)
+    {
+      world->Step(output, state, input);
+    }
+    frameData = link->FrameDataRelativeToWorld();
+
+    EXPECT_NEAR(cmdLinVel.X() * time, frameData.pose.translation().x(), 1e-2);
+    EXPECT_NEAR(cmdLinVel.Y() * time, frameData.pose.translation().y(), 1e-2);
+    EXPECT_NEAR(expectedPosZ + cmdLinVel.Z() * time,
+                frameData.pose.translation().z(), 1e-2);
+    const gz::math::Quaterniond actualRot =
+        gz::math::eigen3::convert(frameData.pose).Rot();
+    EXPECT_NEAR(0.0, actualRot.Roll(), 1e-2);
+    EXPECT_NEAR(0.0, actualRot.Pitch(), 1e-2);
+    EXPECT_NEAR(cmdAngVel.Z() * time, actualRot.Yaw(), 1e-2);
+    EXPECT_EQ(cmdLinVel, gz::math::eigen3::convert(frameData.linearVelocity));
+    EXPECT_EQ(cmdAngVel, gz::math::eigen3::convert(frameData.angularVelocity));
   }
 }
 

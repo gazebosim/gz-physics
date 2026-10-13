@@ -37,6 +37,8 @@ void LinkFeatures::AddLinkExternalForceInWorld(
   if (!worldInfo || !worldInfo->mjModelObj || !worldInfo->mjDataObj)
     return;
 
+  this->RecompileSpec(*worldInfo);
+
   int bodyId = mjs_getId(linkInfo->body->element);
   if (bodyId < 0 || bodyId >= worldInfo->mjModelObj->nbody)
     return;
@@ -64,6 +66,8 @@ void LinkFeatures::AddLinkExternalTorqueInWorld(
   auto worldInfo = linkInfo->worldInfo;
   if (!worldInfo || !worldInfo->mjModelObj || !worldInfo->mjDataObj)
     return;
+
+  this->RecompileSpec(*worldInfo);
 
   int bodyId = mjs_getId(linkInfo->body->element);
   if (bodyId < 0 || bodyId >= worldInfo->mjModelObj->nbody)

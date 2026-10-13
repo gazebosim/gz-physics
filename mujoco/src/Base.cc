@@ -182,9 +182,29 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
   _worldInfo.specDirty = false;
 
   if (rc != 0) {
-    std::cerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj)
-              << "\n";
+    gzerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj) << "\n";
     return false;
+  }
+
+  // Broadphase collision buffers scale quadratically with nbody (~6*nbody^2
+  // bytes). Worlds with many static bodies (high nbody, low nv) can exceed
+  // MuJoCo's default arena size, which scales linearly with nbody.
+  // Recompile with an explicit arena size when needed. Note that mjSpec::memory
+  // is deliberately not reset between calls so subsequent recompiles only run
+  // once.
+  const mjtSize nbody = _worldInfo.mjModelObj->nbody;
+  const mjtSize requiredArena =
+      nbody * nbody * static_cast<mjtSize>(sizeof(mjtNum));
+  if (requiredArena > _worldInfo.mjModelObj->narena)
+  {
+    _worldInfo.mjSpecObj->memory = requiredArena;
+    rc = mj_recompile(_worldInfo.mjSpecObj, nullptr, _worldInfo.mjModelObj,
+                      _worldInfo.mjDataObj);
+    if (rc != 0)
+    {
+      gzerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj) << "\n";
+      return false;
+    }
   }
 
   // Inject magic number and pointer to WorldInfo in the userdata slots
