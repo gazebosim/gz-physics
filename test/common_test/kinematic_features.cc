@@ -1678,13 +1678,16 @@ TEST_F(KinematicJointTestFeaturesList, KinematicJointLimits)
     };
     const double sliderVelTol = 5e-3;
 
-    // Drive into the upper limit and stop there
-    armJoint->SetVelocity(0, 1.0);
-    StepKinematicWorld(world, 300);
+    // Drive into the upper limit and stop there. A slow drive is used here:
+    // the arm reaches the limit with a partial step, which exercises the
+    // hand-over between the clamped joint velocity and the motor that stops
+    // the arm, while the lower limit below is approached at full speed.
+    armJoint->SetVelocity(0, 0.3);
+    StepKinematicWorld(world, 1000);
     EXPECT_NEAR(0.3, armJoint->GetPosition(0), 1e-3);
-    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
-    EXPECT_NEAR(1.0, armAngVelX(), 1e-3);
-    StepKinematicWorld(world, 700);
+    EXPECT_NEAR(0.3, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.3, armAngVelX(), 1e-3);
+    StepKinematicWorld(world, 1100);
     EXPECT_NEAR(0.6, armJoint->GetPosition(0), 1e-3);
     EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
     EXPECT_NEAR(0.0, armAngVelX(), 1e-3);
@@ -1695,7 +1698,7 @@ TEST_F(KinematicJointTestFeaturesList, KinematicJointLimits)
     // velocity that was set earlier and persists, until it reaches the new
     // limit.
     armJoint->SetMaxPosition(0, 0.9);
-    StepKinematicWorld(world, 400);
+    StepKinematicWorld(world, 1100);
     EXPECT_NEAR(0.9, armJoint->GetPosition(0), 1e-3);
     EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
     EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);

@@ -267,6 +267,20 @@ std::optional<KinematicJointVel> updateKinematicJoint(
       _joint->kinematicJointVel);
   _joint->kinematicJointVelCmd = std::nullopt;
 
+  // The position limits of a kinematic child joint are enforced below by
+  // clamping the integrated position, so disable bullet's joint limit
+  // constraint while the link is kinematic. The constraint is active as soon
+  // as the joint sits on a limit and would stop the joint on its own in the
+  // step the joint reaches the limit, in addition to the motor in the next
+  // step, which pushes a dynamic ancestor twice. SetLinkKinematic restores
+  // the constraint when the link becomes dynamic.
+  if (_joint->jointLimits && _joint->jointLimits->getMaxAppliedImpulse() > 0)
+  {
+    _joint->jointLimitsMaxImpulse =
+        _joint->jointLimits->getMaxAppliedImpulse();
+    _joint->jointLimits->setMaxAppliedImpulse(0);
+  }
+
   if (dofCount == 1)
   {
     const double curPos = _body->GetJointPosForDof(idx, 0);
@@ -274,7 +288,7 @@ std::optional<KinematicJointVel> updateKinematicJoint(
     // from the velocity written after the last step.
     const bool velOverridden = std::abs(
         _body->getJointVelMultiDof(idx)[0] - _joint->kinematicJointVelPinned)
-        > 0.0;
+        > 0;
 
     // Bullet does not integrate the position of kinematic links, so
     // integrate the joint position here. The joint stops at its position
@@ -353,7 +367,7 @@ std::optional<KinematicJointVel> updateKinematicJoint(
           static_cast<btScalar>(targetVel));
     }
     // restoreKinematicJointVelocities writes this velocity after the step
-    _joint->kinematicJointVelPinned = targetVel;
+    _joint->kinematicJointVelPinned = static_cast<btScalar>(targetVel);
   }
   else
   {

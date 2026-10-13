@@ -323,7 +323,12 @@ struct JointInfo
   // of a kinematic child link, i.e. the commanded velocity after clamping to
   // the position limits. A different joint velocity means that the velocity
   // was set from outside (SetJointVelocity) since the last step.
-  double kinematicJointVelPinned = 0.0;
+  btScalar kinematicJointVelPinned = 0;
+
+  // Max impulse of jointLimits before it was disabled for a kinematic child
+  // link, whose position limits are enforced by WorldForwardStep instead.
+  // Zero if jointLimits is not disabled.
+  btScalar jointLimitsMaxImpulse = 0;
 
   // Velocity motor of the first dof. Created by SetJointVelocityCommand with
   // the joint effort limit, or by WorldForwardStep with an unlimited impulse
