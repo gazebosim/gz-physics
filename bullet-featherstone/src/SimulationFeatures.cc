@@ -224,14 +224,6 @@ struct KinematicJointVel
 /// joint follows the commanded velocity exactly.
 constexpr btScalar kKinematicJointMotorMaxImpulse = 1e9;
 
-/// \brief Squared magnitude of the base velocity (linear in m/s and angular
-/// in rad/s) below which a kinematic base is at rest: it is neither moved
-/// nor kept awake. Converting between the velocity of the root link frame
-/// and the velocity of the center of mass leaves rounding residuals once a
-/// base with an offset center of mass is stopped, which would otherwise keep
-/// the body and everything attached to it awake.
-constexpr btScalar kKinematicBaseRestVelSq = 1e-10;
-
 /////////////////////////////////////////////////
 /// \brief Set the velocity of the first dof of a joint and zero the velocity
 /// of its other dofs.
@@ -445,42 +437,44 @@ void SimulationFeatures::WorldForwardStep(
     if (!body || !body->isBaseKinematic())
       continue;
 
-    const btVector3 linVel = body->getBaseVel();
-    const btVector3 angVel = body->getBaseOmega();
-    if (linVel.length2() + angVel.length2() > kKinematicBaseRestVelSq)
-    {
-      // The base transform is the center of mass frame of the root link
-      // while the velocity of a free group is the velocity of the root link
-      // frame. Integrate the root link frame so that it moves with the
-      // requested velocity even when it is offset from the center of mass,
-      // and derive the center of mass velocity at the new pose from it.
+    // The velocity of a kinematic base is the velocity of its root link
+    // frame, stored in double precision in the multibody by the free group
+    // velocity setters. Bullet stores the velocity of the center of mass of
+    // the root link, which is derived from the stored velocity at every pose
+    // and never fed back into it, so that a root link with an offset center
+    // of mass moves at exactly the requested velocity instead of orbiting
+    // its center of mass or drifting with bullet's single precision state.
+    const Eigen::Vector3d &linkLinVelCmd =
+        body->GetBaseLinkFrameLinearVelocity();
+    const Eigen::Vector3d &angVelCmd = body->GetBaseLinkFrameAngularVelocity();
+    if (linkLinVelCmd.isZero(0.0) && angVelCmd.isZero(0.0))
+      continue;
 
-      // btMultiBody user index stores the gz-physics model root link id
-      const std::size_t rootID =
-          static_cast<std::size_t>(body->getUserIndex());
-      const auto *model = this->ReferenceInterface<ModelInfo>(
-          this->links.at(rootID)->model);
-      const btTransform baseInertiaToLinkBt =
-          convertTf(model->baseInertiaToLinkFrame);
-      const btTransform &baseTf = body->getBaseWorldTransform();
-      const btTransform linkTf = baseTf * baseInertiaToLinkBt;
-      const btVector3 comToLink = getBaseComToLinkFrame(*model, baseTf);
-      const btVector3 linkLinVel = linVel + angVel.cross(comToLink);
+    // btMultiBody user index stores the gz-physics model root link id
+    const std::size_t rootID =
+        static_cast<std::size_t>(body->getUserIndex());
+    const auto *model = this->ReferenceInterface<ModelInfo>(
+        this->links.at(rootID)->model);
+    const btTransform baseInertiaToLinkBt =
+        convertTf(model->baseInertiaToLinkFrame);
+    const btTransform linkTf =
+        body->getBaseWorldTransform() * baseInertiaToLinkBt;
+    const btVector3 linkLinVel = convertVec(linkLinVelCmd);
+    const btVector3 angVel = convertVec(angVelCmd);
 
-      btTransform predictedLinkTf;
-      btTransformUtil::integrateTransform(
-          linkTf, linkLinVel, angVel, static_cast<btScalar>(stepSize),
-          predictedLinkTf);
-      const btTransform predictedBaseTf =
-          predictedLinkTf * baseInertiaToLinkBt.inverse();
-      const btVector3 newComToLink =
-          getBaseComToLinkFrame(*model, predictedBaseTf);
-      const btVector3 newBaseLinVel = linkLinVel - angVel.cross(newComToLink);
+    btTransform predictedLinkTf;
+    btTransformUtil::integrateTransform(
+        linkTf, linkLinVel, angVel, static_cast<btScalar>(stepSize),
+        predictedLinkTf);
+    const btTransform predictedBaseTf =
+        predictedLinkTf * baseInertiaToLinkBt.inverse();
+    const btVector3 comToLink = getBaseComToLinkFrame(*model, predictedBaseTf);
+    const btVector3 baseLinVel = linkLinVel - angVel.cross(comToLink);
 
-      body->SetBaseWorldTransform(predictedBaseTf);
-      body->setBaseVel(newBaseLinVel);
-      kinematicBaseVels.push_back({body, newBaseLinVel, angVel});
-    }
+    body->SetBaseWorldTransform(predictedBaseTf);
+    body->setBaseVel(baseLinVel);
+    body->setBaseOmega(angVel);
+    kinematicBaseVels.push_back({body, baseLinVel, angVel});
   }
 
   // Integrate and lock/control joints whose child link is kinematic.

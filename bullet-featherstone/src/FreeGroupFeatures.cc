@@ -83,37 +83,6 @@ void enforceFixedConstraint(
 }
 
 /////////////////////////////////////////////////
-/// \brief World linear velocity of the root link frame of a model. Bullet
-/// stores the velocity of the center of mass of the root link, while the
-/// velocity of a free group is the velocity of the root link frame:
-/// v_link = v_com + w x r, with r from the center of mass to the root link
-/// frame.
-/// \param[in] _model Model to query.
-btVector3 getLinkFrameLinearVelocity(const ModelInfo &_model)
-{
-  const btVector3 comToLink =
-      getBaseComToLinkFrame(_model, _model.body->getBaseWorldTransform());
-  return _model.body->getBaseVel() +
-      _model.body->getBaseOmega().cross(comToLink);
-}
-
-/////////////////////////////////////////////////
-/// \brief Set the base velocity of a model from the velocity of its root
-/// link frame, see getLinkFrameLinearVelocity: v_com = v_link - w x r.
-/// \param[in] _model Model to update.
-/// \param[in] _linkLinVel World linear velocity of the root link frame.
-/// \param[in] _angVel World angular velocity.
-void setBaseVelocityFromLinkFrame(const ModelInfo &_model,
-    const btVector3 &_linkLinVel, const btVector3 &_angVel)
-{
-  const btVector3 comToLink =
-      getBaseComToLinkFrame(_model, _model.body->getBaseWorldTransform());
-  _model.body->setBaseOmega(_angVel);
-  _model.body->setBaseVel(_linkLinVel - _angVel.cross(comToLink));
-  _model.body->wakeUp();
-}
-
-/////////////////////////////////////////////////
 Identity FreeGroupFeatures::FindFreeGroupForModel(
     const Identity &_modelID) const
 {
@@ -176,9 +145,14 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
 
   if (model)
   {
-    // Keep the linear velocity of the root link frame, as dartsim does.
-    setBaseVelocityFromLinkFrame(*model, getLinkFrameLinearVelocity(*model),
-        convertVec(_angularVelocity));
+    // Keep the linear velocity of the root link frame, as dartsim does. A
+    // kinematic base moves with the stored velocity of its root link frame,
+    // for a dynamic base it is derived from bullet's center of mass velocity.
+    const Eigen::Vector3d linkLinVel = isBaseKinematic(*model->body) ?
+        model->body->GetBaseLinkFrameLinearVelocity() :
+        convert(getBaseLinkFrameLinearVelocity(*model));
+    setBaseVelocityFromLinkFrame(*model, linkLinVel, _angularVelocity);
+    model->body->wakeUp();
   }
 }
 
@@ -191,8 +165,11 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
 
   if (model)
   {
-    setBaseVelocityFromLinkFrame(*model, convertVec(_linearVelocity),
-        model->body->getBaseOmega());
+    const Eigen::Vector3d angVel = isBaseKinematic(*model->body) ?
+        model->body->GetBaseLinkFrameAngularVelocity() :
+        convert(model->body->getBaseOmega());
+    setBaseVelocityFromLinkFrame(*model, _linearVelocity, angVel);
+    model->body->wakeUp();
   }
 }
 
@@ -207,6 +184,16 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   {
     model->body->SetBaseWorldTransform(
       convertTf(_pose * model->baseInertiaToLinkFrame.inverse()));
+
+    if (isBaseKinematic(*model->body))
+    {
+      // The center of mass velocity bullet stores depends on the orientation
+      // of the base. Derive it again so that a kinematic base keeps the
+      // velocity of its root link frame.
+      setBaseVelocityFromLinkFrame(*model,
+          model->body->GetBaseLinkFrameLinearVelocity(),
+          model->body->GetBaseLinkFrameAngularVelocity());
+    }
 
     model->body->wakeUp();
 

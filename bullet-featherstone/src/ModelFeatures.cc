@@ -40,6 +40,8 @@ void ModelFeatures::SetModelStatic(const Identity &_id, bool _static)
   // Zero out velocities and forces
   modelInfo->body->setBaseVel(btVector3(0, 0, 0));
   modelInfo->body->setBaseOmega(btVector3(0, 0, 0));
+  modelInfo->body->SetBaseLinkFrameVelocity(
+      Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
   modelInfo->body->clearForcesAndTorques();
   modelInfo->body->clearConstraintForces();
   modelInfo->body->clearVelocities();

@@ -2546,6 +2546,132 @@ TEST_F(KinematicFreeGroupTestFeaturesList, KinematicBaseTwist)
 }
 
 /////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicBaseSlowVelocity)
+{
+  // A kinematic base commanded with a very small velocity must move with it:
+  // the requested velocity is applied as is, without a threshold. The model
+  // starts at the world origin so that the small displacement is
+  // representable in single precision.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world,
+        BoxModelSdf("slow", gz::math::Pose3d::Zero, true));
+    auto model = world->GetModel("slow");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+
+    const Eigen::Vector3d linVel(5e-6, 0, 0);
+    freeGroup->SetWorldLinearVelocity(linVel);
+    const double time = 10.0;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+
+    const auto frameData = link->FrameDataRelativeToWorld();
+    const double expectedX = linVel.x() * time;
+    EXPECT_NEAR(expectedX, frameData.pose.translation().x(),
+        0.01 * expectedX);
+    EXPECT_NEAR(0.0, frameData.pose.translation().y(), 1e-9);
+    EXPECT_NEAR(0.0, frameData.pose.translation().z(), 1e-9);
+    EXPECT_TRUE(gz::physics::test::Equal(linVel, frameData.linearVelocity,
+        1e-9));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicBaseRotatedInertialFrame)
+{
+  // A kinematic base whose inertial frame is offset from and rotated with
+  // respect to the link frame, commanded once with a linear and an angular
+  // velocity. The velocity of the link frame must stay at the commanded
+  // value: it must not drift with the single precision state of the engine
+  // when the center of mass velocity is derived from it at every step.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>1 2 3 0 0 0</pose>
+        <link name="link">
+          <kinematic>true</kinematic>
+          <inertial>
+            <pose>0.5 0.2 0.1 0.3 0.4 0.5</pose>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.02</iyy><izz>0.03</izz>
+            </inertia>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+
+    const Eigen::Vector3d linVel(0.3, -0.2, 0.1);
+    const Eigen::Vector3d angVel(0.5, 0.2, 1.0);
+    freeGroup->SetWorldLinearVelocity(linVel);
+    freeGroup->SetWorldAngularVelocity(angVel);
+
+    const double time = 2.0;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+
+    // The link frame moves in a straight line and rotates about the fixed
+    // axis of the angular velocity.
+    const Eigen::Vector3d expectedPos =
+        Eigen::Vector3d(1, 2, 3) + linVel * time;
+    const Eigen::Quaterniond expectedRot(Eigen::AngleAxisd(
+        angVel.norm() * time, angVel.normalized()));
+    const gz::math::Pose3d expectedPose(
+        gz::math::eigen3::convert(expectedPos),
+        gz::math::eigen3::convert(expectedRot));
+    EXPECT_TRUE(PoseNear(expectedPose, LinkWorldPose(link), 1e-2));
+
+    const auto frameData = link->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(linVel, frameData.linearVelocity,
+        1e-6));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, frameData.angularVelocity,
+        1e-6));
+  }
+}
+
+/////////////////////////////////////////////////
 TEST_F(KinematicFreeGroupTestFeaturesList,
        KinematicParentDynamicChildBaseVelocity)
 {
