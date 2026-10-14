@@ -448,6 +448,19 @@ inline void makeColliderStatic(LinkInfo *_linkInfo)
 }
 
 /////////////////////////////////////////////////
+/// \brief Return true if the collider of a link currently has the static
+/// broadphase filter group, i.e. the link is static, fixed to the world or
+/// welded to a static link by AttachFixedJoint (see makeColliderStatic).
+inline bool isColliderStatic(const LinkInfo *_linkInfo)
+{
+  if (!_linkInfo->collider)
+    return false;
+  const btBroadphaseProxy *proxy = _linkInfo->collider->getBroadphaseHandle();
+  return proxy &&
+      (proxy->m_collisionFilterGroup & btBroadphaseProxy::StaticFilter) > 0;
+}
+
+/////////////////////////////////////////////////
 inline void makeColliderDynamic(LinkInfo *_linkInfo)
 {
   btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
@@ -460,9 +473,7 @@ inline void makeColliderDynamic(LinkInfo *_linkInfo)
 
   // If broadphase and collision object flags do not agree, the
   // link was originally non-static but made static by AttachJoint
-  if (!_linkInfo->isStaticOrFixed &&
-      ((childProxy->m_collisionFilterGroup &
-      btBroadphaseProxy::StaticFilter) > 0))
+  if (!_linkInfo->isStaticOrFixed && isColliderStatic(_linkInfo))
   {
     childProxy->m_collisionFilterGroup =
         btBroadphaseProxy::DefaultFilter;

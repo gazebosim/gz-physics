@@ -260,6 +260,10 @@ std::optional<KinematicJointVel> updateKinematicJoint(
 
   const int idx = identifier->indexInBtModel;
   const int dofCount = _body->getLink(idx).m_dofCount;
+  // The collider flags are checked rather than LinkInfo::isKinematic: the
+  // collider of a kinematic link is static while the link is welded to a
+  // static link, and the joint must not be driven against that weld. The
+  // recorded velocity / command is applied once the link is detached.
   if (!_body->isLinkKinematic(idx) || dofCount == 0)
     return std::nullopt;
 

@@ -38,10 +38,7 @@ void KinematicLinkFeatures::SetLinkKinematic(
   // link by AttachFixedJoint keeps its static collider flags. The kinematic
   // flag is applied by makeColliderDynamic when the link is made non-static
   // or detached.
-  const btBroadphaseProxy *proxy = link->collider ?
-      link->collider->getBroadphaseHandle() : nullptr;
-  const bool colliderStatic = link->isStaticOrFixed || (proxy &&
-      (proxy->m_collisionFilterGroup & btBroadphaseProxy::StaticFilter) > 0);
+  const bool colliderStatic = link->isStaticOrFixed || isColliderStatic(link);
 
   if (link->indexInModel.has_value())
   {
@@ -59,6 +56,9 @@ void KinematicLinkFeatures::SetLinkKinematic(
       }
     }
     auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+    // Note: besides the joint of the link, detachable fixed joints that were
+    // attached to the link are also in this map, so do not stop at the first
+    // match.
     for (auto &jointPair : this->joints)
     {
       auto &joint = *jointPair.second;
@@ -90,8 +90,6 @@ void KinematicLinkFeatures::SetLinkKinematic(
           joint.jointLimitsMaxImpulse = 0;
         }
       }
-      // A link is the child of at most one joint
-      break;
     }
   }
   else if (!colliderStatic)
