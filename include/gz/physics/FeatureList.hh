@@ -41,7 +41,7 @@ namespace gz
       // Forward declarations
       template <typename...> struct CombineLists;
       template <bool, typename...> struct SelfConflict;
-      template <typename> struct IterateTuple;
+      template <typename> struct IterateList;
     }
 
     /////////////////////////////////////////////////
@@ -58,15 +58,29 @@ namespace gz
     /// using AdvancedList = FeatureList<BasicList, AdvancedA, AdvancedB>;
     /// \endcode
     template <typename... FeaturesT>
-    struct FeatureList : detail::IterateTuple<std::tuple<FeaturesT...>>
+    struct FeatureList : detail::IterateList<TypeList<FeaturesT...>>
     {
+      /// FlatFeatureTypeList is a TypeList containing all the feature classes
+      /// that are bundled in this list. This list is fully seralialized; any
+      /// hierarchy that was used to construct this FeatureList will be
+      /// collapsed in this member.
+      public: using FlatFeatureTypeList =
+          typename detail::CombineLists<FeaturesT...>::Result;
+
       /// Features is a std::tuple containing all the feature classes that are
       /// bundled in this list. This list is fully seralialized; any hierarchy
       /// that was used to construct this FeatureList will be collapsed in this
       /// member.
+      /// \note This type is the same as FlatFeatureTypeList but the features
+      /// are contained in a std::tuple. Users are encouraged to use
+      /// FlatFeatureTypeList since it provides faster build times
       public: using Features =
-          typename detail::CombineLists<FeaturesT...>::Result;
+          typename detail::ToTuple<FlatFeatureTypeList>::type;
 
+      /// \brief TypeList containing the raw list of features
+      public: using FeatureTypeList = TypeList<FeaturesT...>;
+
+      /// \brief std::tuple containing the raw list of features
       public: using FeatureTuple = std::tuple<FeaturesT...>;
 
       /// \brief A static constexpr function which indicates whether a given
@@ -79,7 +93,7 @@ namespace gz
 
       /// \brief A static constexpr function which indicates whether any
       /// features in SomeFeatureList conflict with any features in
-      /// SomeFeatureList.
+      /// this list.
       ///
       /// \tparam SomeFeatureList
       ///   The list to compare against for conflicts.
