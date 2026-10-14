@@ -15,6 +15,7 @@
  *
 */
 
+#include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <string>
@@ -1454,6 +1455,83 @@ TYPED_TEST(JointFeaturesDetachTest, JointDetach)
         gz::math::eigen3::convert(frameDataUpperLink.linearVelocity));
     EXPECT_EQ(upperLinkAngularVelocity,
        gz::math::eigen3::convert(frameDataUpperLink.angularVelocity));
+  }
+}
+
+struct JointFeatureWorldFixedList : gz::physics::FeatureList<
+    gz::physics::GetBasicJointProperties,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetModelFromWorld,
+    gz::physics::sdf::ConstructSdfModel,
+    gz::physics::sdf::ConstructSdfWorld
+> { };
+
+template <class T>
+class JointFeaturesWorldFixedTest :
+  public JointFeaturesTest<T>{};
+using JointFeaturesWorldFixedTestTypes =
+  ::testing::Types<JointFeatureWorldFixedList>;
+TYPED_TEST_SUITE(JointFeaturesWorldFixedTest,
+                 JointFeaturesWorldFixedTestTypes);
+
+/////////////////////////////////////////////////
+TYPED_TEST(JointFeaturesWorldFixedTest, WorldFixedJointState)
+{
+  // A joint that fixes a model to the world has no degrees of freedom and
+  // therefore no joint position or velocity for any dof.
+  const std::string modelStr = R"(
+    <sdf version="1.6">
+      <model name="sphere_world_fixed">
+        <pose>0 0 3 0 0 0</pose>
+        <link name="link">
+          <collision name="collision">
+            <geometry>
+              <sphere>
+                <radius>0.1</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="world_fixed" type="fixed">
+          <parent>world</parent>
+          <child>link</child>
+        </joint>
+      </model>
+    </sdf>)";
+
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<JointFeatureWorldFixedList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    errors = root.LoadSdfString(modelStr);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.Model());
+    ASSERT_NE(nullptr, world->ConstructModel(*root.Model()));
+
+    auto model = world->GetModel("sphere_world_fixed");
+    ASSERT_NE(nullptr, model);
+    auto joint = model->GetJoint("world_fixed");
+    ASSERT_NE(nullptr, joint);
+
+    EXPECT_EQ(0u, joint->GetDegreesOfFreedom());
+    for (std::size_t dof = 0; dof < 7; ++dof)
+    {
+      EXPECT_TRUE(std::isnan(joint->GetPosition(dof))) << "dof " << dof;
+      EXPECT_TRUE(std::isnan(joint->GetVelocity(dof))) << "dof " << dof;
+    }
   }
 }
 

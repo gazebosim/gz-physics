@@ -98,9 +98,10 @@ double JointFeatures::GetJointPosition(
     return model->body->GetJointPosForDof(identifier->indexInBtModel, _dof);
   }
 
-  // The base joint never really has a position. It is either a Free Joint or
-  // a Fixed Joint, but it doesn't track a "joint position" for Free Joint.
-  return 0.0;
+  // A joint that attaches a model to the world or to another model has no
+  // degrees of freedom, see GetJointDegreesOfFreedom, and therefore no joint
+  // position, as in dartsim.
+  return gz::math::NAN_D;
 }
 
 /////////////////////////////////////////////////
@@ -116,16 +117,9 @@ double JointFeatures::GetJointVelocity(
     return model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof];
   }
 
-  if (std::get_if<RootJoint>(&joint->identifier))
-  {
-    const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-
-    if (_dof < 3)
-      return model->body->getBaseVel()[_dof];
-    else if (_dof < 6)
-      return model->body->getBaseOmega()[_dof];
-  }
-
+  // A joint that attaches a model to the world or to another model has no
+  // degrees of freedom, see GetJointDegreesOfFreedom, and therefore no joint
+  // velocity, as in dartsim.
   return gz::math::NAN_D;
 }
 
