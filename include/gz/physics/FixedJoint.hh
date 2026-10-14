@@ -61,6 +61,45 @@ namespace gz
             const std::string &_name) = 0;
       };
     };
+
+    /////////////////////////////////////////////////
+    /// \brief This feature sets dynamic constraint properties.
+    class GZ_PHYSICS_VISIBLE SetDynamicJointConstraintPropertiesFeature
+        : public virtual FeatureWithRequirements<FixedJointCast>
+    {
+      /// \brief Set dynamic joint constraint properties.
+      public: template <typename PolicyT, typename FeaturesT>
+      class Link : public virtual Feature::Link<PolicyT, FeaturesT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        /// \brief Set the global constraint force mixing parameter.
+        /// \param[in] _value
+        ///   The desired constraint force mixing parameter.
+        public: void SetConstraintForceMixing(const Scalar _value);
+
+        /// \brief Set the global error reduction parameter.
+        /// \param[in] _value
+        ///   The desired global error reduction parameter.
+        public: void SetErrorReductionParameter(const Scalar _value);
+      };
+
+      /// \private The implementation API to set dynamic joint constraint
+      /// properties.
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: using Scalar = typename PolicyT::Scalar;
+
+        // see Link::SetConstraintForceMixing above
+        public: virtual void SetConstraintForceMixing(
+            const Identity &_childID, Scalar _value) = 0;
+
+        // See Link::SetErrorReductionParameter above
+        public: virtual void SetErrorReductionParameter(
+            const Identity &_childID, Scalar _value) = 0;
+      };
+    };
   }
 }
 
