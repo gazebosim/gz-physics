@@ -424,6 +424,21 @@ inline Eigen::Isometry3d GetWorldTransformOfLink(
 }
 
 /////////////////////////////////////////////////
+/// \brief Vector from the center of mass of the root link, which is the
+/// origin of the bullet base frame, to the origin of the root link frame, in
+/// world coordinates. The offset is rotated rather than taken as the
+/// difference of two world positions so that it does not lose precision far
+/// from the world origin.
+/// \param[in] _model Model the root link belongs to.
+/// \param[in] _baseTf World transform of the base frame.
+inline btVector3 getBaseComToLinkFrame(const ModelInfo &_model,
+    const btTransform &_baseTf)
+{
+  return _baseTf.getBasis() *
+      convertVec(_model.baseInertiaToLinkFrame.translation());
+}
+
+/////////////////////////////////////////////////
 inline void makeColliderStatic(LinkInfo *_linkInfo)
 {
   btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();

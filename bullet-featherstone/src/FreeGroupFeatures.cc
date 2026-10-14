@@ -83,6 +83,37 @@ void enforceFixedConstraint(
 }
 
 /////////////////////////////////////////////////
+/// \brief World linear velocity of the root link frame of a model. Bullet
+/// stores the velocity of the center of mass of the root link, while the
+/// velocity of a free group is the velocity of the root link frame:
+/// v_link = v_com + w x r, with r from the center of mass to the root link
+/// frame.
+/// \param[in] _model Model to query.
+btVector3 getLinkFrameLinearVelocity(const ModelInfo &_model)
+{
+  const btVector3 comToLink =
+      getBaseComToLinkFrame(_model, _model.body->getBaseWorldTransform());
+  return _model.body->getBaseVel() +
+      _model.body->getBaseOmega().cross(comToLink);
+}
+
+/////////////////////////////////////////////////
+/// \brief Set the base velocity of a model from the velocity of its root
+/// link frame, see getLinkFrameLinearVelocity: v_com = v_link - w x r.
+/// \param[in] _model Model to update.
+/// \param[in] _linkLinVel World linear velocity of the root link frame.
+/// \param[in] _angVel World angular velocity.
+void setBaseVelocityFromLinkFrame(const ModelInfo &_model,
+    const btVector3 &_linkLinVel, const btVector3 &_angVel)
+{
+  const btVector3 comToLink =
+      getBaseComToLinkFrame(_model, _model.body->getBaseWorldTransform());
+  _model.body->setBaseOmega(_angVel);
+  _model.body->setBaseVel(_linkLinVel - _angVel.cross(comToLink));
+  _model.body->wakeUp();
+}
+
+/////////////////////////////////////////////////
 Identity FreeGroupFeatures::FindFreeGroupForModel(
     const Identity &_modelID) const
 {
@@ -131,7 +162,7 @@ Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
   // Free groups in bullet-featherstone are always represented by ModelInfo
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
 
-  // btMultiBody user index stores the gz-phsics model root link id
+  // btMultiBody user index stores the gz-physics model root link id
   std::size_t rootID = static_cast<std::size_t>(model->body->getUserIndex());
   return this->GenerateIdentity(rootID, this->links.at(rootID));
 }
@@ -145,8 +176,9 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
 
   if (model)
   {
-    model->body->setBaseOmega(convertVec(_angularVelocity));
-    model->body->wakeUp();
+    // Keep the linear velocity of the root link frame, as dartsim does.
+    setBaseVelocityFromLinkFrame(*model, getLinkFrameLinearVelocity(*model),
+        convertVec(_angularVelocity));
   }
 }
 
@@ -156,11 +188,11 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
 {
   // Free groups in bullet-featherstone are always represented by ModelInfo
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
-  // Set Base Vel
+
   if (model)
   {
-    model->body->setBaseVel(convertVec(_linearVelocity));
-    model->body->wakeUp();
+    setBaseVelocityFromLinkFrame(*model, convertVec(_linearVelocity),
+        model->body->getBaseOmega());
   }
 }
 

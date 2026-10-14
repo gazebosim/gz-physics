@@ -157,16 +157,22 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   FrameData data;
   if (model && model->body)
   {
-    data.pose = convert(model->body->getBaseWorldTransform())
-        * model->baseInertiaToLinkFrame;
+    const btTransform &baseTf = model->body->getBaseWorldTransform();
+    data.pose = convert(baseTf) * model->baseInertiaToLinkFrame;
     if (isModel)
       data.pose = data.pose * model->rootLinkToModelTf;
     else if (isCollision)
       data.pose = data.pose * collisionPoseOffset;
     else if (isJoint)
       data.pose = data.pose * jointPoseOffset;
-    data.linearVelocity = convert(model->body->getBaseVel());
+    // Bullet stores the velocity of the center of mass of the root link,
+    // which is the origin of the base frame. Velocity of the requested
+    // frame: v = v_com + w x (p - p_com).
+    const Eigen::Vector3d comToFrame =
+        data.pose.translation() - convert(baseTf.getOrigin());
     data.angularVelocity = convert(model->body->getBaseOmega());
+    data.linearVelocity = convert(model->body->getBaseVel()) +
+        data.angularVelocity.cross(comToFrame);
   }
   return data;
 }
