@@ -1228,6 +1228,248 @@ TEST_F(KinematicJointTestFeaturesList, DynamicParentKinematicChildReaction)
 }
 
 /////////////////////////////////////////////////
+TEST_F(KinematicJointTestFeaturesList, DynamicParentKinematicChainReaction)
+{
+  // Two kinematic links in a row under a dynamic slider: an upper arm that
+  // stands up from the slider and is held still, and a lower arm at its top
+  // that is driven. The joint between the two arms connects two kinematic
+  // links, and the slider still has to react to the lower arm. The slider
+  // joint has no friction and gravity is perpendicular to it, so the
+  // momentum along the slider axis is conserved:
+  //   (m_slider + m_upper + m_lower) * v_slider
+  //       + m_lower * (-0.5 * sin(q) * qdot) = 0
+  // With all masses equal to 1 kg, v_slider = sin(q) * qdot / 6.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<KinematicJointFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>0 0 1 0 0 0</pose>
+        <link name="anchor">
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="slider">
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="upper_arm">
+          <kinematic>true</kinematic>
+          <pose>0 0 0.5 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.084</ixx><iyy>0.084</iyy><izz>0.0017</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="lower_arm">
+          <kinematic>true</kinematic>
+          <pose>0 0.5 1.0 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.084</ixx><iyy>0.0017</iyy><izz>0.084</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <joint name="world_joint" type="fixed">
+          <parent>world</parent>
+          <child>anchor</child>
+        </joint>
+        <joint name="slider_joint" type="prismatic">
+          <parent>anchor</parent>
+          <child>slider</child>
+          <axis>
+            <xyz>0 1 0</xyz>
+          </axis>
+        </joint>
+        <joint name="shoulder_joint" type="revolute">
+          <pose>0 0 -0.5 0 0 0</pose>
+          <parent>slider</parent>
+          <child>upper_arm</child>
+          <axis>
+            <xyz>1 0 0</xyz>
+          </axis>
+        </joint>
+        <joint name="elbow_joint" type="revolute">
+          <pose>0 -0.5 0 0 0 0</pose>
+          <parent>upper_arm</parent>
+          <child>lower_arm</child>
+          <axis>
+            <xyz>1 0 0</xyz>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto sliderJoint = model->GetJoint("slider_joint");
+    ASSERT_NE(nullptr, sliderJoint);
+    auto shoulderJoint = model->GetJoint("shoulder_joint");
+    ASSERT_NE(nullptr, shoulderJoint);
+    auto elbowJoint = model->GetJoint("elbow_joint");
+    ASSERT_NE(nullptr, elbowJoint);
+
+    // The lower arm starts at q = 0, where its velocity has no component
+    // along the slider axis, so starting it does not inject momentum.
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      shoulderJoint->SetVelocityCommand(0, 0.0);
+      elbowJoint->SetVelocityCommand(0, 1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(0.0, shoulderJoint->GetPosition(0), 1e-6);
+    EXPECT_NEAR(0.5, elbowJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(1.0, elbowJoint->GetVelocity(0), 1e-3);
+    EXPECT_LT(0.05, sliderJoint->GetVelocity(0));
+    EXPECT_NEAR(std::sin(elbowJoint->GetPosition(0)) / 6.0,
+        sliderJoint->GetVelocity(0), 5e-3);
+  }
+}
+
+/////////////////////////////////////////////////
+using KinematicJointWrenchFeaturesList = gz::physics::FeatureList<
+  KinematicJointFeaturesList,
+  gz::physics::GetJointTransmittedWrench
+>;
+
+using KinematicJointWrenchTestFeaturesList =
+  KinematicFeaturesTest<KinematicJointWrenchFeaturesList>;
+
+/////////////////////////////////////////////////
+TEST_F(KinematicJointWrenchTestFeaturesList, KinematicChainDynamicChildWrench)
+{
+  // A chain that is kinematic from the world down to the forearm, with a
+  // dynamic hand at its end. The kinematic shoulder joint has to stay locked
+  // during the step while it holds the hand, so that the wrist transmits
+  // the weight of the hand at rest.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicJointWrenchFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="arm">
+        <joint name="fixed_to_world" type="fixed">
+          <parent>world</parent>
+          <child>base</child>
+        </joint>
+        <link name="base">
+          <kinematic>true</kinematic>
+          <inertial>
+            <mass>10</mass>
+          </inertial>
+        </link>
+        <link name="forearm">
+          <kinematic>true</kinematic>
+          <pose>0 0 0.5 0 0 0</pose>
+          <inertial>
+            <pose>0 0 0.25 0 0 0</pose>
+            <mass>5</mass>
+          </inertial>
+        </link>
+        <link name="hand">
+          <pose>0 0 1.0 0 0 0</pose>
+          <inertial>
+            <pose>0 0 0.28 0 0 0</pose>
+            <mass>3</mass>
+            <inertia>
+              <ixx>0.05</ixx>
+              <iyy>0.05</iyy>
+              <izz>0.05</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <joint name="shoulder" type="revolute">
+          <parent>base</parent>
+          <child>forearm</child>
+          <axis>
+            <xyz>0 1 0</xyz>
+          </axis>
+        </joint>
+        <joint name="wrist" type="revolute">
+          <parent>forearm</parent>
+          <child>hand</child>
+          <axis>
+            <xyz>0 1 0</xyz>
+            <limit>
+              <effort>1000</effort>
+            </limit>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("arm");
+    ASSERT_NE(nullptr, model);
+    auto shoulder = model->GetJoint("shoulder");
+    ASSERT_NE(nullptr, shoulder);
+    auto wrist = model->GetJoint("wrist");
+    ASSERT_NE(nullptr, wrist);
+
+    // Tilt the hand past horizontal, so that its weight also twists the
+    // wrist.
+    const double shoulderPos = 0.4;
+    const double wristPos = 1.5;
+    shoulder->SetPosition(0, shoulderPos);
+    wrist->SetPosition(0, wristPos);
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      shoulder->SetVelocityCommand(0, 0.0);
+      wrist->SetVelocityCommand(0, 0.0);
+      StepKinematicWorld(world, 1);
+    }
+
+    EXPECT_NEAR(shoulderPos, shoulder->GetPosition(0), 1e-6);
+    EXPECT_NEAR(wristPos, wrist->GetPosition(0), 1e-2);
+
+    // At rest the wrist carries the weight of the hand, and the torque of
+    // that weight about the wrist.
+    const double mass = 3.0;
+    const double weight = mass * std::abs(kGravity);
+    const double tilt = shoulder->GetPosition(0) + wrist->GetPosition(0);
+    const auto wrench = wrist->GetTransmittedWrench();
+    EXPECT_NEAR(weight, wrench.force.norm(), 0.01 * weight);
+    EXPECT_NEAR(weight * 0.28 * std::abs(std::sin(tilt)),
+        wrench.torque.norm(), 0.01 * weight * 0.28);
+  }
+}
+
+/////////////////////////////////////////////////
 TEST_F(KinematicJointTestFeaturesList, KinematicLinksPrismaticJointCommands)
 {
   // Two kinematic links connected by a vertical prismatic joint. Gravity acts
