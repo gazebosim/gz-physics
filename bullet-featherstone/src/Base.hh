@@ -312,6 +312,16 @@ struct JointInfo
   // they are part of the same body.
   bool fixedConstraintWeldChildToParent = false;
 
+  // Joint velocity and one-step velocity command of the first dof of a joint
+  // whose child link is kinematic. The velocity persists until it is set
+  // again, the command is consumed by the next step. Only the first dof can
+  // be driven.
+  double kinematicJointVel = 0.0;
+  std::optional<double> kinematicJointVelCmd = std::nullopt;
+
+  // Velocity motor of the first dof. Created by SetJointVelocityCommand with
+  // the joint effort limit, or by WorldForwardStep with an unlimited impulse
+  // to lock / drive the joint of a kinematic link under a dynamic ancestor.
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
   std::shared_ptr<btMultiBodyFixedConstraint> fixedConstraint = nullptr;
