@@ -2252,20 +2252,21 @@ TYPED_TEST_SUITE(SimulationFeaturesRayIntersectionTest,
 
 // Collision detectors (as accepted by SetCollisionDetector) that support
 // single ray intersection queries in the dartsim plugin, and those that do
-// not. DART >= 6.20.0 implements raycast in its native "dart" collision
-// detector, so its classification depends on the DART version.
+// not. The native "dart" collision detector supports raycast only in
+// DART versions that ship the complete DARTCollisionDetector (>= 6.20.0),
+// so its classification depends on the DART version.
 namespace
 {
 const std::vector<std::string> kRaySupportedCollisionDetectors = {
   "ode",
   "bullet",
-#ifdef DART_VERSION_GE_6_20_0
+#ifdef DART_HAS_DART_COLLISION_DETECTOR
   "dart",
 #endif
 };
 
 const std::vector<std::string> kRayUnsupportedCollisionDetectors = {
-#ifndef DART_VERSION_GE_6_20_0
+#ifndef DART_HAS_DART_COLLISION_DETECTOR
   "dart",
 #endif
   "fcl",
