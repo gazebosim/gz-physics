@@ -29,13 +29,22 @@ void KinematicLinkFeatures::SetLinkKinematic(
   auto *link = this->ReferenceInterface<LinkInfo>(_id);
   auto *model = this->ReferenceInterface<ModelInfo>(link->model);
 
-  int collisionFlags = _kinematic ? btCollisionObject::CF_KINEMATIC_OBJECT :
+  link->isKinematic = _kinematic;
+  const int collisionFlags = _kinematic ?
+      btCollisionObject::CF_KINEMATIC_OBJECT :
       btCollisionObject::CF_DYNAMIC_OBJECT;
+
+  // A link that is static, fixed to the world or currently welded to a static
+  // link by AttachFixedJoint keeps its static collider flags. The kinematic
+  // flag is applied by makeColliderDynamic when the link is made non-static
+  // or detached.
+  const bool colliderStatic = link->isStaticOrFixed || isColliderStatic(link);
 
   if (link->indexInModel.has_value())
   {
     const int idx = link->indexInModel.value();
-    model->body->setLinkDynamicType(idx, collisionFlags);
+    if (!colliderStatic)
+      model->body->setLinkDynamicType(idx, collisionFlags);
     if (_kinematic)
     {
       // Bullet stops integrating the joint position of a kinematic link but
@@ -47,6 +56,9 @@ void KinematicLinkFeatures::SetLinkKinematic(
       }
     }
     auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+    // Note: besides the joint of the link, detachable fixed joints that were
+    // attached to the link are also in this map, so do not stop at the first
+    // match.
     for (auto &jointPair : this->joints)
     {
       auto &joint = *jointPair.second;
@@ -80,20 +92,23 @@ void KinematicLinkFeatures::SetLinkKinematic(
       }
     }
   }
-  else
+  else if (!colliderStatic)
   {
     model->body->setBaseDynamicType(collisionFlags);
   }
+  // Changing the dynamic type does not wake up a sleeping body in bullet, so
+  // a body that fell asleep while kinematic would otherwise not start moving
+  // when it is made dynamic.
+  model->body->wakeUp();
 }
 
 /////////////////////////////////////////////////
 bool KinematicLinkFeatures::GetLinkKinematic(const Identity &_id) const
 {
-  auto *link = this->ReferenceInterface<LinkInfo>(_id);
-  auto *model = this->ReferenceInterface<ModelInfo>(link->model);
-
-  int indexInModel = link->indexInModel.value_or(-1);
-  return model->body->isLinkKinematic(indexInModel);
+  // Report the requested state rather than the collider flags: the collider
+  // of a kinematic link is temporarily static while the link is welded to a
+  // static link, see SetLinkKinematic.
+  return this->ReferenceInterface<LinkInfo>(_id)->isKinematic;
 }
 #endif
 

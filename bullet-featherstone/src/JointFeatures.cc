@@ -239,17 +239,18 @@ void JointFeatures::SetJointVelocity(
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
   model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] =
       static_cast<btScalar>(_value);
-#if BT_BULLET_VERSION >= 307
   // Bullet does not integrate the position of a kinematic child link, so
   // WorldForwardStep does it with this velocity. Unlike a velocity command,
   // the velocity persists until it is set again. Only the first dof of a
-  // kinematic child joint can currently be driven.
-  if (_dof == 0 && model->body->isLinkKinematic(identifier->indexInBtModel))
+  // kinematic child joint can currently be driven. The requested kinematic
+  // state is used rather than the collider flags so that a velocity set while
+  // the link is welded to a static link takes effect once it is detached.
+  if (_dof == 0 &&
+      this->ReferenceInterface<LinkInfo>(joint->childLinkID)->isKinematic)
   {
     joint->kinematicJointVel = _value;
     joint->kinematicJointVelCmd = std::nullopt;
   }
-#endif
   model->body->wakeUp();
 }
 
@@ -432,10 +433,9 @@ void JointFeatures::SetJointVelocityCommand(
   double velocity = std::clamp(_value,
       jointInfo->minVelocity, jointInfo->maxVelocity);
 
-#if BT_BULLET_VERSION >= 307
   const auto *identifier = std::get_if<InternalJoint>(&jointInfo->identifier);
   if (identifier &&
-      modelInfo->body->isLinkKinematic(identifier->indexInBtModel))
+      this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID)->isKinematic)
   {
     // The joint of a kinematic child link is driven by WorldForwardStep, which
     // integrates the joint position with the command for one step and, if the
@@ -449,7 +449,6 @@ void JointFeatures::SetJointVelocityCommand(
     modelInfo->body->wakeUp();
     return;
   }
-#endif
 
   if (!jointInfo->motor)
   {
@@ -688,19 +687,13 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
       {
         parentCollider->setIgnoreCollisionCheck(childCollider, false);
         childCollider->setIgnoreCollisionCheck(parentCollider, false);
-        btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
-        if (childProxy)
+        // Recursively make child colliders dynamic if they were originally
+        // not static
+        if (!linkInfo->isStaticOrFixed && isColliderStatic(linkInfo))
         {
-          // Recursively make child colliders dynamic if they were originally
-          // not static
-          if (!linkInfo->isStaticOrFixed &&
-              ((childProxy->m_collisionFilterGroup &
-              btBroadphaseProxy::StaticFilter) > 0))
-          {
-            makeColliderDynamic(linkInfo);
-            updateColliderFlagsRecursive(std::size_t(jointInfo->childLinkID),
-                this->joints, this->links, makeColliderDynamic);
-          }
+          makeColliderDynamic(linkInfo);
+          updateColliderFlagsRecursive(std::size_t(jointInfo->childLinkID),
+              this->joints, this->links, makeColliderDynamic);
         }
       }
     }
