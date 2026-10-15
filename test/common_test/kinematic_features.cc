@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <sstream>
 #include <string>
 
 #include <gz/common/Console.hh>
@@ -29,6 +30,7 @@
 #include "Worlds.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
+#include <gz/physics/FixedJoint.hh>
 #include <gz/physics/Joint.hh>
 #include <gz/physics/KinematicLink.hh>
 #include <gz/physics/FrameSemantics.hh>
@@ -37,6 +39,7 @@
 #include <gz/physics/FreeGroup.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/Link.hh>
+#include <gz/physics/Model.hh>
 #include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/sdf/ConstructLink.hh>
@@ -716,7 +719,145 @@ const char kDynamicParentKinematicChildSdf[] = R"(
       </joint>
     </model>
   </sdf>)";
+
+/// \brief SDF string of a model with a single box link named "link".
+/// \param[in] _name Model name.
+/// \param[in] _pose Model pose.
+/// \param[in] _kinematic True to make the link kinematic.
+/// \param[in] _static True to make the model static.
+std::string BoxModelSdf(const std::string &_name,
+    const gz::math::Pose3d &_pose, bool _kinematic, bool _static = false)
+{
+  std::ostringstream sdf;
+  sdf << "<sdf version='1.6'>"
+      << "<model name='" << _name << "'>"
+      << "<static>" << _static << "</static>"
+      << "<pose>" << _pose << "</pose>"
+      << "<link name='link'>"
+      << "<kinematic>" << _kinematic << "</kinematic>"
+      << "<collision name='collision'>"
+      << "<geometry><box><size>0.2 0.2 0.2</size></box></geometry>"
+      << "</collision>"
+      << "</link></model></sdf>";
+  return sdf.str();
+}
 }  // namespace
+
+/////////////////////////////////////////////////
+TEST_F(SetKinematicTestFeaturesList, SetKinematicFalseAfterSleepTimeout)
+{
+  // A stationary kinematic body may be put to sleep by the physics engine.
+  // Making it dynamic again must wake it up so that it falls under gravity.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<SetKinematicFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    const gz::math::Pose3d initialPose(0, 0, 10, 0, 0, 0);
+    ConstructModelFromString(world, BoxModelSdf("M1", initialPose, true));
+
+    auto link = world->GetModel("M1")->GetLink("link");
+    ASSERT_NE(nullptr, link);
+
+    // Stay kinematic for longer than bullet's default sleep timeout (2 s)
+    StepKinematicWorld(world, 2500);
+    EXPECT_TRUE(PoseNear(initialPose, LinkWorldPose(link), 1e-6));
+
+    // Make link dynamic and verify that it falls
+    link->SetKinematic(false);
+    const double time = 1.0;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+
+    const auto frameData = link->FrameDataRelativeToWorld();
+    EXPECT_NEAR(initialPose.Z() + 0.5 * kGravity * time * time,
+                frameData.pose.translation().z(), 1e-2);
+    EXPECT_NEAR(kGravity * time, frameData.linearVelocity.z(), 1e-2);
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(SetKinematicTestFeaturesList, KinematicParentDynamicChildFixedJoint)
+{
+  // A dynamic link attached to a kinematic base link via a fixed joint
+  // should be held in place by the kinematic link. Once the base becomes
+  // dynamic, the whole model should fall.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<SetKinematicFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>0 0 2 0 0 0</pose>
+        <link name="base">
+          <kinematic>true</kinematic>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <link name="child">
+          <pose>0.5 0 0 0 0 0</pose>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="fixed_joint" type="fixed">
+          <parent>base</parent>
+          <child>child</child>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto base = model->GetLink("base");
+    ASSERT_NE(nullptr, base);
+    auto child = model->GetLink("child");
+    ASSERT_NE(nullptr, child);
+    EXPECT_TRUE(base->GetKinematic());
+    EXPECT_FALSE(child->GetKinematic());
+
+    const gz::math::Pose3d initialBasePose(0, 0, 2, 0, 0, 0);
+    const gz::math::Pose3d initialChildPose(0.5, 0, 2, 0, 0, 0);
+
+    StepKinematicWorld(world, 1000);
+    EXPECT_TRUE(PoseNear(initialBasePose, LinkWorldPose(base), 1e-3));
+    EXPECT_TRUE(PoseNear(initialChildPose, LinkWorldPose(child), 1e-3));
+
+    // Make base dynamic. The whole rigid model should free fall.
+    base->SetKinematic(false);
+    const double time = 0.5;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+    const double expectedZ = 2.0 + 0.5 * kGravity * time * time;
+    EXPECT_NEAR(expectedZ, LinkWorldPose(base).Z(), 1e-2);
+    EXPECT_NEAR(expectedZ, LinkWorldPose(child).Z(), 1e-2);
+  }
+}
 
 /////////////////////////////////////////////////
 using KinematicJointFeaturesList = gz::physics::FeatureList<
@@ -1835,6 +1976,338 @@ TEST_F(KinematicJointRemoveTestFeaturesList, RemoveModelWithKinematicChild)
     EXPECT_NEAR(0.0, armJoint->GetPosition(0), 1e-3);
     EXPECT_TRUE(PoseNear(gz::math::Pose3d(0, 0.5, 1, 0, 0, 0),
         LinkWorldPose(arm), 1e-3));
+  }
+}
+
+/////////////////////////////////////////////////
+using KinematicFreeGroupFeaturesList = gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::ForwardStep,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetJointFromModel,
+  gz::physics::GetBasicJointState,
+  gz::physics::SetBasicJointState,
+  gz::physics::SetJointPositionLimitsFeature,
+  gz::physics::KinematicLink,
+  gz::physics::LinkFrameSemantics,
+  gz::physics::ModelStaticState,
+  gz::physics::FindFreeGroupFeature,
+  gz::physics::SetFreeGroupWorldPose,
+  gz::physics::AttachFixedJointFeature,
+  gz::physics::DetachJointFeature,
+  gz::physics::SetJointTransformFromParentFeature
+>;
+
+using KinematicFreeGroupTestFeaturesList =
+  KinematicFeaturesTest<KinematicFreeGroupFeaturesList>;
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, DynamicModelAttachedToKinematic)
+{
+  // A dynamic model attached to a kinematic model with a detachable fixed
+  // joint should be held by the kinematic model, follow it when it is moved,
+  // and fall once detached. The kinematic model should remain kinematic.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world,
+        BoxModelSdf("M_kin", gz::math::Pose3d(0, 0, 2, 0, 0, 0), true));
+    ConstructModelFromString(world,
+        BoxModelSdf("M_dyn", gz::math::Pose3d(0, 0, 1.5, 0, 0, 0), false));
+
+    auto kinModel = world->GetModel("M_kin");
+    ASSERT_NE(nullptr, kinModel);
+    auto kinLink = kinModel->GetLink("link");
+    ASSERT_NE(nullptr, kinLink);
+    auto dynModel = world->GetModel("M_dyn");
+    ASSERT_NE(nullptr, dynModel);
+    auto dynLink = dynModel->GetLink("link");
+    ASSERT_NE(nullptr, dynLink);
+
+    auto fixedJoint = dynLink->AttachFixedJoint(kinLink);
+    ASSERT_NE(nullptr, fixedJoint);
+    // Preserve the current relative pose between the two links
+    fixedJoint->SetTransformFromParent(gz::math::eigen3::convert(
+        gz::math::Pose3d(0, 0, -0.5, 0, 0, 0)));
+
+    // Dynamic model should be held up by the kinematic model. Step for
+    // longer than bullet's default sleep timeout (2 s).
+    StepKinematicWorld(world, 2500);
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(0, 0, 2, 0, 0, 0),
+        LinkWorldPose(kinLink), 1e-3));
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(0, 0, 1.5, 0, 0, 0),
+        LinkWorldPose(dynLink), 1e-3));
+    EXPECT_TRUE(kinLink->GetKinematic());
+
+    // Move the kinematic model. The dynamic model should follow.
+    auto kinGroup = kinModel->FindFreeGroup();
+    ASSERT_NE(nullptr, kinGroup);
+    kinGroup->SetWorldPose(gz::math::eigen3::convert(
+        gz::math::Pose3d(1, 0, 2, 0, 0, 0)));
+    StepKinematicWorld(world, 10);
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(1, 0, 2, 0, 0, 0),
+        LinkWorldPose(kinLink), 1e-3));
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(1, 0, 1.5, 0, 0, 0),
+        LinkWorldPose(dynLink), 1e-2));
+
+    // Detach. Dynamic model should fall, kinematic model should stay.
+    fixedJoint->Detach();
+    const double time = 0.5;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+    EXPECT_TRUE(kinLink->GetKinematic());
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(1, 0, 2, 0, 0, 0),
+        LinkWorldPose(kinLink), 1e-3));
+    EXPECT_NEAR(1.5 + 0.5 * kGravity * time * time,
+        LinkWorldPose(dynLink).Z(), 2e-2);
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicLinkDetachedFromStatic)
+{
+  // Attach a kinematic link to a static link with a detachable fixed joint,
+  // then detach it. The link should still be kinematic after detaching and
+  // so it should not fall.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    const gz::math::Pose3d kinPose(0, 0, 1.5, 0, 0, 0);
+    ConstructModelFromString(world, BoxModelSdf("M_static",
+        gz::math::Pose3d(0, 0, 2, 0, 0, 0), false, true));
+    ConstructModelFromString(world, BoxModelSdf("M_kin", kinPose, true));
+
+    auto staticLink = world->GetModel("M_static")->GetLink("link");
+    ASSERT_NE(nullptr, staticLink);
+    auto kinLink = world->GetModel("M_kin")->GetLink("link");
+    ASSERT_NE(nullptr, kinLink);
+    EXPECT_TRUE(kinLink->GetKinematic());
+
+    auto fixedJoint = kinLink->AttachFixedJoint(staticLink);
+    ASSERT_NE(nullptr, fixedJoint);
+    fixedJoint->SetTransformFromParent(gz::math::eigen3::convert(
+        gz::math::Pose3d(0, 0, -0.5, 0, 0, 0)));
+    // The link is still reported as kinematic while it is welded to the
+    // static link, and it does not move.
+    StepKinematicWorld(world, 100);
+    EXPECT_TRUE(kinLink->GetKinematic());
+    EXPECT_TRUE(PoseNear(kinPose, LinkWorldPose(kinLink), 1e-3));
+    fixedJoint->Detach();
+
+    EXPECT_TRUE(kinLink->GetKinematic());
+    StepKinematicWorld(world, 1000);
+    EXPECT_TRUE(PoseNear(kinPose, LinkWorldPose(kinLink), 1e-3));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, SetKinematicWhileAttachedToStatic)
+{
+  // Attach a dynamic link to a static link with a detachable fixed joint and
+  // make it kinematic while it is attached. The link must stay in place while
+  // attached, and it must be kinematic, i.e. not fall, once detached.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    const gz::math::Pose3d linkPose(0, 0, 1.5, 0, 0, 0);
+    ConstructModelFromString(world, BoxModelSdf("M_static",
+        gz::math::Pose3d(0, 0, 2, 0, 0, 0), false, true));
+    ConstructModelFromString(world, BoxModelSdf("M_dyn", linkPose, false));
+
+    auto staticLink = world->GetModel("M_static")->GetLink("link");
+    ASSERT_NE(nullptr, staticLink);
+    auto dynLink = world->GetModel("M_dyn")->GetLink("link");
+    ASSERT_NE(nullptr, dynLink);
+    EXPECT_FALSE(dynLink->GetKinematic());
+
+    auto fixedJoint = dynLink->AttachFixedJoint(staticLink);
+    ASSERT_NE(nullptr, fixedJoint);
+    fixedJoint->SetTransformFromParent(gz::math::eigen3::convert(
+        gz::math::Pose3d(0, 0, -0.5, 0, 0, 0)));
+    StepKinematicWorld(world, 100);
+    EXPECT_TRUE(PoseNear(linkPose, LinkWorldPose(dynLink), 1e-3));
+
+    // Make the attached link kinematic. It stays welded to the static link.
+    dynLink->SetKinematic(true);
+    EXPECT_TRUE(dynLink->GetKinematic());
+    StepKinematicWorld(world, 100);
+    EXPECT_TRUE(PoseNear(linkPose, LinkWorldPose(dynLink), 1e-3));
+
+    // Once detached the link is kinematic and does not fall.
+    fixedJoint->Detach();
+    EXPECT_TRUE(dynLink->GetKinematic());
+    StepKinematicWorld(world, 1000);
+    EXPECT_TRUE(PoseNear(linkPose, LinkWorldPose(dynLink), 1e-3));
+
+    // Making it dynamic now lets it fall.
+    dynLink->SetKinematic(false);
+    EXPECT_FALSE(dynLink->GetKinematic());
+    StepKinematicWorld(world, 500);
+    EXPECT_GT(linkPose.Z() - 0.5, LinkWorldPose(dynLink).Z());
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, StaticModelKeepsKinematicLink)
+{
+  // Making a model static and then non-static again must restore the
+  // kinematic state of its links instead of making them dynamic.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    const gz::math::Pose3d linkPose(0, 0, 2, 0, 0, 0);
+    ConstructModelFromString(world, BoxModelSdf("M_kin", linkPose, true));
+
+    auto model = world->GetModel("M_kin");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+    EXPECT_TRUE(link->GetKinematic());
+
+    model->SetStatic(true);
+    EXPECT_TRUE(model->GetStatic());
+    EXPECT_TRUE(link->GetKinematic());
+    StepKinematicWorld(world, 100);
+    EXPECT_TRUE(PoseNear(linkPose, LinkWorldPose(link), 1e-3));
+
+    model->SetStatic(false);
+    EXPECT_FALSE(model->GetStatic());
+    EXPECT_TRUE(link->GetKinematic());
+    StepKinematicWorld(world, 1000);
+    EXPECT_TRUE(PoseNear(linkPose, LinkWorldPose(link), 1e-3));
+
+    // The link can still be made dynamic afterwards
+    link->SetKinematic(false);
+    StepKinematicWorld(world, 500);
+    EXPECT_GT(linkPose.Z() - 0.5, LinkWorldPose(link).Z());
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicChildWeldedToStatic)
+{
+  // The kinematic arm of kDynamicParentKinematicChildSdf, a non-base link
+  // with a dynamic parent, is welded to a static link with a detachable fixed
+  // joint twice. The detached joints remain known to the engine. A joint
+  // velocity set while the arm is welded takes effect once it is detached,
+  // and making the arm dynamic afterwards frees its joint and restores its
+  // position limits.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, kDynamicParentKinematicChildSdf);
+    ConstructModelFromString(world, BoxModelSdf("M_static",
+        gz::math::Pose3d(0, 1.5, 1, 0, 0, 0), false, true));
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto arm = model->GetLink("arm");
+    ASSERT_NE(nullptr, arm);
+    auto armJoint = model->GetJoint("arm_joint");
+    ASSERT_NE(nullptr, armJoint);
+    auto staticLink = world->GetModel("M_static")->GetLink("link");
+    ASSERT_NE(nullptr, staticLink);
+    armJoint->SetMinPosition(0, -0.4);
+    armJoint->SetMaxPosition(0, 0.6);
+    const gz::math::Pose3d armPose(0, 0.5, 1, 0, 0, 0);
+
+    for (int i = 0; i < 2; ++i)
+    {
+      auto fixedJoint = arm->AttachFixedJoint(staticLink);
+      ASSERT_NE(nullptr, fixedJoint);
+      // Preserve the current pose of the arm relative to the static link
+      fixedJoint->SetTransformFromParent(gz::math::eigen3::convert(
+          gz::math::Pose3d(0, -1, 0, 0, 0, 0)));
+      if (i == 1)
+      {
+        // Set a joint velocity while the arm is welded. It must not move yet.
+        armJoint->SetVelocity(0, 0.5);
+      }
+      StepKinematicWorld(world, 100);
+      EXPECT_TRUE(arm->GetKinematic());
+      EXPECT_NEAR(0.0, armJoint->GetPosition(0), 1e-3);
+      // The weld is a (slightly compliant) constraint between two bodies
+      EXPECT_TRUE(PoseNear(armPose, LinkWorldPose(arm), 1e-2));
+      fixedJoint->Detach();
+    }
+
+    // Detached: the arm is kinematic and turns with the velocity set earlier
+    EXPECT_TRUE(arm->GetKinematic());
+    StepKinematicWorld(world, 200);
+    EXPECT_NEAR(0.1, armJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(0.5, armJoint->GetVelocity(0), 1e-3);
+
+    // Dynamic: the arm swings down under gravity and is stopped by the lower
+    // position limit, which must be enforced again.
+    arm->SetKinematic(false);
+    EXPECT_FALSE(arm->GetKinematic());
+    StepKinematicWorld(world, 1000);
+    EXPECT_GT(-0.3, armJoint->GetPosition(0));
+    EXPECT_LT(-0.5, armJoint->GetPosition(0));
+    StepKinematicWorld(world, 1000);
+    EXPECT_GT(-0.3, armJoint->GetPosition(0));
+    EXPECT_LT(-0.5, armJoint->GetPosition(0));
   }
 }
 

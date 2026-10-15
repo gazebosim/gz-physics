@@ -244,6 +244,10 @@ struct LinkInfo
   std::unordered_map<std::string, std::size_t> collisionNameToEntityId = {};
   // Link is either static, fixed to world, or has zero dofs
   bool isStaticOrFixed = false;
+  // True if the link is kinematic, as requested with <kinematic> in SDF or
+  // SetKinematic. The collider of a kinematic link is temporarily static
+  // while the link is welded to a static link (see makeColliderStatic).
+  bool isKinematic = false;
   // Cached pose from the previous physics step for performance optimization
   mutable std::optional<math::Pose3d> prevPose = std::nullopt;
 };
@@ -444,6 +448,19 @@ inline void makeColliderStatic(LinkInfo *_linkInfo)
 }
 
 /////////////////////////////////////////////////
+/// \brief Return true if the collider of a link currently has the static
+/// broadphase filter group, i.e. the link is static, fixed to the world or
+/// welded to a static link by AttachFixedJoint (see makeColliderStatic).
+inline bool isColliderStatic(const LinkInfo *_linkInfo)
+{
+  if (!_linkInfo->collider)
+    return false;
+  const btBroadphaseProxy *proxy = _linkInfo->collider->getBroadphaseHandle();
+  return proxy &&
+      (proxy->m_collisionFilterGroup & btBroadphaseProxy::StaticFilter) > 0;
+}
+
+/////////////////////////////////////////////////
 inline void makeColliderDynamic(LinkInfo *_linkInfo)
 {
   btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
@@ -456,15 +473,16 @@ inline void makeColliderDynamic(LinkInfo *_linkInfo)
 
   // If broadphase and collision object flags do not agree, the
   // link was originally non-static but made static by AttachJoint
-  if (!_linkInfo->isStaticOrFixed &&
-      ((childProxy->m_collisionFilterGroup &
-      btBroadphaseProxy::StaticFilter) > 0))
+  if (!_linkInfo->isStaticOrFixed && isColliderStatic(_linkInfo))
   {
     childProxy->m_collisionFilterGroup =
         btBroadphaseProxy::DefaultFilter;
     childProxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
 #if BT_BULLET_VERSION >= 307
-    childCollider->setDynamicType(btCollisionObject::CF_DYNAMIC_OBJECT);
+    const int collisionFlags = _linkInfo->isKinematic ?
+        btCollisionObject::CF_KINEMATIC_OBJECT :
+        btCollisionObject::CF_DYNAMIC_OBJECT;
+    childCollider->setDynamicType(collisionFlags);
 #endif
   }
 }
