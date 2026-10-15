@@ -220,8 +220,8 @@ struct KinematicJointVel
 };
 
 /// \brief Max impulse of the motor that locks or drives the joint of a
-/// kinematic link with a dynamic ancestor or descendant. Effectively
-/// unlimited so that the joint follows the commanded velocity exactly.
+/// kinematic link under a dynamic ancestor. Effectively unlimited so that the
+/// joint follows the commanded velocity exactly.
 constexpr btScalar kKinematicJointMotorMaxImpulse = 1e9;
 
 /// \brief Joint motor that locks or drives the joint of a kinematic link.
@@ -280,38 +280,15 @@ void setKinematicJointVel(GzMultiBody *_body, int _indexInBtModel,
 }
 
 /////////////////////////////////////////////////
-/// \brief Check whether a link has a dynamic link below it in its multibody.
-/// \param[in] _body Multibody the link belongs to.
-/// \param[in] _indexInBtModel Index of the link in the multibody.
-/// \return True if any descendant of the link is not kinematic.
-bool hasDynamicDescendant(const GzMultiBody *_body, int _indexInBtModel)
-{
-  // Bullet orders the links of a multibody so that a parent always comes
-  // before its children, so all descendants follow the link.
-  for (int i = _indexInBtModel + 1; i < _body->getNumLinks(); ++i)
-  {
-    if (_body->isLinkKinematic(i))
-      continue;
-    int ancestor = _body->getParent(i);
-    while (ancestor > _indexInBtModel)
-      ancestor = _body->getParent(ancestor);
-    if (ancestor == _indexInBtModel)
-      return true;
-  }
-  return false;
-}
-
-/////////////////////////////////////////////////
 /// \brief Integrate and lock / drive a joint whose child link is kinematic.
 /// Bullet does not integrate the position of kinematic links and does not
-/// lock the joint of a kinematic link that has a dynamic ancestor or a
-/// dynamic descendant, so the joint position is integrated here from the
-/// joint velocity (or one-step velocity command) and the joint motor is used
-/// to lock or drive the joint when the link has a dynamic ancestor or a
-/// dynamic descendant. The joint stops at its position limits: the velocity
-/// is reduced to what is needed to reach a limit and is zero while the joint
-/// sits at a limit and is driven into it. Must be called before stepping the
-/// world.
+/// lock the joint of a kinematic link that has a dynamic ancestor, so the
+/// joint position is integrated here from the joint velocity (or one-step
+/// velocity command) and the joint motor is used to lock or drive the joint
+/// when the link has a dynamic ancestor. The joint stops at its position
+/// limits: the velocity is reduced to what is needed to reach a limit and is
+/// zero while the joint sits at a limit and is driven into it. Must be called
+/// before stepping the world.
 /// \param[in] _world Bullet world the multibody belongs to.
 /// \param[in] _joint Joint to update.
 /// \param[in] _body Multibody the joint belongs to.
@@ -390,15 +367,10 @@ std::optional<KinematicJointVel> updateKinematicJoint(
       _body->wakeUp();
     }
 
-    if (!_body->isLinkAndAllAncestorsKinematic(idx) ||
-        hasDynamicDescendant(_body, idx))
+    if (!_body->isLinkAndAllAncestorsKinematic(idx))
     {
       // Bullet does not lock the joint of a kinematic link that has a
       // dynamic ancestor, so use the joint motor to lock or drive the joint.
-      // The same applies to a joint with a dynamic descendant: without the
-      // motor the joint yields to the load of the descendant during the
-      // step, which corrupts the wrench that the descendant's joints
-      // transmit.
       // The joint velocity is deliberately not set here: the motor changes it
       // during the step so that the dynamic ancestor feels the reaction of a
       // change in the commanded velocity, including a joint that is stopped
