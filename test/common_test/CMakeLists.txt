@@ -93,6 +93,15 @@ foreach(test ${tests})
     target_compile_definitions(${test_executable} PRIVATE DART_HAS_CONTACT_SURFACE)
   endif()
 
+  # DART >= 6.20.0 implements raycast queries in its native "dart" collision
+  # detector (DARTCollisionDetector). Older versions only support raycasts
+  # with the bullet collision detector.
+  if (DART_VERSION VERSION_GREATER_EQUAL 6.20.0)
+    target_compile_definitions(${test_executable} PRIVATE
+      "DART_VERSION_GE_6_20_0"
+    )
+  endif()
+
   if (APPLE)
     # see https://github.com/gazebosim/gz-physics/issues/620
     target_compile_definitions(${test_executable} PRIVATE DART_ODE_CCD_WITH_BOX_CYLINDER_COLLISION)
