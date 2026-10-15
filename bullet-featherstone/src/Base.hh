@@ -300,8 +300,8 @@ struct JointInfo
   double maxEffort = 0.0;
   double minVelocity = 0.0;
   double maxVelocity = 0.0;
-  double axisLower = 0.0;
-  double axisUpper = 0.0;
+  double axisLower = -std::numeric_limits<double>::infinity();
+  double axisUpper = std::numeric_limits<double>::infinity();
 
   // joint damping, spring stiffness and reference
   double damping = 0.0;
@@ -312,6 +312,27 @@ struct JointInfo
   // they are part of the same body.
   bool fixedConstraintWeldChildToParent = false;
 
+  // Joint velocity and one-step velocity command of the first dof of a joint
+  // whose child link is kinematic. The velocity persists until it is set
+  // again, the command is consumed by the next step. Only the first dof can
+  // be driven.
+  double kinematicJointVel = 0.0;
+  std::optional<double> kinematicJointVelCmd = std::nullopt;
+
+  // Velocity of the first dof that WorldForwardStep last wrote to the joint
+  // of a kinematic child link, i.e. the commanded velocity after clamping to
+  // the position limits. A different joint velocity means that the velocity
+  // was set from outside (SetJointVelocity) since the last step.
+  btScalar kinematicJointVelPinned = 0;
+
+  // Max impulse of jointLimits before it was disabled for a kinematic child
+  // link, whose position limits are enforced by WorldForwardStep instead.
+  // Zero if jointLimits is not disabled.
+  btScalar jointLimitsMaxImpulse = 0;
+
+  // Velocity motor of the first dof. Created by SetJointVelocityCommand with
+  // the joint effort limit, or by WorldForwardStep with an unlimited impulse
+  // to lock / drive the joint of a kinematic link under a dynamic ancestor.
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
   std::shared_ptr<btMultiBodyFixedConstraint> fixedConstraint = nullptr;
