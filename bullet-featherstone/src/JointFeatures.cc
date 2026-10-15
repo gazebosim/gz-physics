@@ -222,14 +222,34 @@ void JointFeatures::SetJointVelocity(
   const Identity &_id, const std::size_t _dof, const double _value)
 {
   GZ_PROFILE("JointFeatures::SetJointVelocity");
-  const auto *joint = this->ReferenceInterface<JointInfo>(_id);
+  auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
   if (!identifier)
     return;
 
+  // A nan or inf joint velocity corrupts the state of the whole multibody.
+  if (!std::isfinite(_value))
+  {
+    gzerr << "Invalid joint velocity value [" << _value
+          << "] set on joint [" << joint->name << " DOF " << _dof
+          << "]. The value will be ignored\n";
+    return;
+  }
+
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
   model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] =
       static_cast<btScalar>(_value);
+#if BT_BULLET_VERSION >= 307
+  // Bullet does not integrate the position of a kinematic child link, so
+  // WorldForwardStep does it with this velocity. Unlike a velocity command,
+  // the velocity persists until it is set again. Only the first dof of a
+  // kinematic child joint can currently be driven.
+  if (_dof == 0 && model->body->isLinkKinematic(identifier->indexInBtModel))
+  {
+    joint->kinematicJointVel = _value;
+    joint->kinematicJointVelCmd = std::nullopt;
+  }
+#endif
   model->body->wakeUp();
 }
 
@@ -407,6 +427,30 @@ void JointFeatures::SetJointVelocityCommand(
   }
 
   auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+
+  // clamp the values
+  double velocity = std::clamp(_value,
+      jointInfo->minVelocity, jointInfo->maxVelocity);
+
+#if BT_BULLET_VERSION >= 307
+  const auto *identifier = std::get_if<InternalJoint>(&jointInfo->identifier);
+  if (identifier &&
+      modelInfo->body->isLinkKinematic(identifier->indexInBtModel))
+  {
+    // The joint of a kinematic child link is driven by WorldForwardStep, which
+    // integrates the joint position with the command for one step and, if the
+    // link has a dynamic ancestor, drives the joint motor itself. Only the
+    // first dof can currently be driven.
+    if (_dof == 0)
+    {
+      jointInfo->kinematicJointVel = 0.0;
+      jointInfo->kinematicJointVelCmd = velocity;
+    }
+    modelInfo->body->wakeUp();
+    return;
+  }
+#endif
+
   if (!jointInfo->motor)
   {
     auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
@@ -422,10 +466,6 @@ void JointFeatures::SetJointVelocityCommand(
       static_cast<btScalar>(jointInfo->maxEffort * world->stepSize));
     world->world->addMultiBodyConstraint(jointInfo->motor.get());
   }
-
-  // clamp the values
-  double velocity = std::clamp(_value,
-      jointInfo->minVelocity, jointInfo->maxVelocity);
 
   jointInfo->motor->setVelocityTarget(static_cast<btScalar>(velocity));
   modelInfo->body->wakeUp();
