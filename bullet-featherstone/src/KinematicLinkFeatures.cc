@@ -57,15 +57,26 @@ void KinematicLinkFeatures::SetLinkKinematic(
       {
         joint.kinematicJointVel = 0.0;
         joint.kinematicJointVelCmd = std::nullopt;
+        joint.kinematicJointVelPinned = 0;
       }
-      else if (joint.motor)
+      else
       {
-        // WorldForwardStep may have turned the joint motor into the lock of
-        // the kinematic link, with an unlimited impulse. Remove it so that
-        // the dynamic link moves freely. The next velocity command recreates
-        // it with the joint effort limit.
-        world->world->removeMultiBodyConstraint(joint.motor.get());
-        joint.motor.reset();
+        if (joint.motor)
+        {
+          // WorldForwardStep may have turned the joint motor into the lock
+          // of the kinematic link, with an unlimited impulse. Remove it so
+          // that the dynamic link moves freely. The next velocity command
+          // recreates it with the joint effort limit.
+          world->world->removeMultiBodyConstraint(joint.motor.get());
+          joint.motor.reset();
+        }
+        if (joint.jointLimits && joint.jointLimitsMaxImpulse > 0)
+        {
+          // Re-enable the joint limit constraint that WorldForwardStep
+          // disabled while the link was kinematic.
+          joint.jointLimits->setMaxAppliedImpulse(joint.jointLimitsMaxImpulse);
+          joint.jointLimitsMaxImpulse = 0;
+        }
       }
     }
   }
