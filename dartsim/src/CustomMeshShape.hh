@@ -18,9 +18,17 @@
 #ifndef GZ_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
 #define GZ_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
 
+#include <dart/config.hpp>
 #include <dart/dynamics/MeshShape.hpp>
 #include <gz/common/Mesh.hh>
 #include <gz/physics/dartsim-plugin/Export.hh>
+
+// DART >= 6.20.0 deprecates the Assimp-based MeshShape APIs in favor of
+// dart::math::TriMesh. When this is defined, CustomMeshShape is built from a
+// TriMesh instead of an aiScene.
+#if DART_VERSION_AT_LEAST(6, 20, 0)
+#define DART_USES_TRIMESH
+#endif
 
 namespace gz {
 namespace physics {

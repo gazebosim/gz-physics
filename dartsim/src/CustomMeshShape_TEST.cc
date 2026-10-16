@@ -20,8 +20,6 @@
 #include <memory>
 #include <string>
 
-#include <dart/config.hpp>
-
 #include <gz/common/Mesh.hh>
 #include <gz/common/SubMesh.hh>
 
@@ -107,7 +105,7 @@ TEST(CustomMeshShape_TEST, MultipleSubMeshes)
   EXPECT_NEAR(1.0, bbox.getMax().y(), tol);
   EXPECT_NEAR(2.0, bbox.getMax().z(), tol);
 
-#if DART_VERSION_AT_LEAST(6, 20, 0)
+#ifdef DART_USES_TRIMESH
   // On DART >= 6.20 the shape is built directly as a TriMesh. Check that the
   // submeshes were merged into a single vertex buffer with offset indices and
   // that the line submesh was dropped.
@@ -201,7 +199,7 @@ TEST(CustomMeshShape_TEST, InvalidSubMeshesAreSkipped)
   EXPECT_NEAR(1.0, bbox.getMax().x(), tol);
   EXPECT_NEAR(1.0, bbox.getMax().y(), tol);
 
-#if DART_VERSION_AT_LEAST(6, 20, 0)
+#ifdef DART_USES_TRIMESH
   auto triMesh = shape->getTriMesh();
   ASSERT_NE(nullptr, triMesh);
   EXPECT_EQ(3u, triMesh->getVertices().size());

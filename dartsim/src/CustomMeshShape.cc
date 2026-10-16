@@ -20,8 +20,7 @@
 #include <memory>
 #include <string>
 
-#include <dart/config.hpp>
-#if DART_VERSION_AT_LEAST(6, 20, 0)
+#ifdef DART_USES_TRIMESH
 #include <dart/math/TriMesh.hpp>
 #endif
 
@@ -80,7 +79,7 @@ unsigned int CheckNumVerticesPerFaces(
   return 0;
 }
 
-#if DART_VERSION_AT_LEAST(6, 20, 0)
+#ifdef DART_USES_TRIMESH
 /////////////////////////////////////////////////
 /// \brief Convert a common::Mesh into a DART TriMesh. Only triangle submeshes
 /// contribute geometry; point and line submeshes carry no collision geometry
@@ -199,7 +198,7 @@ unsigned int GetPrimitiveType(
 #endif
 }
 
-#if DART_VERSION_AT_LEAST(6, 20, 0)
+#ifdef DART_USES_TRIMESH
 /////////////////////////////////////////////////
 CustomMeshShape::CustomMeshShape(
     const common::Mesh &_input,
