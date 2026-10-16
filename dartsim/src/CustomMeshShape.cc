@@ -228,19 +228,24 @@ CustomMeshShape::CustomMeshShape(
   aiScene *scene = new aiScene;
   scene->mNumMeshes = numSubMeshes;
   scene->mMeshes = new aiMesh*[numSubMeshes];
+  for (unsigned int i = 0; i < numSubMeshes; ++i)
+    scene->mMeshes[i] = nullptr;
   scene->mRootNode = node;
 
   // NOTE(MXG): We are ignoring materials and colors from the mesh, because
   // gazebo will only use dartsim for physics, not for rendering.
   scene->mMaterials = nullptr;
 
+  // Number of submeshes that were successfully converted. Skipped submeshes
+  // must not leave null entries in scene->mMeshes since DART iterates over
+  // all of them when computing the bounding box and volume.
+  unsigned int numValidMeshes = 0;
+
   // Fill in submesh contents
   for (unsigned int i = 0; i < numSubMeshes; ++i)
   {
     const common::SubMeshPtr &inputSubmesh =
         _input.SubMeshByIndex(i).lock();
-
-    scene->mMeshes[i] = nullptr;
 
     if (!inputSubmesh)
     {
@@ -328,8 +333,11 @@ CustomMeshShape::CustomMeshShape(
         mesh->mNormals[j][k] = static_cast<ai_real>(n[k]);
     }
 
-    scene->mMeshes[i] = mesh.release();
+    scene->mMeshes[numValidMeshes++] = mesh.release();
   }
+
+  scene->mNumMeshes = numValidMeshes;
+  node->mNumMeshes = numValidMeshes;
 
   this->mMesh = scene;
   this->mIsBoundingBoxDirty = true;
