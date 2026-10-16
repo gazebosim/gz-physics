@@ -224,6 +224,47 @@ struct KinematicJointVel
 /// joint follows the commanded velocity exactly.
 constexpr btScalar kKinematicJointMotorMaxImpulse = 1e9;
 
+/// \brief Joint motor that locks or drives the joint of a kinematic link.
+/// Bullet solves a multibody constraint in the simulation island of the
+/// colliders of its links, but kinematic colliders belong to no island. A
+/// plain joint motor between two kinematic links, e.g. a kinematic joint
+/// above a dynamic link in an otherwise kinematic chain, would never be
+/// solved. This motor falls back to the island of the dynamic links of its
+/// multibody, which bullet merges into a single island.
+class KinematicJointMotor : public btMultiBodyJointMotor
+{
+  public: using btMultiBodyJointMotor::btMultiBodyJointMotor;
+
+  // Documentation inherited
+  public: int getIslandIdA() const override
+  {
+    const int island = btMultiBodyJointMotor::getIslandIdA();
+    return island >= 0 ? island : this->DynamicIsland();
+  }
+
+  // Documentation inherited
+  public: int getIslandIdB() const override
+  {
+    const int island = btMultiBodyJointMotor::getIslandIdB();
+    return island >= 0 ? island : this->DynamicIsland();
+  }
+
+  /// \brief Island of the first dynamic collider of the multibody.
+  /// \return Island tag, or -1 if the multibody has no dynamic collider.
+  private: int DynamicIsland() const
+  {
+    const auto island = [](const btMultiBodyLinkCollider *_collider)
+    {
+      return (_collider && !_collider->isStaticOrKinematicObject()) ?
+          _collider->getIslandTag() : -1;
+    };
+    int tag = island(this->m_bodyA->getBaseCollider());
+    for (int i = 0; tag < 0 && i < this->m_bodyA->getNumLinks(); ++i)
+      tag = island(this->m_bodyA->getLink(i).m_collider);
+    return tag;
+  }
+};
+
 /////////////////////////////////////////////////
 /// \brief Set the velocity of the first dof of a joint and zero the velocity
 /// of its other dofs.
@@ -336,18 +377,16 @@ std::optional<KinematicJointVel> updateKinematicJoint(
       // by its limit while moving. The same motor is used by
       // JointFeatures::SetJointVelocityCommand, which only records the
       // command while the link is kinematic.
-      if (!_joint->motor)
+      if (!dynamic_cast<KinematicJointMotor *>(_joint->motor.get()))
       {
-        _joint->motor = std::make_shared<btMultiBodyJointMotor>(
+        // Replace a motor created by a velocity command while the link was
+        // dynamic: it has the joint effort limit and no island fallback.
+        if (_joint->motor)
+          _world->removeMultiBodyConstraint(_joint->motor.get());
+        _joint->motor = std::make_shared<KinematicJointMotor>(
             _body, idx, 0, static_cast<btScalar>(targetVel),
             kKinematicJointMotorMaxImpulse);
         _world->addMultiBodyConstraint(_joint->motor.get());
-      }
-      else if (_joint->motor->getMaxAppliedImpulse() <
-          kKinematicJointMotorMaxImpulse)
-      {
-        // Motor created by a velocity command with the joint effort limit.
-        _joint->motor->setMaxAppliedImpulse(kKinematicJointMotorMaxImpulse);
       }
       _joint->motor->setVelocityTarget(static_cast<btScalar>(targetVel));
 
