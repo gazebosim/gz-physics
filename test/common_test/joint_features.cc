@@ -15,6 +15,7 @@
  *
 */
 
+#include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <string>
@@ -1454,6 +1455,161 @@ TYPED_TEST(JointFeaturesDetachTest, JointDetach)
         gz::math::eigen3::convert(frameDataUpperLink.linearVelocity));
     EXPECT_EQ(upperLinkAngularVelocity,
        gz::math::eigen3::convert(frameDataUpperLink.angularVelocity));
+  }
+}
+
+struct JointFeatureDofList : gz::physics::FeatureList<
+    gz::physics::ForwardStep,
+    gz::physics::GetBasicJointProperties,
+    gz::physics::GetBasicJointState,
+    gz::physics::GetEngineInfo,
+    gz::physics::GetJointFromModel,
+    gz::physics::GetModelFromWorld,
+    gz::physics::SetBasicJointState,
+    gz::physics::sdf::ConstructSdfModel,
+    gz::physics::sdf::ConstructSdfWorld
+> { };
+
+template <class T>
+class JointFeaturesDofTest :
+  public JointFeaturesTest<T>{};
+using JointFeaturesDofTestTypes =
+  ::testing::Types<JointFeatureDofList>;
+TYPED_TEST_SUITE(JointFeaturesDofTest,
+                 JointFeaturesDofTestTypes);
+
+/////////////////////////////////////////////////
+TYPED_TEST(JointFeaturesDofTest, InvalidDof)
+{
+  // Joints without degrees of freedom, whether they fix a model to the world
+  // or a link to another link, have no joint position or velocity, and a dof
+  // index past the end of a joint has no state and is ignored when set.
+  const std::string modelStr = R"(
+    <sdf version="1.6">
+      <model name="joint_dofs">
+        <pose>0 0 3 0 0 0</pose>
+        <link name="base">
+          <collision name="collision">
+            <geometry>
+              <sphere>
+                <radius>0.1</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+        <link name="fixed_link">
+          <pose>0.5 0 0 0 0 0</pose>
+          <collision name="collision">
+            <geometry>
+              <sphere>
+                <radius>0.1</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+        <link name="arm">
+          <pose>0 0.5 0 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx>
+              <iyy>0.01</iyy>
+              <izz>0.01</izz>
+            </inertia>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <sphere>
+                <radius>0.1</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="world_fixed" type="fixed">
+          <parent>world</parent>
+          <child>base</child>
+        </joint>
+        <joint name="internal_fixed" type="fixed">
+          <parent>base</parent>
+          <child>fixed_link</child>
+        </joint>
+        <joint name="revolute" type="revolute">
+          <parent>base</parent>
+          <child>arm</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)";
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // The bullet plugin ignores the dof index
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet")
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<JointFeatureDofList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    errors = root.LoadSdfString(modelStr);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.Model());
+    ASSERT_NE(nullptr, world->ConstructModel(*root.Model()));
+
+    auto model = world->GetModel("joint_dofs");
+    ASSERT_NE(nullptr, model);
+    auto worldFixed = model->GetJoint("world_fixed");
+    ASSERT_NE(nullptr, worldFixed);
+    auto internalFixed = model->GetJoint("internal_fixed");
+    ASSERT_NE(nullptr, internalFixed);
+    auto revolute = model->GetJoint("revolute");
+    ASSERT_NE(nullptr, revolute);
+
+    // Joints without dofs
+    for (const auto &joint : {worldFixed, internalFixed})
+    {
+      EXPECT_EQ(0u, joint->GetDegreesOfFreedom());
+      for (std::size_t dof = 0; dof < 7; ++dof)
+      {
+        EXPECT_TRUE(std::isnan(joint->GetPosition(dof))) << "dof " << dof;
+        EXPECT_TRUE(std::isnan(joint->GetVelocity(dof))) << "dof " << dof;
+      }
+    }
+
+    // Dof past the end of a joint with one dof
+    EXPECT_EQ(1u, revolute->GetDegreesOfFreedom());
+    EXPECT_DOUBLE_EQ(0.0, revolute->GetPosition(0));
+    EXPECT_DOUBLE_EQ(0.0, revolute->GetVelocity(0));
+    for (std::size_t dof = 1; dof < 7; ++dof)
+    {
+      EXPECT_TRUE(std::isnan(revolute->GetPosition(dof))) << "dof " << dof;
+      EXPECT_TRUE(std::isnan(revolute->GetVelocity(dof))) << "dof " << dof;
+    }
+
+    // Setting a dof past the end is ignored. The joint axis goes through the
+    // center of mass of the arm, so the arm does not move on its own.
+    revolute->SetPosition(1, 0.5);
+    revolute->SetVelocity(1, 0.5);
+    revolute->SetForce(1, 1.0);
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    world->Step(output, state, input);
+    EXPECT_NEAR(0.0, revolute->GetPosition(0), 1e-6);
+    EXPECT_NEAR(0.0, revolute->GetVelocity(0), 1e-6);
+
+    // while the dof of the joint can be set
+    revolute->SetPosition(0, 0.5);
+    EXPECT_NEAR(0.5, revolute->GetPosition(0), 1e-6);
   }
 }
 
