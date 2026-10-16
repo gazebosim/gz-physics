@@ -264,6 +264,23 @@ void GzMultiBody::AddJointDampingStiffnessTorque(int _jointIndex,
   }
 }
 
+void GzMultiBody::SetBaseLinkFrameVelocity(const Eigen::Vector3d &_linVel,
+    const Eigen::Vector3d &_angVel)
+{
+  this->baseLinkFrameLinVel = _linVel;
+  this->baseLinkFrameAngVel = _angVel;
+}
+
+const Eigen::Vector3d &GzMultiBody::GetBaseLinkFrameLinearVelocity() const
+{
+  return this->baseLinkFrameLinVel;
+}
+
+const Eigen::Vector3d &GzMultiBody::GetBaseLinkFrameAngularVelocity() const
+{
+  return this->baseLinkFrameAngVel;
+}
+
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz

@@ -92,9 +92,20 @@ void KinematicLinkFeatures::SetLinkKinematic(
       }
     }
   }
-  else if (!colliderStatic)
+  else
   {
-    model->body->setBaseDynamicType(collisionFlags);
+    if (!colliderStatic)
+      model->body->setBaseDynamicType(collisionFlags);
+    if (_kinematic)
+    {
+      // A kinematic base is moved with the velocity of its root link frame
+      // stored in the multibody, see SimulationFeatures::WorldForwardStep.
+      // Start from the current velocity so that the base keeps moving as it
+      // did while it was dynamic.
+      model->body->SetBaseLinkFrameVelocity(
+          convert(getBaseLinkFrameLinearVelocity(*model)),
+          convert(model->body->getBaseOmega()));
+    }
   }
   // Changing the dynamic type does not wake up a sleeping body in bullet, so
   // a body that fell asleep while kinematic would otherwise not start moving
