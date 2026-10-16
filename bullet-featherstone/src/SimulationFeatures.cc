@@ -191,8 +191,13 @@ void clearCollisionCache(btMultiBodyDynamicsWorld *_world)
 /// step.
 struct KinematicBaseVel
 {
+  /// \brief Multibody with the kinematic base.
   GzMultiBody *body;
+
+  /// \brief World linear velocity of the center of mass of the base.
   btVector3 linVel;
+
+  /// \brief World angular velocity of the base.
   btVector3 angVel;
 };
 
@@ -432,18 +437,44 @@ void SimulationFeatures::WorldForwardStep(
     if (!body || !body->isBaseKinematic())
       continue;
 
-    const btVector3 linVel = body->getBaseVel();
-    const btVector3 angVel = body->getBaseOmega();
-    if (!linVel.isZero() || !angVel.isZero())
-    {
-      btTransform predictedTrans;
-      btTransformUtil::integrateTransform(
-          body->getBaseWorldTransform(),
-          linVel, angVel, static_cast<btScalar>(stepSize),
-          predictedTrans);
-      body->SetBaseWorldTransform(predictedTrans);
-      kinematicBaseVels.push_back({body, linVel, angVel});
-    }
+    // The velocity of a kinematic base is the velocity of its root link
+    // frame, stored in double precision in the multibody by the free group
+    // velocity setters. Bullet stores the velocity of the center of mass of
+    // the root link, which is derived from the stored velocity at every pose
+    // and never fed back into it, so that a root link with an offset center
+    // of mass moves at exactly the requested velocity instead of orbiting
+    // its center of mass or drifting with bullet's single precision state.
+    const Eigen::Vector3d &linkLinVelCmd =
+        body->GetBaseLinkFrameLinearVelocity();
+    const Eigen::Vector3d &angVelCmd = body->GetBaseLinkFrameAngularVelocity();
+    if (linkLinVelCmd.isZero(0.0) && angVelCmd.isZero(0.0))
+      continue;
+
+    // btMultiBody user index stores the gz-physics model root link id
+    const std::size_t rootID =
+        static_cast<std::size_t>(body->getUserIndex());
+    const auto *model = this->ReferenceInterface<ModelInfo>(
+        this->links.at(rootID)->model);
+    const btTransform baseInertiaToLinkBt =
+        convertTf(model->baseInertiaToLinkFrame);
+    const btTransform linkTf =
+        body->getBaseWorldTransform() * baseInertiaToLinkBt;
+    const btVector3 linkLinVel = convertVec(linkLinVelCmd);
+    const btVector3 angVel = convertVec(angVelCmd);
+
+    btTransform predictedLinkTf;
+    btTransformUtil::integrateTransform(
+        linkTf, linkLinVel, angVel, static_cast<btScalar>(stepSize),
+        predictedLinkTf);
+    const btTransform predictedBaseTf =
+        predictedLinkTf * baseInertiaToLinkBt.inverse();
+    const btVector3 comToLink = getBaseComToLinkFrame(*model, predictedBaseTf);
+    const btVector3 baseLinVel = linkLinVel - angVel.cross(comToLink);
+
+    body->SetBaseWorldTransform(predictedBaseTf);
+    body->setBaseVel(baseLinVel);
+    body->setBaseOmega(angVel);
+    kinematicBaseVels.push_back({body, baseLinVel, angVel});
   }
 
   // Integrate and lock/control joints whose child link is kinematic.
@@ -533,6 +564,10 @@ void SimulationFeatures::WorldForwardStep(
   {
     entry.body->setBaseVel(entry.linVel);
     entry.body->setBaseOmega(entry.angVel);
+    // A kinematic base moving slower than bullet's sleep threshold would be
+    // put to sleep after the sleep timeout even though it is moving, which
+    // would freeze the dynamic links attached to it.
+    entry.body->wakeUp();
   }
   // Pin the joint velocities of kinematic child joints to the commanded
   // values.
