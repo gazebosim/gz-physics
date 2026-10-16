@@ -19,6 +19,7 @@
 #include <tuple>
 
 #include "test/TestLibLoader.hh"
+#include "test/Utils.hh"
 #include "Worlds.hh"
 
 #include <gz/common/Console.hh>
@@ -30,6 +31,7 @@
 #include <sdf/World.hh>
 
 #include "gz/physics/FindFeatures.hh"
+#include "gz/physics/ForwardStep.hh"
 #include "gz/physics/FrameSemantics.hh"
 #include "gz/physics/FreeGroup.hh"
 #include "gz/physics/GetEntities.hh"
@@ -53,6 +55,11 @@ struct NestedTestFeatureList : gz::physics::FeatureList<
     BaseTestFeatureList,
     gz::physics::sdf::ConstructSdfNestedModel,
     gz::physics::GetNestedModelFromModel > { };
+
+struct VelocityTestFeatureList : gz::physics::FeatureList<
+    BaseTestFeatureList,
+    gz::physics::ForwardStep,
+    gz::physics::SetFreeGroupWorldVelocity > { };
 
 using BaseWorldPtr = gz::physics::World3dPtr<BaseTestFeatureList>;
 using BaseModelPtr = gz::physics::Model3dPtr<BaseTestFeatureList>;
@@ -91,6 +98,8 @@ class FreeGroupFeaturesTest:
 using BaseFreeGroupFeaturesTest = FreeGroupFeaturesTest<BaseTestFeatureList>;
 using NestedFreeGroupFeaturesTest =
     FreeGroupFeaturesTest<NestedTestFeatureList>;
+using VelocityFreeGroupFeaturesTest =
+    FreeGroupFeaturesTest<VelocityTestFeatureList>;
 
 NestedModelPtr GetModelFromAbsoluteName(const NestedWorldPtr &_world,
                                         const std::string &_absoluteName)
@@ -506,10 +515,136 @@ TEST_F(BaseFreeGroupFeaturesTest, FreeGroupSetWorldPoseStaticAndFixedModel)
   }
 }
 
+TEST_F(VelocityFreeGroupFeaturesTest, FreeGroupSetWorldVelocityCoMOffset)
+{
+  // The velocity of a free group is the velocity of its canonical link
+  // frame. The center of mass of the link below is offset from the link
+  // frame, so the engine has to convert between the velocity of the link
+  // frame and the velocity of the center of mass when the link rotates.
+  const std::string modelStr = R"(
+    <sdf version="1.11">
+      <model name="offset">
+        <pose>5 0 2 0 0 0</pose>
+        <link name="link">
+          <inertial>
+            <pose>0.5 0 0 0 0 0</pose>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx>
+              <iyy>0.01</iyy>
+              <izz>0.01</izz>
+            </inertia>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <sphere>
+                <radius>0.1</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+  // Center of mass in the link frame
+  const Eigen::Vector3d comOffset(0.5, 0, 0);
+  // Model pose, away from the sphere of sphere.sdf
+  const Eigen::Vector3d linkPos(5, 0, 2);
+
+  for (const std::string &name : pluginNames)
+  {
+    // bullet sets the velocity of the center of mass and tpe has no notion
+    // of a center of mass.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "tpe")
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<VelocityTestFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    // sphere.sdf has no gravity
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kSphereSdf);
+    EXPECT_EQ(0u, errors.size()) << errors;
+    const sdf::World *sdfWorld = root.WorldByIndex(0);
+    ASSERT_NE(nullptr, sdfWorld);
+    auto world = engine->ConstructWorld(*sdfWorld);
+    ASSERT_NE(nullptr, world);
+
+    errors = root.LoadSdfString(modelStr);
+    ASSERT_TRUE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    auto model = world->GetModel("offset");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+
+    const Eigen::Vector3d linVel(1, 0, 0);
+    const Eigen::Vector3d angVel(0, 0, 1);
+    freeGroup->SetWorldAngularVelocity(angVel);
+    freeGroup->SetWorldLinearVelocity(linVel);
+    auto frameData = link->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(linVel, frameData.linearVelocity,
+        1e-6));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, frameData.angularVelocity,
+        1e-6));
+
+    // Setting the angular velocity keeps the linear velocity of the link
+    // frame, in both orders of the calls.
+    const Eigen::Vector3d angVel2(0, 0, 2);
+    freeGroup->SetWorldAngularVelocity(angVel2);
+    frameData = link->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(linVel, frameData.linearVelocity,
+        1e-6));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel2, frameData.angularVelocity,
+        1e-6));
+    freeGroup->SetWorldLinearVelocity(linVel);
+    freeGroup->SetWorldAngularVelocity(angVel);
+    frameData = link->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(linVel, frameData.linearVelocity,
+        1e-6));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, frameData.angularVelocity,
+        1e-6));
+
+    // Without gravity the center of mass keeps its velocity
+    // v_com = v_link + w x (p_com - p_link) and the link keeps spinning
+    // about a principal axis, so the link frame orbits the center of mass
+    // with the velocity v_com + w x (p_link - p_com).
+    const Eigen::Vector3d comVel = linVel + angVel.cross(comOffset);
+    const std::size_t steps = 500;
+    const double time = steps * 0.001;
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    for (std::size_t i = 0; i < steps; ++i)
+      world->Step(output, state, input);
+
+    frameData = link->FrameDataRelativeToWorld();
+    const Eigen::Vector3d linkToCom = frameData.pose.linear() * comOffset;
+    const Eigen::Vector3d expectedLinVel = comVel - angVel.cross(linkToCom);
+    EXPECT_TRUE(gz::physics::test::Equal(expectedLinVel,
+        frameData.linearVelocity, 1e-2));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, frameData.angularVelocity,
+        1e-2));
+    // The center of mass moved in a straight line while the link yawed.
+    const Eigen::Vector3d expectedComPos =
+        linkPos + comOffset + comVel * time;
+    const Eigen::Vector3d comPos = frameData.pose.translation() + linkToCom;
+    EXPECT_TRUE(gz::physics::test::Equal(expectedComPos, comPos, 1e-2));
+    EXPECT_NEAR(angVel.z() * time,
+        gz::math::eigen3::convert(frameData.pose).Rot().Yaw(), 1e-2);
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   BaseFreeGroupFeaturesTest::init(argc, argv);
   NestedFreeGroupFeaturesTest::init(argc, argv);
+  VelocityFreeGroupFeaturesTest::init(argc, argv);
   return RUN_ALL_TESTS();
 }

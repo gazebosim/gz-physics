@@ -159,7 +159,32 @@ class GzMultiBody: public btMultiBody
   public: void AddJointDampingStiffnessTorque(int _jointIndex, double _damping,
       double _springStiffness, double _springReference);
 
+  /// \brief Set the velocity of the root link frame of the base in world
+  /// coordinates. The velocity of a free group is the velocity of its root
+  /// link frame, while bullet stores the velocity of the center of mass of
+  /// the base in btScalar precision. The velocity is kept here in double
+  /// precision and is the velocity a kinematic base is moved with, so that
+  /// bullet's state never feeds back into the requested velocity.
+  /// \param[in] _linVel World linear velocity of the root link frame.
+  /// \param[in] _angVel World angular velocity.
+  public: void SetBaseLinkFrameVelocity(const Eigen::Vector3d &_linVel,
+      const Eigen::Vector3d &_angVel);
+
+  /// \brief Get the world linear velocity of the root link frame, see
+  /// SetBaseLinkFrameVelocity.
+  public: const Eigen::Vector3d &GetBaseLinkFrameLinearVelocity() const;
+
+  /// \brief Get the world angular velocity of the base, see
+  /// SetBaseLinkFrameVelocity.
+  public: const Eigen::Vector3d &GetBaseLinkFrameAngularVelocity() const;
+
   private: bool needsCollisionTransformsUpdate = false;
+
+  /// \brief World linear velocity of the root link frame.
+  private: Eigen::Vector3d baseLinkFrameLinVel = Eigen::Vector3d::Zero();
+
+  /// \brief World angular velocity of the base.
+  private: Eigen::Vector3d baseLinkFrameAngVel = Eigen::Vector3d::Zero();
 };
 
 struct ModelInfo
@@ -421,6 +446,66 @@ inline Eigen::Isometry3d GetWorldTransformOfLink(
   }
 
   return convert(body.getBaseWorldTransform()) * model.baseInertiaToLinkFrame;
+}
+
+/////////////////////////////////////////////////
+/// \brief Vector from the center of mass of the root link, which is the
+/// origin of the bullet base frame, to the origin of the root link frame, in
+/// world coordinates. The offset is rotated rather than taken as the
+/// difference of two world positions, which loses precision far from the
+/// world origin in single precision builds of bullet.
+/// \param[in] _model Model the root link belongs to.
+/// \param[in] _baseTf World transform of the base frame.
+inline btVector3 getBaseComToLinkFrame(const ModelInfo &_model,
+    const btTransform &_baseTf)
+{
+  return _baseTf.getBasis() *
+      convertVec(_model.baseInertiaToLinkFrame.translation());
+}
+
+/////////////////////////////////////////////////
+/// \brief World linear velocity of the root link frame of a model, derived
+/// from the velocity of the center of mass of the root link that bullet
+/// stores: v_link = v_com + w x r, with r from the center of mass to the
+/// root link frame.
+/// \param[in] _model Model to query.
+inline btVector3 getBaseLinkFrameLinearVelocity(const ModelInfo &_model)
+{
+  const btVector3 comToLink =
+      getBaseComToLinkFrame(_model, _model.body->getBaseWorldTransform());
+  return _model.body->getBaseVel() +
+      _model.body->getBaseOmega().cross(comToLink);
+}
+
+/////////////////////////////////////////////////
+/// \brief Set the velocity of the base of a model from the velocity of its
+/// root link frame: v_com = v_link - w x r, see
+/// getBaseLinkFrameLinearVelocity. The velocity of the root link frame is
+/// also stored in the multibody, see GzMultiBody::SetBaseLinkFrameVelocity.
+/// \param[in] _model Model to update.
+/// \param[in] _linkLinVel World linear velocity of the root link frame.
+/// \param[in] _angVel World angular velocity.
+inline void setBaseVelocityFromLinkFrame(const ModelInfo &_model,
+    const Eigen::Vector3d &_linkLinVel, const Eigen::Vector3d &_angVel)
+{
+  _model.body->SetBaseLinkFrameVelocity(_linkLinVel, _angVel);
+  const btVector3 angVel = convertVec(_angVel);
+  const btVector3 comToLink =
+      getBaseComToLinkFrame(_model, _model.body->getBaseWorldTransform());
+  _model.body->setBaseOmega(angVel);
+  _model.body->setBaseVel(convertVec(_linkLinVel) - angVel.cross(comToLink));
+}
+
+/////////////////////////////////////////////////
+/// \brief Return true if the base of a multibody is kinematic. Bullet
+/// versions without kinematic multibodies have no kinematic bases.
+inline bool isBaseKinematic([[maybe_unused]] const btMultiBody &_body)
+{
+#if BT_BULLET_VERSION >= 307
+  return _body.isBaseKinematic();
+#else
+  return false;
+#endif
 }
 
 /////////////////////////////////////////////////
