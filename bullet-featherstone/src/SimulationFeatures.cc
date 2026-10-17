@@ -387,6 +387,7 @@ std::optional<KinematicJointVel> updateKinematicJoint(
             _body, idx, 0, static_cast<btScalar>(targetVel),
             kKinematicJointMotorMaxImpulse);
         _world->addMultiBodyConstraint(_joint->motor.get());
+        _joint->motors[0] = _joint->motor;
       }
       _joint->motor->setVelocityTarget(static_cast<btScalar>(targetVel));
 
@@ -410,6 +411,7 @@ std::optional<KinematicJointVel> updateKinematicJoint(
       {
         _world->removeMultiBodyConstraint(_joint->motor.get());
         _joint->motor.reset();
+        _joint->motors.erase(0);
       }
       setKinematicJointVel(_body, idx, dofCount,
           static_cast<btScalar>(targetVel));
@@ -617,6 +619,13 @@ void SimulationFeatures::WorldForwardStep(
   // joint velocity command behavior
   for (auto & joint : this->joints)
   {
+    for (auto & [dof, motor] : joint.second->motors)
+    {
+      if (motor)
+      {
+        motor->setVelocityTarget(btScalar(0));
+      }
+    }
     if (joint.second->motor)
     {
       joint.second->motor->setVelocityTarget(btScalar(0));

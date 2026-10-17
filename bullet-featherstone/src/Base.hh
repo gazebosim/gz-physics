@@ -255,6 +255,118 @@ class GzMultiBodyLinkCollider: public btMultiBodyLinkCollider {
   public: std::optional<uint16_t> categoryBitmask;
 };
 
+/// \brief Custom GzMultiBodyJointMotor supporting arbitrary linkDoF
+class GzMultiBodyJointMotor : public btMultiBodyJointMotor
+{
+  public: GzMultiBodyJointMotor(
+      btMultiBody* body, int link, int linkDoF,
+      btScalar desiredVelocity, btScalar maxMotorImpulse)
+    : btMultiBodyJointMotor(
+        body, link, linkDoF, desiredVelocity, maxMotorImpulse),
+      m_linkDoF(linkDoF)
+  {
+  }
+
+  public: void finalizeMultiDof() override
+  {
+    allocateJacobiansMultiDof();
+    unsigned int offset =
+        6 + (m_bodyA->getLink(m_linkA).m_dofOffset + m_linkDoF);
+    jacobianA(0)[offset] = 1;
+    m_numDofsFinalized = m_jacSizeBoth;
+  }
+
+  public: void createConstraintRows(
+      btMultiBodyConstraintArray& constraintRows,
+      btMultiBodyJacobianData& data,
+      const btContactSolverInfo& infoGlobal) override
+  {
+    if (m_numDofsFinalized != m_jacSizeBoth)
+    {
+      finalizeMultiDof();
+    }
+    if (m_numDofsFinalized != m_jacSizeBoth)
+      return;
+    if (std::abs(m_maxAppliedImpulse) <= 0.f)
+      return;
+
+    const btScalar posError = 0;
+    const btVector3 dummy(0, 0, 0);
+
+    for (int row = 0; row < getNumRows(); row++)
+    {
+      btMultiBodySolverConstraint& constraintRow =
+          constraintRows.expandNonInitializing();
+
+      btScalar currentPosition = 0;
+      if (m_bodyA->getLink(m_linkA).m_jointType != btMultibodyLink::eSpherical)
+      {
+        currentPosition = m_bodyA->getJointPosMultiDof(m_linkA)[m_linkDoF];
+      }
+      btScalar currentVelocity =
+          m_bodyA->getJointVelMultiDof(m_linkA)[m_linkDoF];
+      btScalar positionStabilizationTerm =
+          m_erp * (m_desiredPosition - currentPosition) / infoGlobal.m_timeStep;
+
+      btScalar velocityError = (m_desiredVelocity - currentVelocity);
+      btScalar rhs = m_kp * positionStabilizationTerm + currentVelocity +
+          m_kd * velocityError;
+      if (rhs > m_rhsClamp)
+        rhs = m_rhsClamp;
+      if (rhs < -m_rhsClamp)
+        rhs = -m_rhsClamp;
+
+      fillMultiBodyConstraint(constraintRow, data, jacobianA(row),
+          jacobianB(row), dummy, dummy, dummy, dummy, posError, infoGlobal,
+          -m_maxAppliedImpulse, m_maxAppliedImpulse, false, 1, false, rhs);
+      constraintRow.m_orgConstraint = this;
+      constraintRow.m_orgDofIndex = row;
+
+      switch (m_bodyA->getLink(m_linkA).m_jointType)
+      {
+        case btMultibodyLink::eRevolute:
+        {
+          constraintRow.m_contactNormal1.setZero();
+          constraintRow.m_contactNormal2.setZero();
+          btVector3 revoluteAxisInWorld = quatRotate(
+              m_bodyA->getLink(m_linkA).m_cachedWorldTransform.getRotation(),
+              m_bodyA->getLink(m_linkA).m_axes[0].m_topVec);
+          constraintRow.m_relpos1CrossNormal = revoluteAxisInWorld;
+          constraintRow.m_relpos2CrossNormal = -revoluteAxisInWorld;
+          break;
+        }
+        case btMultibodyLink::ePrismatic:
+        {
+          btVector3 prismaticAxisInWorld = quatRotate(
+              m_bodyA->getLink(m_linkA).m_cachedWorldTransform.getRotation(),
+              m_bodyA->getLink(m_linkA).m_axes[0].m_bottomVec);
+          constraintRow.m_contactNormal1 = prismaticAxisInWorld;
+          constraintRow.m_contactNormal2 = -prismaticAxisInWorld;
+          constraintRow.m_relpos1CrossNormal.setZero();
+          constraintRow.m_relpos2CrossNormal.setZero();
+          break;
+        }
+        case btMultibodyLink::eSpherical:
+        {
+          constraintRow.m_contactNormal1.setZero();
+          constraintRow.m_contactNormal2.setZero();
+          btMatrix3x3 frameAworld;
+          frameAworld.setIdentity();
+          frameAworld = m_bodyA->localFrameToWorld(m_linkA, frameAworld);
+          btVector3 sphericalAxisInWorld = frameAworld.getColumn(m_linkDoF);
+          constraintRow.m_relpos1CrossNormal = sphericalAxisInWorld;
+          constraintRow.m_relpos2CrossNormal = -sphericalAxisInWorld;
+          break;
+        }
+        default:
+          break;
+      }
+    }
+  }
+
+  private: int m_linkDoF{0};
+};
+
 /// Link information is embedded inside the model, so all we need to store here
 /// is a reference to the model and the index of this link inside of it.
 struct LinkInfo
@@ -327,10 +439,15 @@ struct JointInfo
   // \todo(iche033) Extend to support joints with more than 1 dof
   double minEffort = 0.0;
   double maxEffort = 0.0;
-  double minVelocity = 0.0;
-  double maxVelocity = 0.0;
+  double minVelocity = -std::numeric_limits<double>::infinity();
+  double maxVelocity = std::numeric_limits<double>::infinity();
   double axisLower = -std::numeric_limits<double>::infinity();
   double axisUpper = std::numeric_limits<double>::infinity();
+
+  std::unordered_map<std::size_t, double> minEffortMap = {};
+  std::unordered_map<std::size_t, double> maxEffortMap = {};
+  std::unordered_map<std::size_t, double> minVelocityMap = {};
+  std::unordered_map<std::size_t, double> maxVelocityMap = {};
 
   // joint damping, spring stiffness and reference
   double damping = 0.0;
@@ -363,6 +480,54 @@ struct JointInfo
   // the joint effort limit, or by WorldForwardStep with an unlimited impulse
   // to lock / drive the joint of a kinematic link under a dynamic ancestor.
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
+
+  // Velocity motors per dof for multi-dof joints.
+  std::unordered_map<std::size_t, std::shared_ptr<btMultiBodyJointMotor>>
+      motors = {};
+
+  /// \brief Get maximum effort for a specific DOF.
+  /// \param[in] _dof Degree of freedom index.
+  /// \return Maximum effort.
+  public: double GetMaxEffort(std::size_t _dof) const
+  {
+    auto it = this->maxEffortMap.find(_dof);
+    if (it != this->maxEffortMap.end())
+      return it->second;
+    return this->maxEffort;
+  }
+
+  /// \brief Get minimum effort for a specific DOF.
+  /// \param[in] _dof Degree of freedom index.
+  /// \return Minimum effort.
+  public: double GetMinEffort(std::size_t _dof) const
+  {
+    auto it = this->minEffortMap.find(_dof);
+    if (it != this->minEffortMap.end())
+      return it->second;
+    return this->minEffort;
+  }
+
+  /// \brief Get maximum velocity for a specific DOF.
+  /// \param[in] _dof Degree of freedom index.
+  /// \return Maximum velocity.
+  public: double GetMaxVelocity(std::size_t _dof) const
+  {
+    auto it = this->maxVelocityMap.find(_dof);
+    if (it != this->maxVelocityMap.end())
+      return it->second;
+    return this->maxVelocity;
+  }
+
+  /// \brief Get minimum velocity for a specific DOF.
+  /// \param[in] _dof Degree of freedom index.
+  /// \return Minimum velocity.
+  public: double GetMinVelocity(std::size_t _dof) const
+  {
+    auto it = this->minVelocityMap.find(_dof);
+    if (it != this->minVelocityMap.end())
+      return it->second;
+    return this->minVelocity;
+  }
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
   std::shared_ptr<btMultiBodyFixedConstraint> fixedConstraint = nullptr;
   std::shared_ptr<btMultiBodyGearConstraint> gearConstraint = nullptr;
@@ -780,9 +945,18 @@ class Base : public Implements3d<FeatureList<Feature>>
     for (const auto jointID : model->jointEntityIds)
     {
       const auto joint = this->joints.at(jointID);
+      for (auto & [dof, motor] : joint->motors)
+      {
+        if (motor)
+        {
+          world->world->removeMultiBodyConstraint(motor.get());
+        }
+      }
+      joint->motors.clear();
       if (joint->motor)
       {
         world->world->removeMultiBodyConstraint(joint->motor.get());
+        joint->motor.reset();
       }
       if (joint->fixedConstraint)
       {
