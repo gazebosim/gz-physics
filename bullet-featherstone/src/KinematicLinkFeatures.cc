@@ -73,6 +73,12 @@ void KinematicLinkFeatures::SetLinkKinematic(
       }
       else
       {
+        for (auto & [dof, motor] : joint.motors)
+        {
+          if (motor)
+            world->world->removeMultiBodyConstraint(motor.get());
+        }
+        joint.motors.clear();
         if (joint.motor)
         {
           // WorldForwardStep may have turned the joint motor into the lock
