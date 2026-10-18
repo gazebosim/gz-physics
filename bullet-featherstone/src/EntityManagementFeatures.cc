@@ -526,11 +526,9 @@ const std::string &EntityManagementFeatures::GetModelName(
 std::size_t EntityManagementFeatures::GetModelIndex(
     const Identity &_modelID) const
 {
-  // The root link does not have an index, so we give it an index of 0 and bump
-  // the rest up by one when providing an index to gazebo
   const auto index = this->ReferenceInterface<ModelInfo>(
     _modelID)->indexInWorld;
-  return static_cast<std::size_t>(index + 1);
+  return static_cast<std::size_t>(index);
 }
 
 /////////////////////////////////////////////////
