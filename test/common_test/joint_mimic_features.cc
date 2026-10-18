@@ -678,6 +678,91 @@ TEST_F(JointMimicFeatureTest, BallJointMimicSafetyGuardTest)
   }
 }
 
+// Here, we verify that setting a mimic constraint across two different models
+// is correctly disallowed and returns false in physics engines that do not
+// support cross-model multibody mimic constraints (such as bullet-featherstone).
+TEST_F(JointMimicFeatureTest, CrossModelMimicSafetyGuardTest)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_SUPPORTED_ENGINE(name, "bullet-featherstone")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    const std::string worldStr = R"(
+    <sdf version="1.9">
+      <world name="test_world">
+        <model name="leader_model">
+          <link name="base"/>
+          <joint name="fixed_leader" type="fixed">
+            <parent>world</parent>
+            <child>base</child>
+          </joint>
+          <link name="child">
+            <inertial>
+              <mass>1</mass>
+              <inertia>
+                <ixx>1</ixx><iyy>1</iyy><izz>1</izz>
+                <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+              </inertia>
+            </inertial>
+          </link>
+          <joint name="joint" type="revolute">
+            <parent>base</parent>
+            <child>child</child>
+            <axis><xyz>0 0 1</xyz></axis>
+          </joint>
+        </model>
+        <model name="follower_model">
+          <link name="base"/>
+          <joint name="fixed_follower" type="fixed">
+            <parent>world</parent>
+            <child>base</child>
+          </joint>
+          <link name="child">
+            <inertial>
+              <mass>1</mass>
+              <inertia>
+                <ixx>1</ixx><iyy>1</iyy><izz>1</izz>
+                <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+              </inertia>
+            </inertial>
+          </link>
+          <joint name="joint" type="revolute">
+            <parent>base</parent>
+            <child>child</child>
+            <axis><xyz>0 0 1</xyz></axis>
+          </joint>
+        </model>
+      </world>
+    </sdf>)";
+
+    sdf::Root root;
+    const sdf::Errors errors = root.LoadSdfString(worldStr);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto leaderJoint = world->GetModel("leader_model")->GetJoint("joint");
+    ASSERT_NE(nullptr, leaderJoint);
+
+    auto followerJoint = world->GetModel("follower_model")->GetJoint("joint");
+    ASSERT_NE(nullptr, followerJoint);
+
+    // Cross-model mimic constraint should be disallowed and return false:
+    EXPECT_FALSE(followerJoint->SetMimicConstraint(
+        0, leaderJoint, 0, 1.0, 0.5, 0.0));
+
+    std::cout << "Finished testing plugin: " << name << std::endl;
+  }
+}
+
 // Test SetMimicConstraint on a programmatically added model since some engines
 // (e.g. MuJoCo) might require rebuilding/recompiling their internal state after
 // new models are spawned.
@@ -685,8 +770,7 @@ TEST_F(JointMimicFeatureTest, SetMimicConstraintOnSpawnedModel)
 {
   for (const std::string &name : this->pluginNames)
   {
-    CHECK_SUPPORTED_ENGINE(name, "mujoco")
-    CHECK_SUPPORTED_ENGINE(name, "bullet-featherstone")
+    CHECK_SUPPORTED_ENGINE(name, "mujoco", "bullet-featherstone")
 
     auto plugin = this->loader.Instantiate(name);
     auto engine = gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
