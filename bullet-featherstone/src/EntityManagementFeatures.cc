@@ -528,6 +528,11 @@ std::size_t EntityManagementFeatures::GetModelIndex(
 {
   const auto index = this->ReferenceInterface<ModelInfo>(
     _modelID)->indexInWorld;
+  if (index < 0)
+  {
+    // Model proxy of a world (indexInWorld == -1) returns 0.
+    return 0;
+  }
   return static_cast<std::size_t>(index);
 }
 
