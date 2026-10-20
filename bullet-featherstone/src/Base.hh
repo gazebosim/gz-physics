@@ -159,7 +159,32 @@ class GzMultiBody: public btMultiBody
   public: void AddJointDampingStiffnessTorque(int _jointIndex, double _damping,
       double _springStiffness, double _springReference);
 
+  /// \brief Set the velocity of the root link frame of the base in world
+  /// coordinates. The velocity of a free group is the velocity of its root
+  /// link frame, while bullet stores the velocity of the center of mass of
+  /// the base in btScalar precision. The velocity is kept here in double
+  /// precision and is the velocity a kinematic base is moved with, so that
+  /// bullet's state never feeds back into the requested velocity.
+  /// \param[in] _linVel World linear velocity of the root link frame.
+  /// \param[in] _angVel World angular velocity.
+  public: void SetBaseLinkFrameVelocity(const Eigen::Vector3d &_linVel,
+      const Eigen::Vector3d &_angVel);
+
+  /// \brief Get the world linear velocity of the root link frame, see
+  /// SetBaseLinkFrameVelocity.
+  public: const Eigen::Vector3d &GetBaseLinkFrameLinearVelocity() const;
+
+  /// \brief Get the world angular velocity of the base, see
+  /// SetBaseLinkFrameVelocity.
+  public: const Eigen::Vector3d &GetBaseLinkFrameAngularVelocity() const;
+
   private: bool needsCollisionTransformsUpdate = false;
+
+  /// \brief World linear velocity of the root link frame.
+  private: Eigen::Vector3d baseLinkFrameLinVel = Eigen::Vector3d::Zero();
+
+  /// \brief World angular velocity of the base.
+  private: Eigen::Vector3d baseLinkFrameAngVel = Eigen::Vector3d::Zero();
 };
 
 struct ModelInfo
@@ -183,6 +208,12 @@ struct ModelInfo
   /// These are joints that connect this model to other models, e.g. fixed
   /// constraints.
   std::unordered_set<std::size_t> external_constraints;
+
+  /// \brief Buffers for btMultiBody::compTreeLinkVelocities, sized to the
+  /// number of links + 1. Kept here so that link velocity queries, which may
+  /// happen for every link at every step, do not allocate.
+  mutable std::vector<btVector3> linkOmega;
+  mutable std::vector<btVector3> linkVel;
 
   ModelInfo(
     std::string _name,
@@ -238,6 +269,10 @@ struct LinkInfo
   std::unordered_map<std::string, std::size_t> collisionNameToEntityId = {};
   // Link is either static, fixed to world, or has zero dofs
   bool isStaticOrFixed = false;
+  // True if the link is kinematic, as requested with <kinematic> in SDF or
+  // SetKinematic. The collider of a kinematic link is temporarily static
+  // while the link is welded to a static link (see makeColliderStatic).
+  bool isKinematic = false;
   // Cached pose from the previous physics step for performance optimization
   mutable std::optional<math::Pose3d> prevPose = std::nullopt;
 };
@@ -294,8 +329,8 @@ struct JointInfo
   double maxEffort = 0.0;
   double minVelocity = 0.0;
   double maxVelocity = 0.0;
-  double axisLower = 0.0;
-  double axisUpper = 0.0;
+  double axisLower = -std::numeric_limits<double>::infinity();
+  double axisUpper = std::numeric_limits<double>::infinity();
 
   // joint damping, spring stiffness and reference
   double damping = 0.0;
@@ -306,6 +341,27 @@ struct JointInfo
   // they are part of the same body.
   bool fixedConstraintWeldChildToParent = false;
 
+  // Joint velocity and one-step velocity command of the first dof of a joint
+  // whose child link is kinematic. The velocity persists until it is set
+  // again, the command is consumed by the next step. Only the first dof can
+  // be driven.
+  double kinematicJointVel = 0.0;
+  std::optional<double> kinematicJointVelCmd = std::nullopt;
+
+  // Velocity of the first dof that WorldForwardStep last wrote to the joint
+  // of a kinematic child link, i.e. the commanded velocity after clamping to
+  // the position limits. A different joint velocity means that the velocity
+  // was set from outside (SetJointVelocity) since the last step.
+  btScalar kinematicJointVelPinned = 0;
+
+  // Max impulse of jointLimits before it was disabled for a kinematic child
+  // link, whose position limits are enforced by WorldForwardStep instead.
+  // Zero if jointLimits is not disabled.
+  btScalar jointLimitsMaxImpulse = 0;
+
+  // Velocity motor of the first dof. Created by SetJointVelocityCommand with
+  // the joint effort limit, or by WorldForwardStep with an unlimited impulse
+  // to lock / drive the joint of a kinematic link under a dynamic ancestor.
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
   std::shared_ptr<btMultiBodyFixedConstraint> fixedConstraint = nullptr;
@@ -393,6 +449,66 @@ inline Eigen::Isometry3d GetWorldTransformOfLink(
 }
 
 /////////////////////////////////////////////////
+/// \brief Vector from the center of mass of the root link, which is the
+/// origin of the bullet base frame, to the origin of the root link frame, in
+/// world coordinates. The offset is rotated rather than taken as the
+/// difference of two world positions, which loses precision far from the
+/// world origin in single precision builds of bullet.
+/// \param[in] _model Model the root link belongs to.
+/// \param[in] _baseTf World transform of the base frame.
+inline btVector3 getBaseComToLinkFrame(const ModelInfo &_model,
+    const btTransform &_baseTf)
+{
+  return _baseTf.getBasis() *
+      convertVec(_model.baseInertiaToLinkFrame.translation());
+}
+
+/////////////////////////////////////////////////
+/// \brief World linear velocity of the root link frame of a model, derived
+/// from the velocity of the center of mass of the root link that bullet
+/// stores: v_link = v_com + w x r, with r from the center of mass to the
+/// root link frame.
+/// \param[in] _model Model to query.
+inline btVector3 getBaseLinkFrameLinearVelocity(const ModelInfo &_model)
+{
+  const btVector3 comToLink =
+      getBaseComToLinkFrame(_model, _model.body->getBaseWorldTransform());
+  return _model.body->getBaseVel() +
+      _model.body->getBaseOmega().cross(comToLink);
+}
+
+/////////////////////////////////////////////////
+/// \brief Set the velocity of the base of a model from the velocity of its
+/// root link frame: v_com = v_link - w x r, see
+/// getBaseLinkFrameLinearVelocity. The velocity of the root link frame is
+/// also stored in the multibody, see GzMultiBody::SetBaseLinkFrameVelocity.
+/// \param[in] _model Model to update.
+/// \param[in] _linkLinVel World linear velocity of the root link frame.
+/// \param[in] _angVel World angular velocity.
+inline void setBaseVelocityFromLinkFrame(const ModelInfo &_model,
+    const Eigen::Vector3d &_linkLinVel, const Eigen::Vector3d &_angVel)
+{
+  _model.body->SetBaseLinkFrameVelocity(_linkLinVel, _angVel);
+  const btVector3 angVel = convertVec(_angVel);
+  const btVector3 comToLink =
+      getBaseComToLinkFrame(_model, _model.body->getBaseWorldTransform());
+  _model.body->setBaseOmega(angVel);
+  _model.body->setBaseVel(convertVec(_linkLinVel) - angVel.cross(comToLink));
+}
+
+/////////////////////////////////////////////////
+/// \brief Return true if the base of a multibody is kinematic. Bullet
+/// versions without kinematic multibodies have no kinematic bases.
+inline bool isBaseKinematic([[maybe_unused]] const btMultiBody &_body)
+{
+#if BT_BULLET_VERSION >= 307
+  return _body.isBaseKinematic();
+#else
+  return false;
+#endif
+}
+
+/////////////////////////////////////////////////
 inline void makeColliderStatic(LinkInfo *_linkInfo)
 {
   btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
@@ -417,6 +533,19 @@ inline void makeColliderStatic(LinkInfo *_linkInfo)
 }
 
 /////////////////////////////////////////////////
+/// \brief Return true if the collider of a link currently has the static
+/// broadphase filter group, i.e. the link is static, fixed to the world or
+/// welded to a static link by AttachFixedJoint (see makeColliderStatic).
+inline bool isColliderStatic(const LinkInfo *_linkInfo)
+{
+  if (!_linkInfo->collider)
+    return false;
+  const btBroadphaseProxy *proxy = _linkInfo->collider->getBroadphaseHandle();
+  return proxy &&
+      (proxy->m_collisionFilterGroup & btBroadphaseProxy::StaticFilter) > 0;
+}
+
+/////////////////////////////////////////////////
 inline void makeColliderDynamic(LinkInfo *_linkInfo)
 {
   btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
@@ -429,15 +558,16 @@ inline void makeColliderDynamic(LinkInfo *_linkInfo)
 
   // If broadphase and collision object flags do not agree, the
   // link was originally non-static but made static by AttachJoint
-  if (!_linkInfo->isStaticOrFixed &&
-      ((childProxy->m_collisionFilterGroup &
-      btBroadphaseProxy::StaticFilter) > 0))
+  if (!_linkInfo->isStaticOrFixed && isColliderStatic(_linkInfo))
   {
     childProxy->m_collisionFilterGroup =
         btBroadphaseProxy::DefaultFilter;
     childProxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
 #if BT_BULLET_VERSION >= 307
-    childCollider->setDynamicType(btCollisionObject::CF_DYNAMIC_OBJECT);
+    const int collisionFlags = _linkInfo->isKinematic ?
+        btCollisionObject::CF_KINEMATIC_OBJECT :
+        btCollisionObject::CF_DYNAMIC_OBJECT;
+    childCollider->setDynamicType(collisionFlags);
 #endif
   }
 }

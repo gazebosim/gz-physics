@@ -16,7 +16,10 @@
  */
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <cstddef>
+#include <sstream>
+#include <string>
 
 #include <gz/common/Console.hh>
 #include <gz/math/eigen3/Conversions.hh>
@@ -27,6 +30,7 @@
 #include "Worlds.hh"
 
 #include <gz/physics/ConstructEmpty.hh>
+#include <gz/physics/FixedJoint.hh>
 #include <gz/physics/Joint.hh>
 #include <gz/physics/KinematicLink.hh>
 #include <gz/physics/FrameSemantics.hh>
@@ -35,6 +39,8 @@
 #include <gz/physics/FreeGroup.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/Link.hh>
+#include <gz/physics/Model.hh>
+#include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/sdf/ConstructLink.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
@@ -164,11 +170,15 @@ TYPED_TEST(KinematicFeaturesTest, JointFrameSemantics)
           F_WCexpected.linearVelocity,
           childLinkFrameData.linearVelocity,
           1e-6));
-    EXPECT_TRUE(
-      gz::physics::test::Equal(
-          F_WCexpected.linearAcceleration,
-          childLinkFrameData.linearAcceleration,
-          1e-6));
+    // \todo(iche033) bullet-featherstone does not compute link accelerations
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+    {
+      EXPECT_TRUE(
+        gz::physics::test::Equal(
+            F_WCexpected.linearAcceleration,
+            childLinkFrameData.linearAcceleration,
+            1e-6));
+    }
   }
 }
 
@@ -574,19 +584,12 @@ TEST_F(SetKinematicTestFeaturesList, SetKinematicLinksWithJoint)
     EXPECT_LT(initialLink2Pose.Y(), frameData2.pose.translation().y());
     EXPECT_GT(initialLink2Pose.Z(), frameData2.pose.translation().z());
 
-    // \todo(iche033) bullet-feathersone implementation does not return
-    // correct velocities for non-base links when they are attached to a parent
-    // base link that is either fixed to the world or kinematic
-    // see https://github.com/gazebosim/gz-physics/issues/617
-    if (this->PhysicsEngineName(name) != "bullet-featherstone")
-    {
-      EXPECT_NEAR(0.0, frameData2.linearVelocity.x(), 1e-3);
-      EXPECT_LT(0.0, frameData2.linearVelocity.y());
-      EXPECT_GT(0.0, frameData2.linearVelocity.z());
-      EXPECT_LT(0.0, frameData2.angularVelocity.x());
-      EXPECT_NEAR(0.0, frameData2.angularVelocity.y(), 1e-3);
-      EXPECT_NEAR(0.0, frameData2.angularVelocity.z(), 1e-3);
-    }
+    EXPECT_NEAR(0.0, frameData2.linearVelocity.x(), 1e-3);
+    EXPECT_LT(0.0, frameData2.linearVelocity.y());
+    EXPECT_GT(0.0, frameData2.linearVelocity.z());
+    EXPECT_LT(0.0, frameData2.angularVelocity.x());
+    EXPECT_NEAR(0.0, frameData2.angularVelocity.y(), 1e-3);
+    EXPECT_NEAR(0.0, frameData2.angularVelocity.z(), 1e-3);
     auto updatedLink2Pose = gz::math::eigen3::convert(frameData2.pose);
 
     // Make link2 kinematic again and step
@@ -610,6 +613,2696 @@ TEST_F(SetKinematicTestFeaturesList, SetKinematicLinksWithJoint)
               gz::math::eigen3::convert(frameData2.linearVelocity));
     EXPECT_EQ(gz::math::Vector3d::Zero,
               gz::math::eigen3::convert(frameData2.angularVelocity));
+  }
+}
+
+/////////////////////////////////////////////////
+// Helpers for the kinematic tests below
+namespace
+{
+/// \brief Step the world a number of times.
+template <typename WorldPtrT>
+void StepKinematicWorld(WorldPtrT &_world, std::size_t _steps)
+{
+  gz::physics::ForwardStep::Input input;
+  gz::physics::ForwardStep::State state;
+  gz::physics::ForwardStep::Output output;
+  for (std::size_t i = 0; i < _steps; ++i)
+    _world->Step(output, state, input);
+}
+
+/// \brief Load a model from an SDF string and construct it in the world.
+template <typename WorldPtrT>
+void ConstructModelFromString(WorldPtrT &_world, const std::string &_modelStr)
+{
+  sdf::Root root;
+  const sdf::Errors errors = root.LoadSdfString(_modelStr);
+  ASSERT_TRUE(errors.empty()) << errors.front();
+  ASSERT_NE(nullptr, root.Model());
+  ASSERT_NE(nullptr, _world->ConstructModel(*root.Model()));
+}
+
+/// \brief Return the world pose of a link as a gz::math::Pose3d
+template <typename LinkPtrT>
+gz::math::Pose3d LinkWorldPose(const LinkPtrT &_link)
+{
+  return gz::math::eigen3::convert(_link->FrameDataRelativeToWorld().pose);
+}
+
+/// \brief Return true if two poses are equal within a tolerance.
+::testing::AssertionResult PoseNear(const gz::math::Pose3d &_expected,
+    const gz::math::Pose3d &_actual, double _tol)
+{
+  const double rotErr =
+      (_expected.Rot().Inverse() * _actual.Rot()).Euler().Length();
+  if (_expected.Pos().Equal(_actual.Pos(), _tol) && rotErr < _tol)
+    return ::testing::AssertionSuccess();
+  return ::testing::AssertionFailure()
+      << "expected pose [" << _expected << "] actual pose [" << _actual << "]";
+}
+
+/// \brief World linear velocity of a point that is rigidly attached to a
+/// frame with the given frame data: v_p = v + w x (p - o)
+Eigen::Vector3d PointVelocity(const gz::physics::FrameData3d &_frame,
+    const Eigen::Vector3d &_point)
+{
+  return _frame.linearVelocity +
+      _frame.angularVelocity.cross(_point - _frame.pose.translation());
+}
+
+constexpr double kStepSize = 0.001;
+constexpr double kGravity = -9.8;
+
+/// \brief Model with a world-fixed anchor, a dynamic slider (prismatic along
+/// world Y) and an arm attached to the slider by a revolute joint about
+/// world X. The arm sticks out horizontally (+Y) from the pivot so that, if
+/// it were dynamic, it would swing down under gravity. The arm is kinematic.
+const char kDynamicParentKinematicChildSdf[] = R"(
+  <sdf version="1.6">
+    <model name="M1">
+      <pose>0 0 1 0 0 0</pose>
+      <link name="anchor">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+          </inertia>
+        </inertial>
+      </link>
+      <link name="slider">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+          </inertia>
+        </inertial>
+      </link>
+      <link name="arm">
+        <kinematic>true</kinematic>
+        <pose>0 0.5 0 0 0 0</pose>
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.084</ixx><iyy>0.0017</iyy><izz>0.084</izz>
+          </inertia>
+        </inertial>
+      </link>
+      <joint name="world_joint" type="fixed">
+        <parent>world</parent>
+        <child>anchor</child>
+      </joint>
+      <joint name="slider_joint" type="prismatic">
+        <parent>anchor</parent>
+        <child>slider</child>
+        <axis>
+          <xyz>0 1 0</xyz>
+        </axis>
+      </joint>
+      <joint name="arm_joint" type="revolute">
+        <pose>0 -0.5 0 0 0 0</pose>
+        <parent>slider</parent>
+        <child>arm</child>
+        <axis>
+          <xyz>1 0 0</xyz>
+        </axis>
+      </joint>
+    </model>
+  </sdf>)";
+
+/// \brief SDF string of a model with a single box link named "link".
+/// \param[in] _name Model name.
+/// \param[in] _pose Model pose.
+/// \param[in] _kinematic True to make the link kinematic.
+/// \param[in] _static True to make the model static.
+std::string BoxModelSdf(const std::string &_name,
+    const gz::math::Pose3d &_pose, bool _kinematic, bool _static = false)
+{
+  std::ostringstream sdf;
+  sdf << "<sdf version='1.6'>"
+      << "<model name='" << _name << "'>"
+      << "<static>" << _static << "</static>"
+      << "<pose>" << _pose << "</pose>"
+      << "<link name='link'>"
+      << "<kinematic>" << _kinematic << "</kinematic>"
+      << "<collision name='collision'>"
+      << "<geometry><box><size>0.2 0.2 0.2</size></box></geometry>"
+      << "</collision>"
+      << "</link></model></sdf>";
+  return sdf.str();
+}
+}  // namespace
+
+/////////////////////////////////////////////////
+TEST_F(SetKinematicTestFeaturesList, SetKinematicFalseAfterSleepTimeout)
+{
+  // A stationary kinematic body may be put to sleep by the physics engine.
+  // Making it dynamic again must wake it up so that it falls under gravity.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<SetKinematicFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    const gz::math::Pose3d initialPose(0, 0, 10, 0, 0, 0);
+    ConstructModelFromString(world, BoxModelSdf("M1", initialPose, true));
+
+    auto link = world->GetModel("M1")->GetLink("link");
+    ASSERT_NE(nullptr, link);
+
+    // Stay kinematic for longer than bullet's default sleep timeout (2 s)
+    StepKinematicWorld(world, 2500);
+    EXPECT_TRUE(PoseNear(initialPose, LinkWorldPose(link), 1e-6));
+
+    // Make link dynamic and verify that it falls
+    link->SetKinematic(false);
+    const double time = 1.0;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+
+    const auto frameData = link->FrameDataRelativeToWorld();
+    EXPECT_NEAR(initialPose.Z() + 0.5 * kGravity * time * time,
+                frameData.pose.translation().z(), 1e-2);
+    EXPECT_NEAR(kGravity * time, frameData.linearVelocity.z(), 1e-2);
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(SetKinematicTestFeaturesList, KinematicParentDynamicChildFixedJoint)
+{
+  // A dynamic link attached to a kinematic base link via a fixed joint
+  // should be held in place by the kinematic link. Once the base becomes
+  // dynamic, the whole model should fall.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<SetKinematicFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>0 0 2 0 0 0</pose>
+        <link name="base">
+          <kinematic>true</kinematic>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <link name="child">
+          <pose>0.5 0 0 0 0 0</pose>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="fixed_joint" type="fixed">
+          <parent>base</parent>
+          <child>child</child>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto base = model->GetLink("base");
+    ASSERT_NE(nullptr, base);
+    auto child = model->GetLink("child");
+    ASSERT_NE(nullptr, child);
+    EXPECT_TRUE(base->GetKinematic());
+    EXPECT_FALSE(child->GetKinematic());
+
+    const gz::math::Pose3d initialBasePose(0, 0, 2, 0, 0, 0);
+    const gz::math::Pose3d initialChildPose(0.5, 0, 2, 0, 0, 0);
+
+    StepKinematicWorld(world, 1000);
+    EXPECT_TRUE(PoseNear(initialBasePose, LinkWorldPose(base), 1e-3));
+    EXPECT_TRUE(PoseNear(initialChildPose, LinkWorldPose(child), 1e-3));
+
+    // Make base dynamic. The whole rigid model should free fall.
+    base->SetKinematic(false);
+    const double time = 0.5;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+    const double expectedZ = 2.0 + 0.5 * kGravity * time * time;
+    EXPECT_NEAR(expectedZ, LinkWorldPose(base).Z(), 1e-2);
+    EXPECT_NEAR(expectedZ, LinkWorldPose(child).Z(), 1e-2);
+  }
+}
+
+/////////////////////////////////////////////////
+using KinematicJointFeaturesList = gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::ForwardStep,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetJointFromModel,
+  gz::physics::GetBasicJointState,
+  gz::physics::SetBasicJointState,
+  gz::physics::SetJointPositionLimitsFeature,
+  gz::physics::SetJointVelocityCommandFeature,
+  gz::physics::KinematicLink,
+  gz::physics::LinkFrameSemantics
+>;
+
+using KinematicJointTestFeaturesList =
+  KinematicFeaturesTest<KinematicJointFeaturesList>;
+
+/////////////////////////////////////////////////
+TEST_F(KinematicJointTestFeaturesList, KinematicLinksJointCommands)
+{
+  // Two kinematic links connected by a revolute joint. The kinematic child
+  // link should follow position, velocity and velocity commands set on the
+  // joint, and report the correct world velocity.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<KinematicJointFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>0 0 1.0 0 0 0</pose>
+        <link name="link1">
+          <kinematic>true</kinematic>
+          <pose>0 0.25 0.0 1.57 0 0</pose>
+          <collision name="collision">
+            <geometry>
+              <cylinder>
+                <radius>0.1</radius>
+                <length>0.5</length>
+              </cylinder>
+            </geometry>
+          </collision>
+        </link>
+        <link name="link2">
+          <kinematic>true</kinematic>
+          <pose>0 -0.25 0.0 1.57 0 0</pose>
+          <collision name="collision">
+            <geometry>
+              <cylinder>
+                <radius>0.1</radius>
+                <length>0.5</length>
+              </cylinder>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="joint" type="revolute">
+          <pose>0 0 -0.25 0 0 0</pose>
+          <parent>link1</parent>
+          <child>link2</child>
+          <axis>
+            <xyz>1.0 0 0</xyz>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto link1 = model->GetLink("link1");
+    ASSERT_NE(nullptr, link1);
+    auto link2 = model->GetLink("link2");
+    ASSERT_NE(nullptr, link2);
+    auto joint = model->GetJoint("joint");
+    ASSERT_NE(nullptr, joint);
+
+    const gz::math::Pose3d initialLink1Pose(0, 0.25, 1, 1.57, 0, 0);
+    const gz::math::Pose3d initialLink2Pose(0, -0.25, 1, 1.57, 0, 0);
+    // The joint axis is world X and passes through the pivot.
+    const gz::math::Pose3d pivot =
+        initialLink2Pose * gz::math::Pose3d(0, 0, -0.25, 0, 0, 0);
+    auto expectedLink2Pose = [&](double _q)
+    {
+      return pivot * gz::math::Pose3d(0, 0, 0, _q, 0, 0) *
+          pivot.Inverse() * initialLink2Pose;
+    };
+
+    // 1. Set joint position
+    joint->SetPosition(0, 0.5);
+    StepKinematicWorld(world, 1);
+    EXPECT_NEAR(0.5, joint->GetPosition(0), 1e-3);
+    EXPECT_TRUE(PoseNear(initialLink1Pose, LinkWorldPose(link1), 1e-3));
+    EXPECT_TRUE(PoseNear(expectedLink2Pose(0.5), LinkWorldPose(link2), 1e-3));
+
+    // 2. Set joint velocity before every step
+    double q0 = joint->GetPosition(0);
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      joint->SetVelocity(0, 1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(q0 + 0.5, joint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-2);
+    EXPECT_TRUE(PoseNear(initialLink1Pose, LinkWorldPose(link1), 1e-3));
+    EXPECT_TRUE(PoseNear(expectedLink2Pose(q0 + 0.5), LinkWorldPose(link2),
+        1e-2));
+    auto frameData2 = link2->FrameDataRelativeToWorld();
+    EXPECT_NEAR(1.0, frameData2.angularVelocity.x(), 1e-2);
+    EXPECT_NEAR(0.0, frameData2.angularVelocity.y(), 1e-2);
+    EXPECT_NEAR(0.0, frameData2.angularVelocity.z(), 1e-2);
+    // The link origin rotates about the pivot: v = w x (p - p_pivot)
+    {
+      const Eigen::Vector3d omega(1.0, 0.0, 0.0);
+      const Eigen::Vector3d expectedLinVel = omega.cross(
+          frameData2.pose.translation() -
+          gz::math::eigen3::convert(pivot.Pos()));
+      EXPECT_TRUE(gz::physics::test::Equal(expectedLinVel,
+          frameData2.linearVelocity, 1e-2));
+    }
+
+    // 3. Velocity command before every step
+    q0 = joint->GetPosition(0);
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      joint->SetVelocityCommand(0, -1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(q0 - 0.5, joint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(-1.0, joint->GetVelocity(0), 1e-2);
+    EXPECT_TRUE(PoseNear(initialLink1Pose, LinkWorldPose(link1), 1e-3));
+    EXPECT_TRUE(PoseNear(expectedLink2Pose(q0 - 0.5), LinkWorldPose(link2),
+        1e-2));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicJointTestFeaturesList, DynamicParentKinematicChildLocked)
+{
+  // A kinematic child link attached to a dynamic parent link via a revolute
+  // joint. The joint should be kinematically locked (the arm moves with the
+  // dynamic parent and does not react to gravity) unless a joint command is
+  // given.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<KinematicJointFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, kDynamicParentKinematicChildSdf);
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto slider = model->GetLink("slider");
+    ASSERT_NE(nullptr, slider);
+    auto arm = model->GetLink("arm");
+    ASSERT_NE(nullptr, arm);
+    auto sliderJoint = model->GetJoint("slider_joint");
+    ASSERT_NE(nullptr, sliderJoint);
+    auto armJoint = model->GetJoint("arm_joint");
+    ASSERT_NE(nullptr, armJoint);
+    EXPECT_FALSE(slider->GetKinematic());
+    EXPECT_TRUE(arm->GetKinematic());
+
+    const gz::math::Pose3d initialArmPose(0, 0.5, 1, 0, 0, 0);
+    EXPECT_TRUE(PoseNear(initialArmPose, LinkWorldPose(arm), 1e-6));
+
+    // 1. Arm is kinematic: the arm joint is locked so nothing should move.
+    StepKinematicWorld(world, 1000);
+    EXPECT_NEAR(0.0, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), 1e-3);
+    EXPECT_TRUE(PoseNear(initialArmPose, LinkWorldPose(arm), 1e-3));
+
+    // 2. Make arm dynamic. It should start from rest, i.e. no velocity should
+    // have accumulated while it was kinematic, and swing down under gravity.
+    arm->SetKinematic(false);
+    StepKinematicWorld(world, 1);
+    EXPECT_GT(0.1, std::abs(armJoint->GetVelocity(0)));
+    StepKinematicWorld(world, 499);
+    EXPECT_GT(initialArmPose.Z() - 0.05, LinkWorldPose(arm).Z());
+    EXPECT_LT(1e-3, std::abs(armJoint->GetPosition(0)));
+
+    // 3. Make arm kinematic again. The arm joint should lock at its current
+    // position.
+    arm->SetKinematic(true);
+    const double lockedPos = armJoint->GetPosition(0);
+    StepKinematicWorld(world, 1000);
+    EXPECT_NEAR(lockedPos, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicJointTestFeaturesList, DynamicParentKinematicChildCommands)
+{
+  // A kinematic child link attached to a dynamic parent link via a revolute
+  // joint should follow velocity and velocity commands set on the joint.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<KinematicJointFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, kDynamicParentKinematicChildSdf);
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto armJoint = model->GetJoint("arm_joint");
+    ASSERT_NE(nullptr, armJoint);
+
+    // 1. Set joint velocity before every step
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      armJoint->SetVelocity(0, 1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(0.5, armJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-2);
+
+    // 2. Velocity command before every step
+    const double q0 = armJoint->GetPosition(0);
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      armJoint->SetVelocityCommand(0, -1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(q0 - 0.5, armJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(-1.0, armJoint->GetVelocity(0), 1e-2);
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicJointTestFeaturesList, DynamicParentKinematicChildReaction)
+{
+  // The dynamic slider has to react to the kinematic arm being driven. The
+  // slider joint has no friction and gravity is perpendicular to it, so the
+  // momentum of slider and arm along the slider axis is conserved:
+  //   m_slider * v_slider + m_arm * (v_slider - 0.5 * sin(q) * qdot) = P
+  // With both masses equal to 1 kg and P = 0 when starting from rest,
+  //   v_slider = 0.25 * sin(q) * qdot
+  // The test also covers that a joint velocity set once persists, that a
+  // velocity command followed by SetVelocity does not disturb the slider and
+  // that a nan velocity is rejected.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<KinematicJointFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, kDynamicParentKinematicChildSdf);
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto sliderJoint = model->GetJoint("slider_joint");
+    ASSERT_NE(nullptr, sliderJoint);
+    auto armJoint = model->GetJoint("arm_joint");
+    ASSERT_NE(nullptr, armJoint);
+
+    // Slider velocity expected from the momentum balance
+    auto expectedSliderVel = [&](double _qdot)
+    {
+      return 0.25 * std::sin(armJoint->GetPosition(0)) * _qdot;
+    };
+    const double velTol = 5e-3;
+
+    // 1. A joint velocity set once persists and the slider follows the
+    // momentum balance while the arm turns. The arm starts at q = 0 where the
+    // arm velocity has no component along the slider axis, so setting the
+    // velocity directly does not inject momentum.
+    armJoint->SetVelocity(0, 1.0);
+    StepKinematicWorld(world, 250);
+    EXPECT_NEAR(0.25, armJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(expectedSliderVel(1.0), sliderJoint->GetVelocity(0), velTol);
+    StepKinematicWorld(world, 250);
+    EXPECT_NEAR(0.5, armJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_LT(0.1, sliderJoint->GetVelocity(0));
+    EXPECT_NEAR(expectedSliderVel(1.0), sliderJoint->GetVelocity(0), velTol);
+
+    // 2. Sudden stop through a velocity command. The arm stops within one
+    // step and the reaction brings the slider to rest. The command replaces
+    // the persistent velocity, so the arm stays locked afterwards.
+    const double qStop = armJoint->GetPosition(0);
+    armJoint->SetVelocityCommand(0, 0.0);
+    StepKinematicWorld(world, 1);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), velTol);
+    StepKinematicWorld(world, 100);
+    EXPECT_NEAR(qStop, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), velTol);
+
+    // 3. Sudden start through a velocity command. The arm reaches the
+    // commanded velocity within one step and the slider reacts immediately.
+    armJoint->SetVelocityCommand(0, 1.0);
+    StepKinematicWorld(world, 1);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_LT(0.1, sliderJoint->GetVelocity(0));
+    EXPECT_NEAR(expectedSliderVel(1.0), sliderJoint->GetVelocity(0), velTol);
+
+    // 4. Velocity command followed by SetVelocity with the same velocity.
+    // Both have to drive the same joint motor; conflicting motors would push
+    // the slider with a large spurious force.
+    armJoint->SetVelocity(0, 1.0);
+    StepKinematicWorld(world, 200);
+    EXPECT_NEAR(qStop + 0.201, armJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(expectedSliderVel(1.0), sliderJoint->GetVelocity(0), velTol);
+
+    // 5. A nan joint velocity is ignored.
+    armJoint->SetVelocity(0, std::nan(""));
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    StepKinematicWorld(world, 1);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(expectedSliderVel(1.0), sliderJoint->GetVelocity(0), velTol);
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicJointTestFeaturesList, DynamicParentKinematicChainReaction)
+{
+  // Two kinematic links in a row under a dynamic slider: an upper arm that
+  // stands up from the slider and is held still, and a lower arm at its top
+  // that is driven. The joint between the two arms connects two kinematic
+  // links, and the slider still has to react to the lower arm. The slider
+  // joint has no friction and gravity is perpendicular to it, so the
+  // momentum along the slider axis is conserved:
+  //   (m_slider + m_upper + m_lower) * v_slider
+  //       + m_lower * (-0.5 * sin(q) * qdot) = 0
+  // With all masses equal to 1 kg, v_slider = sin(q) * qdot / 6.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<KinematicJointFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>0 0 1 0 0 0</pose>
+        <link name="anchor">
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="slider">
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="upper_arm">
+          <kinematic>true</kinematic>
+          <pose>0 0 0.5 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.084</ixx><iyy>0.084</iyy><izz>0.0017</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="lower_arm">
+          <kinematic>true</kinematic>
+          <pose>0 0.5 1.0 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.084</ixx><iyy>0.0017</iyy><izz>0.084</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <joint name="world_joint" type="fixed">
+          <parent>world</parent>
+          <child>anchor</child>
+        </joint>
+        <joint name="slider_joint" type="prismatic">
+          <parent>anchor</parent>
+          <child>slider</child>
+          <axis>
+            <xyz>0 1 0</xyz>
+          </axis>
+        </joint>
+        <joint name="shoulder_joint" type="revolute">
+          <pose>0 0 -0.5 0 0 0</pose>
+          <parent>slider</parent>
+          <child>upper_arm</child>
+          <axis>
+            <xyz>1 0 0</xyz>
+          </axis>
+        </joint>
+        <joint name="elbow_joint" type="revolute">
+          <pose>0 -0.5 0 0 0 0</pose>
+          <parent>upper_arm</parent>
+          <child>lower_arm</child>
+          <axis>
+            <xyz>1 0 0</xyz>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto sliderJoint = model->GetJoint("slider_joint");
+    ASSERT_NE(nullptr, sliderJoint);
+    auto shoulderJoint = model->GetJoint("shoulder_joint");
+    ASSERT_NE(nullptr, shoulderJoint);
+    auto elbowJoint = model->GetJoint("elbow_joint");
+    ASSERT_NE(nullptr, elbowJoint);
+
+    // The lower arm starts at q = 0, where its velocity has no component
+    // along the slider axis, so starting it does not inject momentum.
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      shoulderJoint->SetVelocityCommand(0, 0.0);
+      elbowJoint->SetVelocityCommand(0, 1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(0.0, shoulderJoint->GetPosition(0), 1e-6);
+    EXPECT_NEAR(0.5, elbowJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(1.0, elbowJoint->GetVelocity(0), 1e-3);
+    EXPECT_LT(0.05, sliderJoint->GetVelocity(0));
+    EXPECT_NEAR(std::sin(elbowJoint->GetPosition(0)) / 6.0,
+        sliderJoint->GetVelocity(0), 5e-3);
+  }
+}
+
+/////////////////////////////////////////////////
+using KinematicJointWrenchFeaturesList = gz::physics::FeatureList<
+  KinematicJointFeaturesList,
+  gz::physics::GetJointTransmittedWrench
+>;
+
+using KinematicJointWrenchTestFeaturesList =
+  KinematicFeaturesTest<KinematicJointWrenchFeaturesList>;
+
+/////////////////////////////////////////////////
+TEST_F(KinematicJointWrenchTestFeaturesList, KinematicChainDynamicChildWrench)
+{
+  // A chain that is kinematic from the world down to the forearm, with a
+  // dynamic hand at its end. The kinematic shoulder joint has to stay locked
+  // during the step while it holds the hand, so that the wrist transmits
+  // the weight of the hand at rest.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicJointWrenchFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="arm">
+        <joint name="fixed_to_world" type="fixed">
+          <parent>world</parent>
+          <child>base</child>
+        </joint>
+        <link name="base">
+          <kinematic>true</kinematic>
+          <inertial>
+            <mass>10</mass>
+          </inertial>
+        </link>
+        <link name="forearm">
+          <kinematic>true</kinematic>
+          <pose>0 0 0.5 0 0 0</pose>
+          <inertial>
+            <pose>0 0 0.25 0 0 0</pose>
+            <mass>5</mass>
+          </inertial>
+        </link>
+        <link name="hand">
+          <pose>0 0 1.0 0 0 0</pose>
+          <inertial>
+            <pose>0 0 0.28 0 0 0</pose>
+            <mass>3</mass>
+            <inertia>
+              <ixx>0.05</ixx>
+              <iyy>0.05</iyy>
+              <izz>0.05</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <joint name="shoulder" type="revolute">
+          <parent>base</parent>
+          <child>forearm</child>
+          <axis>
+            <xyz>0 1 0</xyz>
+          </axis>
+        </joint>
+        <joint name="wrist" type="revolute">
+          <parent>forearm</parent>
+          <child>hand</child>
+          <axis>
+            <xyz>0 1 0</xyz>
+            <limit>
+              <effort>1000</effort>
+            </limit>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("arm");
+    ASSERT_NE(nullptr, model);
+    auto shoulder = model->GetJoint("shoulder");
+    ASSERT_NE(nullptr, shoulder);
+    auto wrist = model->GetJoint("wrist");
+    ASSERT_NE(nullptr, wrist);
+
+    // Tilt the hand past horizontal, so that its weight also twists the
+    // wrist.
+    const double shoulderPos = 0.4;
+    const double wristPos = 1.5;
+    shoulder->SetPosition(0, shoulderPos);
+    wrist->SetPosition(0, wristPos);
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      shoulder->SetVelocityCommand(0, 0.0);
+      wrist->SetVelocityCommand(0, 0.0);
+      StepKinematicWorld(world, 1);
+    }
+
+    EXPECT_NEAR(shoulderPos, shoulder->GetPosition(0), 1e-6);
+    EXPECT_NEAR(wristPos, wrist->GetPosition(0), 1e-2);
+
+    // At rest the wrist carries the weight of the hand, and the torque of
+    // that weight about the wrist.
+    const double mass = 3.0;
+    const double weight = mass * std::abs(kGravity);
+    const double tilt = shoulder->GetPosition(0) + wrist->GetPosition(0);
+    const auto wrench = wrist->GetTransmittedWrench();
+    EXPECT_NEAR(weight, wrench.force.norm(), 0.01 * weight);
+    EXPECT_NEAR(weight * 0.28 * std::abs(std::sin(tilt)),
+        wrench.torque.norm(), 0.01 * weight * 0.28);
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicJointTestFeaturesList, KinematicLinksPrismaticJointCommands)
+{
+  // Two kinematic links connected by a vertical prismatic joint. Gravity acts
+  // along the joint axis but must not move the kinematic child. The child
+  // should follow position, velocity and velocity commands set on the joint,
+  // and report the correct world velocity.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<KinematicJointFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>0 0 1.0 0 0 0</pose>
+        <link name="link1">
+          <kinematic>true</kinematic>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <link name="link2">
+          <kinematic>true</kinematic>
+          <pose>0 0 0.5 0 0 0</pose>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="joint" type="prismatic">
+          <parent>link1</parent>
+          <child>link2</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto link1 = model->GetLink("link1");
+    ASSERT_NE(nullptr, link1);
+    auto link2 = model->GetLink("link2");
+    ASSERT_NE(nullptr, link2);
+    auto joint = model->GetJoint("joint");
+    ASSERT_NE(nullptr, joint);
+
+    const gz::math::Pose3d initialLink1Pose(0, 0, 1, 0, 0, 0);
+    const gz::math::Pose3d initialLink2Pose(0, 0, 1.5, 0, 0, 0);
+    auto expectedLink2Pose = [&](double _q)
+    {
+      return initialLink2Pose * gz::math::Pose3d(0, 0, _q, 0, 0, 0);
+    };
+    const Eigen::Vector3d zero = Eigen::Vector3d::Zero();
+
+    // 0. Nothing should move under gravity
+    StepKinematicWorld(world, 1000);
+    EXPECT_NEAR(0.0, joint->GetPosition(0), 1e-6);
+    EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-6);
+    EXPECT_TRUE(PoseNear(initialLink1Pose, LinkWorldPose(link1), 1e-6));
+    EXPECT_TRUE(PoseNear(initialLink2Pose, LinkWorldPose(link2), 1e-6));
+
+    // 1. Set joint position
+    joint->SetPosition(0, 0.3);
+    StepKinematicWorld(world, 1);
+    EXPECT_NEAR(0.3, joint->GetPosition(0), 1e-3);
+    EXPECT_TRUE(PoseNear(initialLink1Pose, LinkWorldPose(link1), 1e-3));
+    EXPECT_TRUE(PoseNear(expectedLink2Pose(0.3), LinkWorldPose(link2), 1e-3));
+
+    // 2. Set joint velocity before every step
+    double q0 = joint->GetPosition(0);
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      joint->SetVelocity(0, 0.5);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(q0 + 0.25, joint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(0.5, joint->GetVelocity(0), 1e-2);
+    EXPECT_TRUE(PoseNear(initialLink1Pose, LinkWorldPose(link1), 1e-3));
+    EXPECT_TRUE(PoseNear(expectedLink2Pose(q0 + 0.25), LinkWorldPose(link2),
+        1e-2));
+    auto frameData1 = link1->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(zero, frameData1.linearVelocity,
+        1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(zero, frameData1.angularVelocity,
+        1e-3));
+    auto frameData2 = link2->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d(0, 0, 0.5),
+        frameData2.linearVelocity, 1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(zero, frameData2.angularVelocity,
+        1e-3));
+
+    // 3. Velocity command before every step
+    q0 = joint->GetPosition(0);
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      joint->SetVelocityCommand(0, -0.5);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(q0 - 0.25, joint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(-0.5, joint->GetVelocity(0), 1e-2);
+    EXPECT_TRUE(PoseNear(initialLink1Pose, LinkWorldPose(link1), 1e-3));
+    EXPECT_TRUE(PoseNear(expectedLink2Pose(q0 - 0.25), LinkWorldPose(link2),
+        1e-2));
+    frameData2 = link2->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d(0, 0, -0.5),
+        frameData2.linearVelocity, 1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(zero, frameData2.angularVelocity,
+        1e-3));
+
+    // 4. A joint velocity persists until it is changed, while a velocity
+    // command only lasts for one step.
+    q0 = joint->GetPosition(0);
+    joint->SetVelocity(0, 0.5);
+    StepKinematicWorld(world, 200);
+    EXPECT_NEAR(q0 + 0.1, joint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(0.5, joint->GetVelocity(0), 1e-2);
+
+    q0 = joint->GetPosition(0);
+    joint->SetVelocityCommand(0, -0.5);
+    StepKinematicWorld(world, 200);
+    EXPECT_NEAR(q0 - 0.5 * kStepSize, joint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-3);
+    EXPECT_TRUE(PoseNear(expectedLink2Pose(joint->GetPosition(0)),
+        LinkWorldPose(link2), 1e-3));
+    frameData2 = link2->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(zero, frameData2.linearVelocity,
+        1e-3));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicJointTestFeaturesList, DynamicParentKinematicChildPrismatic)
+{
+  // A dynamic cart (prismatic along world Y) carries a kinematic mast
+  // (prismatic along world Z) with a kinematic lamp fixed to the mast.
+  // Gravity acts along the mast axis but the mast joint must stay locked.
+  // The mast should follow joint velocity commands relative to the moving
+  // cart, and the world velocities of the mast and the lamp must combine the
+  // cart velocity and the mast joint velocity.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<KinematicJointFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>0 0 1 0 0 0</pose>
+        <link name="anchor">
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="cart">
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="mast">
+          <kinematic>true</kinematic>
+          <pose>0 0 0.5 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="lamp">
+          <kinematic>true</kinematic>
+          <pose>0.2 0 1.0 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <joint name="world_joint" type="fixed">
+          <parent>world</parent>
+          <child>anchor</child>
+        </joint>
+        <joint name="cart_joint" type="prismatic">
+          <parent>anchor</parent>
+          <child>cart</child>
+          <axis>
+            <xyz>0 1 0</xyz>
+          </axis>
+        </joint>
+        <joint name="mast_joint" type="prismatic">
+          <parent>cart</parent>
+          <child>mast</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+          </axis>
+        </joint>
+        <joint name="lamp_joint" type="fixed">
+          <parent>mast</parent>
+          <child>lamp</child>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto cart = model->GetLink("cart");
+    ASSERT_NE(nullptr, cart);
+    auto mast = model->GetLink("mast");
+    ASSERT_NE(nullptr, mast);
+    auto lamp = model->GetLink("lamp");
+    ASSERT_NE(nullptr, lamp);
+    auto cartJoint = model->GetJoint("cart_joint");
+    ASSERT_NE(nullptr, cartJoint);
+    auto mastJoint = model->GetJoint("mast_joint");
+    ASSERT_NE(nullptr, mastJoint);
+    EXPECT_FALSE(cart->GetKinematic());
+    EXPECT_TRUE(mast->GetKinematic());
+    EXPECT_TRUE(lamp->GetKinematic());
+
+    const gz::math::Pose3d initialMastPose(0, 0, 1.5, 0, 0, 0);
+    const gz::math::Pose3d initialLampPose(0.2, 0, 2.0, 0, 0, 0);
+    // Expected poses for a cart displacement _y and mast displacement _z
+    auto expectedMastPose = [&](double _y, double _z)
+    {
+      return gz::math::Pose3d(0, _y, 0, 0, 0, 0) * initialMastPose *
+          gz::math::Pose3d(0, 0, _z, 0, 0, 0);
+    };
+    auto expectedLampPose = [&](double _y, double _z)
+    {
+      return gz::math::Pose3d(0, _y, 0, 0, 0, 0) * initialLampPose *
+          gz::math::Pose3d(0, 0, _z, 0, 0, 0);
+    };
+    const Eigen::Vector3d zero = Eigen::Vector3d::Zero();
+
+    // 1. Mast joint is locked: nothing should move under gravity.
+    StepKinematicWorld(world, 1000);
+    EXPECT_NEAR(0.0, cartJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, cartJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, mastJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, mastJoint->GetVelocity(0), 1e-3);
+    EXPECT_TRUE(PoseNear(initialMastPose, LinkWorldPose(mast), 1e-3));
+    EXPECT_TRUE(PoseNear(initialLampPose, LinkWorldPose(lamp), 1e-3));
+
+    // 2. Give the cart a velocity. The kinematic links should be carried
+    // along with the cart and the mast joint should remain locked.
+    const double cartVel = 0.5;
+    cartJoint->SetVelocity(0, cartVel);
+    StepKinematicWorld(world, 500);
+    double cartPos = cartVel * 0.5;
+    EXPECT_NEAR(cartPos, cartJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(cartVel, cartJoint->GetVelocity(0), 1e-2);
+    EXPECT_NEAR(0.0, mastJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, mastJoint->GetVelocity(0), 1e-3);
+    EXPECT_TRUE(PoseNear(expectedMastPose(cartPos, 0.0), LinkWorldPose(mast),
+        1e-2));
+    EXPECT_TRUE(PoseNear(expectedLampPose(cartPos, 0.0), LinkWorldPose(lamp),
+        1e-2));
+    auto mastData = mast->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d(0, cartVel, 0),
+        mastData.linearVelocity, 1e-2));
+    EXPECT_TRUE(gz::physics::test::Equal(zero, mastData.angularVelocity,
+        1e-2));
+    auto lampData = lamp->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d(0, cartVel, 0),
+        lampData.linearVelocity, 1e-2));
+    EXPECT_TRUE(gz::physics::test::Equal(zero, lampData.angularVelocity,
+        1e-2));
+
+    // 3. Set mast joint velocity before every step while the cart keeps
+    // moving.
+    const double mastVel = 0.4;
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      mastJoint->SetVelocity(0, mastVel);
+      StepKinematicWorld(world, 1);
+    }
+    cartPos += cartVel * 0.5;
+    double mastPos = mastVel * 0.5;
+    EXPECT_NEAR(cartPos, cartJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(cartVel, cartJoint->GetVelocity(0), 1e-2);
+    EXPECT_NEAR(mastPos, mastJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(mastVel, mastJoint->GetVelocity(0), 1e-2);
+    EXPECT_TRUE(PoseNear(expectedMastPose(cartPos, mastPos),
+        LinkWorldPose(mast), 1e-2));
+    EXPECT_TRUE(PoseNear(expectedLampPose(cartPos, mastPos),
+        LinkWorldPose(lamp), 1e-2));
+    mastData = mast->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d(0, cartVel, mastVel),
+        mastData.linearVelocity, 1e-2));
+    EXPECT_TRUE(gz::physics::test::Equal(zero, mastData.angularVelocity,
+        1e-2));
+    lampData = lamp->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d(0, cartVel, mastVel),
+        lampData.linearVelocity, 1e-2));
+    EXPECT_TRUE(gz::physics::test::Equal(zero, lampData.angularVelocity,
+        1e-2));
+
+    // 4. Velocity command before every step
+    for (std::size_t i = 0; i < 500; ++i)
+    {
+      mastJoint->SetVelocityCommand(0, -mastVel);
+      StepKinematicWorld(world, 1);
+    }
+    cartPos += cartVel * 0.5;
+    mastPos -= mastVel * 0.5;
+    EXPECT_NEAR(cartPos, cartJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(cartVel, cartJoint->GetVelocity(0), 1e-2);
+    EXPECT_NEAR(mastPos, mastJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(-mastVel, mastJoint->GetVelocity(0), 1e-2);
+    EXPECT_TRUE(PoseNear(expectedMastPose(cartPos, mastPos),
+        LinkWorldPose(mast), 1e-2));
+    EXPECT_TRUE(PoseNear(expectedLampPose(cartPos, mastPos),
+        LinkWorldPose(lamp), 1e-2));
+    mastData = mast->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d(0, cartVel, -mastVel),
+        mastData.linearVelocity, 1e-2));
+    lampData = lamp->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d(0, cartVel, -mastVel),
+        lampData.linearVelocity, 1e-2));
+
+    // 5. Without commands the mast joint locks again at its current position
+    // while the cart keeps moving.
+    StepKinematicWorld(world, 500);
+    cartPos += cartVel * 0.5;
+    EXPECT_NEAR(cartPos, cartJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(mastPos, mastJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(0.0, mastJoint->GetVelocity(0), 1e-3);
+    EXPECT_TRUE(PoseNear(expectedLampPose(cartPos, mastPos),
+        LinkWorldPose(lamp), 1e-2));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicJointTestFeaturesList, DynamicParentKinematicChildBallJoint)
+{
+  // A kinematic child link attached to a dynamic parent link via a ball
+  // joint. Driving multi-dof kinematic joints is not supported, but the joint
+  // must at least be held in place and not accumulate velocity.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<KinematicJointFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>0 0 1 0 0 0</pose>
+        <link name="anchor">
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="slider">
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="arm">
+          <kinematic>true</kinematic>
+          <pose>0.5 0 0 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.0017</ixx><iyy>0.084</iyy><izz>0.084</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <joint name="world_joint" type="fixed">
+          <parent>world</parent>
+          <child>anchor</child>
+        </joint>
+        <joint name="slider_joint" type="prismatic">
+          <parent>anchor</parent>
+          <child>slider</child>
+          <axis>
+            <xyz>0 1 0</xyz>
+          </axis>
+        </joint>
+        <joint name="arm_joint" type="ball">
+          <pose>-0.5 0 0 0 0 0</pose>
+          <parent>slider</parent>
+          <child>arm</child>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto arm = model->GetLink("arm");
+    ASSERT_NE(nullptr, arm);
+    auto armJoint = model->GetJoint("arm_joint");
+    ASSERT_NE(nullptr, armJoint);
+    auto sliderJoint = model->GetJoint("slider_joint");
+    ASSERT_NE(nullptr, sliderJoint);
+    EXPECT_TRUE(arm->GetKinematic());
+
+    // The arm sticks out along +X so gravity acts about the second dof of the
+    // ball joint.
+    const gz::math::Pose3d initialArmPose(0.5, 0, 1, 0, 0, 0);
+    EXPECT_TRUE(PoseNear(initialArmPose, LinkWorldPose(arm), 1e-6));
+
+    StepKinematicWorld(world, 1000);
+    EXPECT_TRUE(PoseNear(initialArmPose, LinkWorldPose(arm), 1e-3));
+    EXPECT_NEAR(0.0, sliderJoint->GetPosition(0), 1e-2);
+    for (std::size_t dof = 0; dof < 3; ++dof)
+    {
+      EXPECT_NEAR(0.0, armJoint->GetVelocity(dof), 1e-3) << "dof " << dof;
+    }
+    const auto armData = arm->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d::Zero().eval(),
+        armData.linearVelocity, 1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(Eigen::Vector3d::Zero().eval(),
+        armData.angularVelocity, 1e-3));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicJointTestFeaturesList, KinematicJointLimits)
+{
+  // Kinematically driven joints must stop at their position limits. This is
+  // checked for a prismatic joint between two kinematic links and for a
+  // revolute joint between a dynamic parent and a kinematic child.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<KinematicJointFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M_kin">
+        <pose>0 0 1 0 0 0</pose>
+        <link name="link1">
+          <kinematic>true</kinematic>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <link name="link2">
+          <kinematic>true</kinematic>
+          <pose>0 0 0.5 0 0 0</pose>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="joint" type="prismatic">
+          <parent>link1</parent>
+          <child>link2</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>-0.2</lower>
+              <upper>0.3</upper>
+            </limit>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)");
+
+    // 1. Prismatic joint between kinematic links
+    auto kinModel = world->GetModel("M_kin");
+    ASSERT_NE(nullptr, kinModel);
+    auto link2 = kinModel->GetLink("link2");
+    ASSERT_NE(nullptr, link2);
+    auto joint = kinModel->GetJoint("joint");
+    ASSERT_NE(nullptr, joint);
+    const gz::math::Pose3d initialLink2Pose(0, 0, 1.5, 0, 0, 0);
+    auto expectedLink2Pose = [&](double _q)
+    {
+      return initialLink2Pose * gz::math::Pose3d(0, 0, _q, 0, 0, 0);
+    };
+
+    // Drive into the upper limit and stop there
+    joint->SetVelocity(0, 1.0);
+    StepKinematicWorld(world, 1000);
+    EXPECT_NEAR(0.3, joint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-3);
+    EXPECT_TRUE(PoseNear(expectedLink2Pose(0.3), LinkWorldPose(link2), 1e-3));
+    EXPECT_NEAR(0.0, link2->FrameDataRelativeToWorld().linearVelocity.z(),
+        1e-3);
+
+    // Drive into the lower limit and stop there
+    joint->SetVelocity(0, -1.0);
+    StepKinematicWorld(world, 1000);
+    EXPECT_NEAR(-0.2, joint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-3);
+    EXPECT_TRUE(PoseNear(expectedLink2Pose(-0.2), LinkWorldPose(link2),
+        1e-3));
+
+    // Moving away from a limit works
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      joint->SetVelocityCommand(0, 1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(-0.1, joint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(1.0, joint->GetVelocity(0), 1e-3);
+
+    // A joint that is placed beyond its limit is not pushed back, but it can
+    // not move further out and it can move back in.
+    joint->SetPosition(0, 0.4);
+    joint->SetVelocity(0, 1.0);
+    StepKinematicWorld(world, 100);
+    EXPECT_NEAR(0.4, joint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, joint->GetVelocity(0), 1e-3);
+    joint->SetVelocity(0, -1.0);
+    StepKinematicWorld(world, 50);
+    EXPECT_NEAR(0.35, joint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(-1.0, joint->GetVelocity(0), 1e-3);
+
+    // 2. Revolute joint between a dynamic parent and a kinematic child, with
+    // the limits set at run time. The slider joint has no friction, so the
+    // slider must be at rest whenever the arm is at rest (see
+    // DynamicParentKinematicChildReaction) and must not be pushed by an arm
+    // that cannot move.
+    ConstructModelFromString(world, kDynamicParentKinematicChildSdf);
+    auto dynModel = world->GetModel("M1");
+    ASSERT_NE(nullptr, dynModel);
+    auto slider = dynModel->GetLink("slider");
+    ASSERT_NE(nullptr, slider);
+    auto arm = dynModel->GetLink("arm");
+    ASSERT_NE(nullptr, arm);
+    auto sliderJoint = dynModel->GetJoint("slider_joint");
+    ASSERT_NE(nullptr, sliderJoint);
+    auto armJoint = dynModel->GetJoint("arm_joint");
+    ASSERT_NE(nullptr, armJoint);
+    armJoint->SetMinPosition(0, -0.4);
+    armJoint->SetMaxPosition(0, 0.6);
+    // The pivot is at the slider link origin and the arm rotates about X.
+    auto expectedArmPose = [&](double _q)
+    {
+      return LinkWorldPose(slider) * gz::math::Pose3d(0, 0, 0, _q, 0, 0) *
+          gz::math::Pose3d(0, 0.5, 0, 0, 0, 0);
+    };
+    auto armAngVelX = [&]()
+    {
+      return arm->FrameDataRelativeToWorld().angularVelocity.x();
+    };
+    const double sliderVelTol = 5e-3;
+
+    // Drive into the upper limit and stop there. A slow drive is used here:
+    // the arm reaches the limit with a partial step, which exercises the
+    // hand-over between the clamped joint velocity and the motor that stops
+    // the arm, while the lower limit below is approached at full speed.
+    armJoint->SetVelocity(0, 0.3);
+    StepKinematicWorld(world, 1000);
+    EXPECT_NEAR(0.3, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.3, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.3, armAngVelX(), 1e-3);
+    StepKinematicWorld(world, 1100);
+    EXPECT_NEAR(0.6, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, armAngVelX(), 1e-3);
+    EXPECT_TRUE(PoseNear(expectedArmPose(0.6), LinkWorldPose(arm), 1e-3));
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);
+
+    // Raising the limit at run time lets the arm continue with the joint
+    // velocity that was set earlier and persists, until it reaches the new
+    // limit.
+    armJoint->SetMaxPosition(0, 0.9);
+    StepKinematicWorld(world, 1100);
+    EXPECT_NEAR(0.9, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);
+
+    // Driving into the limit, with a joint velocity set before every step or
+    // with velocity commands, neither moves the arm nor pushes the slider.
+    double sliderPos = sliderJoint->GetPosition(0);
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      armJoint->SetVelocity(0, 1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      armJoint->SetVelocityCommand(0, 1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(0.9, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(sliderPos, sliderJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);
+
+    // A joint placed beyond its limit is not pushed back and cannot be driven
+    // further out, which must not push the slider either, but it can move
+    // back in.
+    armJoint->SetPosition(0, 1.2);
+    sliderPos = sliderJoint->GetPosition(0);
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      armJoint->SetVelocity(0, 1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(1.2, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(sliderPos, sliderJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      armJoint->SetVelocityCommand(0, -1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(1.1, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(-1.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(-1.0, armAngVelX(), 1e-3);
+
+    // Drive into the lower limit and stop there
+    for (std::size_t i = 0; i < 1600; ++i)
+    {
+      armJoint->SetVelocityCommand(0, -1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(-0.4, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(0.0, armJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(0.0, armAngVelX(), 1e-3);
+    EXPECT_TRUE(PoseNear(expectedArmPose(-0.4), LinkWorldPose(arm), 1e-3));
+    EXPECT_NEAR(0.0, sliderJoint->GetVelocity(0), sliderVelTol);
+
+    // Moving away from a limit works
+    for (std::size_t i = 0; i < 100; ++i)
+    {
+      armJoint->SetVelocityCommand(0, 1.0);
+      StepKinematicWorld(world, 1);
+    }
+    EXPECT_NEAR(-0.3, armJoint->GetPosition(0), 1e-3);
+    EXPECT_NEAR(1.0, armJoint->GetVelocity(0), 1e-3);
+  }
+}
+
+/////////////////////////////////////////////////
+using KinematicJointRemoveFeaturesList = gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::ForwardStep,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetJointFromModel,
+  gz::physics::GetBasicJointState,
+  gz::physics::SetBasicJointState,
+  gz::physics::KinematicLink,
+  gz::physics::LinkFrameSemantics,
+  gz::physics::RemoveEntities
+>;
+
+using KinematicJointRemoveTestFeaturesList =
+  KinematicFeaturesTest<KinematicJointRemoveFeaturesList>;
+
+/////////////////////////////////////////////////
+TEST_F(KinematicJointRemoveTestFeaturesList, RemoveModelWithKinematicChild)
+{
+  // An engine may keep internal constraints alive to lock or drive the joint
+  // of a kinematic child link attached to a dynamic parent. Removing the model
+  // must clean them up so that the world can keep stepping afterwards.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicJointRemoveFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, kDynamicParentKinematicChildSdf);
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    EXPECT_EQ(1u, world->GetModelCount());
+
+    // Step so that any engine-internal constraints get created
+    StepKinematicWorld(world, 10);
+
+    EXPECT_TRUE(model->Remove());
+    EXPECT_EQ(0u, world->GetModelCount());
+
+    // The world must still be steppable after the removal
+    StepKinematicWorld(world, 10);
+
+    // Re-create the model. The kinematic arm joint should still be locked.
+    ConstructModelFromString(world, kDynamicParentKinematicChildSdf);
+    model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto arm = model->GetLink("arm");
+    ASSERT_NE(nullptr, arm);
+    auto armJoint = model->GetJoint("arm_joint");
+    ASSERT_NE(nullptr, armJoint);
+
+    StepKinematicWorld(world, 500);
+    EXPECT_NEAR(0.0, armJoint->GetPosition(0), 1e-3);
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(0, 0.5, 1, 0, 0, 0),
+        LinkWorldPose(arm), 1e-3));
+  }
+}
+
+/////////////////////////////////////////////////
+using KinematicFreeGroupFeaturesList = gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfModel,
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::ForwardStep,
+  gz::physics::GetLinkFromModel,
+  gz::physics::GetModelFromWorld,
+  gz::physics::GetNestedModelFromModel,
+  gz::physics::GetJointFromModel,
+  gz::physics::GetBasicJointState,
+  gz::physics::SetBasicJointState,
+  gz::physics::SetJointPositionLimitsFeature,
+  gz::physics::JointFrameSemantics,
+  gz::physics::KinematicLink,
+  gz::physics::LinkFrameSemantics,
+  gz::physics::ModelStaticState,
+  gz::physics::FindFreeGroupFeature,
+  gz::physics::SetFreeGroupWorldPose,
+  gz::physics::SetFreeGroupWorldVelocity,
+  gz::physics::AttachFixedJointFeature,
+  gz::physics::DetachJointFeature,
+  gz::physics::SetJointTransformFromParentFeature
+>;
+
+using KinematicFreeGroupTestFeaturesList =
+  KinematicFeaturesTest<KinematicFreeGroupFeaturesList>;
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicChainVelocities)
+{
+  // A fully kinematic chain: base -> prismatic -> slider -> revolute -> arm
+  // -> fixed -> tip. The base is commanded with a linear and an angular
+  // velocity and the joints with velocities. Verify the integrated poses and
+  // that the world velocity of every link is the rigid body velocity of its
+  // parent plus the contribution of the joint.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>0 0 1 0 0 0</pose>
+        <link name="base">
+          <kinematic>true</kinematic>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="slider">
+          <kinematic>true</kinematic>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="arm">
+          <kinematic>true</kinematic>
+          <pose>0.5 0 0 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <link name="tip">
+          <kinematic>true</kinematic>
+          <pose>1.0 0 0 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+        </link>
+        <joint name="slider_joint" type="prismatic">
+          <parent>base</parent>
+          <child>slider</child>
+          <axis>
+            <xyz>1 0 0</xyz>
+          </axis>
+        </joint>
+        <joint name="arm_joint" type="revolute">
+          <pose>-0.5 0 0 0 0 0</pose>
+          <parent>slider</parent>
+          <child>arm</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+          </axis>
+        </joint>
+        <joint name="tip_joint" type="fixed">
+          <parent>arm</parent>
+          <child>tip</child>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto base = model->GetLink("base");
+    ASSERT_NE(nullptr, base);
+    auto slider = model->GetLink("slider");
+    ASSERT_NE(nullptr, slider);
+    auto arm = model->GetLink("arm");
+    ASSERT_NE(nullptr, arm);
+    auto tip = model->GetLink("tip");
+    ASSERT_NE(nullptr, tip);
+    auto sliderJoint = model->GetJoint("slider_joint");
+    ASSERT_NE(nullptr, sliderJoint);
+    auto armJoint = model->GetJoint("arm_joint");
+    ASSERT_NE(nullptr, armJoint);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+
+    const Eigen::Vector3d baseLinVel(0, 0, 0.3);
+    const Eigen::Vector3d baseAngVel(0, 0, 0.5);
+    const double sliderVel = 0.2;
+    const double armVel = 1.0;
+
+    // Velocities persist, so set them only once.
+    freeGroup->SetWorldLinearVelocity(baseLinVel);
+    freeGroup->SetWorldAngularVelocity(baseAngVel);
+    sliderJoint->SetVelocity(0, sliderVel);
+    armJoint->SetVelocity(0, armVel);
+
+    const double time = 1.0;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+
+    // Poses
+    const gz::math::Pose3d expectedBasePose(
+        0, 0, 1 + baseLinVel.z() * time, 0, 0, baseAngVel.z() * time);
+    const gz::math::Pose3d expectedSliderPose = expectedBasePose *
+        gz::math::Pose3d(sliderVel * time, 0, 0, 0, 0, 0);
+    const gz::math::Pose3d expectedArmPose = expectedSliderPose *
+        gz::math::Pose3d(0, 0, 0, 0, 0, armVel * time) *
+        gz::math::Pose3d(0.5, 0, 0, 0, 0, 0);
+    const gz::math::Pose3d expectedTipPose = expectedArmPose *
+        gz::math::Pose3d(0.5, 0, 0, 0, 0, 0);
+    EXPECT_NEAR(sliderVel * time, sliderJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(armVel * time, armJoint->GetPosition(0), 1e-2);
+    EXPECT_TRUE(PoseNear(expectedBasePose, LinkWorldPose(base), 1e-2));
+    EXPECT_TRUE(PoseNear(expectedSliderPose, LinkWorldPose(slider), 1e-2));
+    EXPECT_TRUE(PoseNear(expectedArmPose, LinkWorldPose(arm), 1e-2));
+    EXPECT_TRUE(PoseNear(expectedTipPose, LinkWorldPose(tip), 1e-2));
+
+    // Joint velocities
+    EXPECT_NEAR(sliderVel, sliderJoint->GetVelocity(0), 1e-3);
+    EXPECT_NEAR(armVel, armJoint->GetVelocity(0), 1e-3);
+
+    // Link velocities
+    const auto baseData = base->FrameDataRelativeToWorld();
+    const auto sliderData = slider->FrameDataRelativeToWorld();
+    const auto armData = arm->FrameDataRelativeToWorld();
+    const auto tipData = tip->FrameDataRelativeToWorld();
+    const Eigen::Vector3d sliderAxis =
+        sliderData.pose.linear() * Eigen::Vector3d::UnitX();
+    const Eigen::Vector3d armAxis =
+        armData.pose.linear() * Eigen::Vector3d::UnitZ();
+    const Eigen::Vector3d armPivot =
+        armJoint->FrameDataRelativeToWorld().pose.translation();
+
+    EXPECT_TRUE(gz::physics::test::Equal(baseLinVel, baseData.linearVelocity,
+        1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(baseAngVel, baseData.angularVelocity,
+        1e-3));
+
+    // Prismatic: v = v_parent(p) + axis * qdot, w = w_parent
+    const Eigen::Vector3d expectedSliderLinVel =
+        PointVelocity(baseData, sliderData.pose.translation()) +
+        sliderAxis * sliderVel;
+    EXPECT_TRUE(gz::physics::test::Equal(expectedSliderLinVel,
+        sliderData.linearVelocity, 1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(baseAngVel,
+        sliderData.angularVelocity, 1e-3));
+
+    // Revolute: w = w_parent + axis * qdot, v = v_parent(pivot) + w x r
+    const Eigen::Vector3d expectedArmAngVel =
+        sliderData.angularVelocity + armAxis * armVel;
+    const Eigen::Vector3d expectedArmLinVel =
+        PointVelocity(sliderData, armPivot) +
+        expectedArmAngVel.cross(armData.pose.translation() - armPivot);
+    EXPECT_TRUE(gz::physics::test::Equal(expectedArmAngVel,
+        armData.angularVelocity, 1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(expectedArmLinVel,
+        armData.linearVelocity, 1e-3));
+
+    // Fixed: rigidly attached to the parent
+    EXPECT_TRUE(gz::physics::test::Equal(armData.angularVelocity,
+        tipData.angularVelocity, 1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(
+        PointVelocity(armData, tipData.pose.translation()),
+        tipData.linearVelocity, 1e-3));
+
+    // The joint frame of the fixed joint moves with the tip link
+    const auto tipJoint = model->GetJoint("tip_joint");
+    ASSERT_NE(nullptr, tipJoint);
+    const auto tipJointData = tipJoint->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(tipData.angularVelocity,
+        tipJointData.angularVelocity, 1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(
+        PointVelocity(tipData, tipJointData.pose.translation()),
+        tipJointData.linearVelocity, 1e-3));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicBaseFixedJointChildren)
+{
+  // Children attached to a kinematic base link with fixed joints, one
+  // kinematic and one dynamic. When the base is commanded with a linear and
+  // an angular velocity, both children must move rigidly with the base and
+  // report the corresponding world velocities.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>0 0 2 0 0 0</pose>
+        <link name="base">
+          <kinematic>true</kinematic>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <link name="kin_child">
+          <kinematic>true</kinematic>
+          <pose>0.5 0 0 0 0 0</pose>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <link name="dyn_child">
+          <pose>0 0.5 0 0 0 0</pose>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="kin_joint" type="fixed">
+          <parent>base</parent>
+          <child>kin_child</child>
+        </joint>
+        <joint name="dyn_joint" type="fixed">
+          <parent>base</parent>
+          <child>dyn_child</child>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto base = model->GetLink("base");
+    ASSERT_NE(nullptr, base);
+    auto kinChild = model->GetLink("kin_child");
+    ASSERT_NE(nullptr, kinChild);
+    auto dynChild = model->GetLink("dyn_child");
+    ASSERT_NE(nullptr, dynChild);
+    EXPECT_TRUE(base->GetKinematic());
+    EXPECT_TRUE(kinChild->GetKinematic());
+    EXPECT_FALSE(dynChild->GetKinematic());
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+
+    const Eigen::Vector3d linVel(0, 0, 0.2);
+    const Eigen::Vector3d angVel(0, 0, 1.0);
+    freeGroup->SetWorldLinearVelocity(linVel);
+    freeGroup->SetWorldAngularVelocity(angVel);
+
+    // Velocity queries must be correct right after setting the velocity
+    auto baseData = base->FrameDataRelativeToWorld();
+    auto kinData = kinChild->FrameDataRelativeToWorld();
+    auto dynData = dynChild->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(linVel, baseData.linearVelocity,
+        1e-6));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, baseData.angularVelocity,
+        1e-6));
+    EXPECT_TRUE(gz::physics::test::Equal(
+        PointVelocity(baseData, kinData.pose.translation()),
+        kinData.linearVelocity, 1e-6));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, kinData.angularVelocity,
+        1e-6));
+    EXPECT_TRUE(gz::physics::test::Equal(
+        PointVelocity(baseData, dynData.pose.translation()),
+        dynData.linearVelocity, 1e-6));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, dynData.angularVelocity,
+        1e-6));
+
+    const double time = 1.0;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+
+    const gz::math::Pose3d expectedBasePose(
+        0, 0, 2 + linVel.z() * time, 0, 0, angVel.z() * time);
+    EXPECT_TRUE(PoseNear(expectedBasePose, LinkWorldPose(base), 1e-2));
+    EXPECT_TRUE(PoseNear(
+        expectedBasePose * gz::math::Pose3d(0.5, 0, 0, 0, 0, 0),
+        LinkWorldPose(kinChild), 1e-2));
+    EXPECT_TRUE(PoseNear(
+        expectedBasePose * gz::math::Pose3d(0, 0.5, 0, 0, 0, 0),
+        LinkWorldPose(dynChild), 1e-2));
+
+    baseData = base->FrameDataRelativeToWorld();
+    kinData = kinChild->FrameDataRelativeToWorld();
+    dynData = dynChild->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(linVel, baseData.linearVelocity,
+        1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, baseData.angularVelocity,
+        1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(
+        PointVelocity(baseData, kinData.pose.translation()),
+        kinData.linearVelocity, 1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, kinData.angularVelocity,
+        1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(
+        PointVelocity(baseData, dynData.pose.translation()),
+        dynData.linearVelocity, 1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, dynData.angularVelocity,
+        1e-3));
+    // Sanity check of the lever arm term: the children are 0.5 m from the
+    // yaw axis so their speed in the XY plane is 0.5 m/s.
+    EXPECT_NEAR(0.5, kinData.linearVelocity.head<2>().norm(), 1e-3);
+    EXPECT_NEAR(0.5, dynData.linearVelocity.head<2>().norm(), 1e-3);
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicBaseWithNestedModel)
+{
+  // A kinematic root link in a model that contains a nested model. The
+  // commanded base velocity must be integrated exactly once per step even if
+  // the engine represents the nested model with the same underlying body.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>0 0 2 0 0 0</pose>
+        <link name="base">
+          <kinematic>true</kinematic>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+        <model name="nested">
+          <pose>0.5 0 0 0 0 0</pose>
+          <link name="link">
+            <kinematic>true</kinematic>
+            <collision name="collision">
+              <geometry>
+                <box><size>0.2 0.2 0.2</size></box>
+              </geometry>
+            </collision>
+          </link>
+        </model>
+        <joint name="joint" type="fixed">
+          <parent>base</parent>
+          <child>nested::link</child>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto base = model->GetLink("base");
+    ASSERT_NE(nullptr, base);
+    auto nestedModel = model->GetNestedModel("nested");
+    ASSERT_NE(nullptr, nestedModel);
+    auto nestedLink = nestedModel->GetLink("link");
+    ASSERT_NE(nullptr, nestedLink);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+
+    const Eigen::Vector3d linVel(1, 0, 0);
+    const Eigen::Vector3d angVel(0, 0, 0.5);
+    freeGroup->SetWorldLinearVelocity(linVel);
+    freeGroup->SetWorldAngularVelocity(angVel);
+
+    const double time = 1.0;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+
+    const gz::math::Pose3d expectedBasePose(
+        linVel.x() * time, 0, 2, 0, 0, angVel.z() * time);
+    EXPECT_TRUE(PoseNear(expectedBasePose, LinkWorldPose(base), 1e-2));
+    EXPECT_TRUE(PoseNear(
+        expectedBasePose * gz::math::Pose3d(0.5, 0, 0, 0, 0, 0),
+        LinkWorldPose(nestedLink), 1e-2));
+
+    const auto baseData = base->FrameDataRelativeToWorld();
+    const auto nestedData = nestedLink->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(linVel, baseData.linearVelocity,
+        1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, baseData.angularVelocity,
+        1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(
+        PointVelocity(baseData, nestedData.pose.translation()),
+        nestedData.linearVelocity, 1e-3));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, nestedData.angularVelocity,
+        1e-3));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicBaseTwist)
+{
+  // Command simultaneous linear and angular velocities on kinematic links.
+  // Velocities are expressed for the link frame origin in world frame.
+  // * M_twist: link frame coincides with the center of mass.
+  // * M_offset: center of mass is offset from the link frame.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M_twist">
+        <pose>0 0 5 0 0 0</pose>
+        <link name="link">
+          <kinematic>true</kinematic>
+          <collision name="collision">
+            <geometry>
+              <sphere><radius>0.1</radius></sphere>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)");
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M_offset">
+        <pose>0 5 5 0 0 0</pose>
+        <link name="link">
+          <kinematic>true</kinematic>
+          <inertial>
+            <pose>0.5 0 0 0 0 0</pose>
+            <mass>1.0</mass>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <sphere><radius>0.1</radius></sphere>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)");
+
+    auto twistModel = world->GetModel("M_twist");
+    ASSERT_NE(nullptr, twistModel);
+    auto twistLink = twistModel->GetLink("link");
+    ASSERT_NE(nullptr, twistLink);
+    auto twistGroup = twistModel->FindFreeGroup();
+    ASSERT_NE(nullptr, twistGroup);
+
+    auto offsetModel = world->GetModel("M_offset");
+    ASSERT_NE(nullptr, offsetModel);
+    auto offsetLink = offsetModel->GetLink("link");
+    ASSERT_NE(nullptr, offsetLink);
+    auto offsetGroup = offsetModel->FindFreeGroup();
+    ASSERT_NE(nullptr, offsetGroup);
+
+    const Eigen::Vector3d linVel(1, 0, 0);
+    const Eigen::Vector3d angVel(0, 0, 1);
+    const Eigen::Vector3d zero = Eigen::Vector3d::Zero();
+    const double time = 1.0;
+    const auto steps = static_cast<std::size_t>(time / kStepSize);
+    // Set the velocities every step, as a controller would, so that the
+    // conversion between the link frame and the center of mass velocity is
+    // exercised at every orientation of M_offset.
+    for (std::size_t i = 0; i < steps; ++i)
+    {
+      twistGroup->SetWorldLinearVelocity(linVel);
+      twistGroup->SetWorldAngularVelocity(angVel);
+      offsetGroup->SetWorldLinearVelocity(zero);
+      offsetGroup->SetWorldAngularVelocity(angVel);
+      StepKinematicWorld(world, 1);
+    }
+
+    // M_twist link origin should move in a straight line along world X
+    // while yawing.
+    const auto twistData = twistLink->FrameDataRelativeToWorld();
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(1, 0, 5, 0, 0, time),
+        gz::math::eigen3::convert(twistData.pose), 1e-2));
+    EXPECT_TRUE(gz::physics::test::Equal(linVel, twistData.linearVelocity,
+        1e-2));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, twistData.angularVelocity,
+        1e-2));
+
+    // M_offset link origin should rotate in place.
+    const auto offsetData = offsetLink->FrameDataRelativeToWorld();
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(0, 5, 5, 0, 0, time),
+        gz::math::eigen3::convert(offsetData.pose), 1e-2));
+    EXPECT_TRUE(gz::physics::test::Equal(zero, offsetData.linearVelocity,
+        1e-2));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, offsetData.angularVelocity,
+        1e-2));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicBaseSlowVelocity)
+{
+  // A kinematic base commanded with a very small velocity must move with it:
+  // the requested velocity is applied as is, without a threshold. The model
+  // starts at the world origin so that the small displacement is
+  // representable in single precision.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world,
+        BoxModelSdf("slow", gz::math::Pose3d::Zero, true));
+    auto model = world->GetModel("slow");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+
+    const Eigen::Vector3d linVel(5e-6, 0, 0);
+    freeGroup->SetWorldLinearVelocity(linVel);
+    const double time = 10.0;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+
+    const auto frameData = link->FrameDataRelativeToWorld();
+    const double expectedX = linVel.x() * time;
+    EXPECT_NEAR(expectedX, frameData.pose.translation().x(),
+        0.01 * expectedX);
+    EXPECT_NEAR(0.0, frameData.pose.translation().y(), 1e-9);
+    EXPECT_NEAR(0.0, frameData.pose.translation().z(), 1e-9);
+    EXPECT_TRUE(gz::physics::test::Equal(linVel, frameData.linearVelocity,
+        1e-9));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicBaseRotatedInertialFrame)
+{
+  // A kinematic base whose inertial frame is offset from and rotated with
+  // respect to the link frame, commanded once with a linear and an angular
+  // velocity. The velocity of the link frame must stay at the commanded
+  // value: it must not drift with the single precision state of the engine
+  // when the center of mass velocity is derived from it at every step.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>1 2 3 0 0 0</pose>
+        <link name="link">
+          <kinematic>true</kinematic>
+          <inertial>
+            <pose>0.5 0.2 0.1 0.3 0.4 0.5</pose>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.02</iyy><izz>0.03</izz>
+            </inertia>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <box><size>0.2 0.2 0.2</size></box>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+
+    const Eigen::Vector3d linVel(0.3, -0.2, 0.1);
+    const Eigen::Vector3d angVel(0.5, 0.2, 1.0);
+    freeGroup->SetWorldLinearVelocity(linVel);
+    freeGroup->SetWorldAngularVelocity(angVel);
+
+    const double time = 2.0;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+
+    // The link frame moves in a straight line and rotates about the fixed
+    // axis of the angular velocity.
+    const Eigen::Vector3d expectedPos =
+        Eigen::Vector3d(1, 2, 3) + linVel * time;
+    const Eigen::Quaterniond expectedRot(Eigen::AngleAxisd(
+        angVel.norm() * time, angVel.normalized()));
+    const gz::math::Pose3d expectedPose(
+        gz::math::eigen3::convert(expectedPos),
+        gz::math::eigen3::convert(expectedRot));
+    EXPECT_TRUE(PoseNear(expectedPose, LinkWorldPose(link), 1e-2));
+
+    const auto frameData = link->FrameDataRelativeToWorld();
+    EXPECT_TRUE(gz::physics::test::Equal(linVel, frameData.linearVelocity,
+        1e-6));
+    EXPECT_TRUE(gz::physics::test::Equal(angVel, frameData.angularVelocity,
+        1e-6));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList,
+       KinematicParentDynamicChildBaseVelocity)
+{
+  // A dynamic pendulum bob hanging from a kinematic base link. Moving the
+  // kinematic base at constant velocity should carry the bob along without
+  // making it swing (constant velocity motion does not induce swinging).
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="M1">
+        <pose>0 0 2 0 0 0</pose>
+        <link name="base">
+          <kinematic>true</kinematic>
+          <collision name="collision">
+            <geometry>
+              <sphere><radius>0.1</radius></sphere>
+            </geometry>
+          </collision>
+        </link>
+        <link name="bob">
+          <pose>0 0 -0.5 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia>
+              <ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz>
+            </inertia>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <sphere><radius>0.1</radius></sphere>
+            </geometry>
+          </collision>
+        </link>
+        <joint name="pivot" type="revolute">
+          <pose>0 0 0.5 0 0 0</pose>
+          <parent>base</parent>
+          <child>bob</child>
+          <axis>
+            <xyz>1 0 0</xyz>
+          </axis>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto base = model->GetLink("base");
+    ASSERT_NE(nullptr, base);
+    auto bob = model->GetLink("bob");
+    ASSERT_NE(nullptr, bob);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+
+    const Eigen::Vector3d linVel(1, 0, 0);
+    const double time = 1.0;
+    // The velocity persists, so set it only once.
+    freeGroup->SetWorldLinearVelocity(linVel);
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(1, 0, 2, 0, 0, 0),
+        LinkWorldPose(base), 1e-2));
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(1, 0, 1.5, 0, 0, 0),
+        LinkWorldPose(bob), 1e-2));
+    EXPECT_TRUE(gz::physics::test::Equal(linVel,
+        base->FrameDataRelativeToWorld().linearVelocity, 1e-2));
+    EXPECT_TRUE(gz::physics::test::Equal(linVel,
+        bob->FrameDataRelativeToWorld().linearVelocity, 1e-2));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, DynamicModelAttachedToKinematic)
+{
+  // A dynamic model attached to a kinematic model with a detachable fixed
+  // joint should be held by the kinematic model, follow it when it is moved,
+  // and fall once detached. The kinematic model should remain kinematic.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world,
+        BoxModelSdf("M_kin", gz::math::Pose3d(0, 0, 2, 0, 0, 0), true));
+    ConstructModelFromString(world,
+        BoxModelSdf("M_dyn", gz::math::Pose3d(0, 0, 1.5, 0, 0, 0), false));
+
+    auto kinModel = world->GetModel("M_kin");
+    ASSERT_NE(nullptr, kinModel);
+    auto kinLink = kinModel->GetLink("link");
+    ASSERT_NE(nullptr, kinLink);
+    auto dynModel = world->GetModel("M_dyn");
+    ASSERT_NE(nullptr, dynModel);
+    auto dynLink = dynModel->GetLink("link");
+    ASSERT_NE(nullptr, dynLink);
+
+    auto fixedJoint = dynLink->AttachFixedJoint(kinLink);
+    ASSERT_NE(nullptr, fixedJoint);
+    // Preserve the current relative pose between the two links
+    fixedJoint->SetTransformFromParent(gz::math::eigen3::convert(
+        gz::math::Pose3d(0, 0, -0.5, 0, 0, 0)));
+
+    // Dynamic model should be held up by the kinematic model. Step for
+    // longer than bullet's default sleep timeout (2 s).
+    StepKinematicWorld(world, 2500);
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(0, 0, 2, 0, 0, 0),
+        LinkWorldPose(kinLink), 1e-3));
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(0, 0, 1.5, 0, 0, 0),
+        LinkWorldPose(dynLink), 1e-3));
+    EXPECT_TRUE(kinLink->GetKinematic());
+
+    // Move the kinematic model. The dynamic model should follow.
+    auto kinGroup = kinModel->FindFreeGroup();
+    ASSERT_NE(nullptr, kinGroup);
+    kinGroup->SetWorldPose(gz::math::eigen3::convert(
+        gz::math::Pose3d(1, 0, 2, 0, 0, 0)));
+    StepKinematicWorld(world, 10);
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(1, 0, 2, 0, 0, 0),
+        LinkWorldPose(kinLink), 1e-3));
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(1, 0, 1.5, 0, 0, 0),
+        LinkWorldPose(dynLink), 1e-2));
+
+    // Detach. Dynamic model should fall, kinematic model should stay.
+    fixedJoint->Detach();
+    const double time = 0.5;
+    StepKinematicWorld(world, static_cast<std::size_t>(time / kStepSize));
+    EXPECT_TRUE(kinLink->GetKinematic());
+    EXPECT_TRUE(PoseNear(gz::math::Pose3d(1, 0, 2, 0, 0, 0),
+        LinkWorldPose(kinLink), 1e-3));
+    EXPECT_NEAR(1.5 + 0.5 * kGravity * time * time,
+        LinkWorldPose(dynLink).Z(), 2e-2);
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicLinkDetachedFromStatic)
+{
+  // Attach a kinematic link to a static link with a detachable fixed joint,
+  // then detach it. The link should still be kinematic after detaching and
+  // so it should not fall.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    const gz::math::Pose3d kinPose(0, 0, 1.5, 0, 0, 0);
+    ConstructModelFromString(world, BoxModelSdf("M_static",
+        gz::math::Pose3d(0, 0, 2, 0, 0, 0), false, true));
+    ConstructModelFromString(world, BoxModelSdf("M_kin", kinPose, true));
+
+    auto staticLink = world->GetModel("M_static")->GetLink("link");
+    ASSERT_NE(nullptr, staticLink);
+    auto kinLink = world->GetModel("M_kin")->GetLink("link");
+    ASSERT_NE(nullptr, kinLink);
+    EXPECT_TRUE(kinLink->GetKinematic());
+
+    auto fixedJoint = kinLink->AttachFixedJoint(staticLink);
+    ASSERT_NE(nullptr, fixedJoint);
+    fixedJoint->SetTransformFromParent(gz::math::eigen3::convert(
+        gz::math::Pose3d(0, 0, -0.5, 0, 0, 0)));
+    // The link is still reported as kinematic while it is welded to the
+    // static link, and it does not move.
+    StepKinematicWorld(world, 100);
+    EXPECT_TRUE(kinLink->GetKinematic());
+    EXPECT_TRUE(PoseNear(kinPose, LinkWorldPose(kinLink), 1e-3));
+    fixedJoint->Detach();
+
+    EXPECT_TRUE(kinLink->GetKinematic());
+    StepKinematicWorld(world, 1000);
+    EXPECT_TRUE(PoseNear(kinPose, LinkWorldPose(kinLink), 1e-3));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, SetKinematicWhileAttachedToStatic)
+{
+  // Attach a dynamic link to a static link with a detachable fixed joint and
+  // make it kinematic while it is attached. The link must stay in place while
+  // attached, and it must be kinematic, i.e. not fall, once detached.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    const gz::math::Pose3d linkPose(0, 0, 1.5, 0, 0, 0);
+    ConstructModelFromString(world, BoxModelSdf("M_static",
+        gz::math::Pose3d(0, 0, 2, 0, 0, 0), false, true));
+    ConstructModelFromString(world, BoxModelSdf("M_dyn", linkPose, false));
+
+    auto staticLink = world->GetModel("M_static")->GetLink("link");
+    ASSERT_NE(nullptr, staticLink);
+    auto dynLink = world->GetModel("M_dyn")->GetLink("link");
+    ASSERT_NE(nullptr, dynLink);
+    EXPECT_FALSE(dynLink->GetKinematic());
+
+    auto fixedJoint = dynLink->AttachFixedJoint(staticLink);
+    ASSERT_NE(nullptr, fixedJoint);
+    fixedJoint->SetTransformFromParent(gz::math::eigen3::convert(
+        gz::math::Pose3d(0, 0, -0.5, 0, 0, 0)));
+    StepKinematicWorld(world, 100);
+    EXPECT_TRUE(PoseNear(linkPose, LinkWorldPose(dynLink), 1e-3));
+
+    // Make the attached link kinematic. It stays welded to the static link.
+    dynLink->SetKinematic(true);
+    EXPECT_TRUE(dynLink->GetKinematic());
+    StepKinematicWorld(world, 100);
+    EXPECT_TRUE(PoseNear(linkPose, LinkWorldPose(dynLink), 1e-3));
+
+    // Once detached the link is kinematic and does not fall.
+    fixedJoint->Detach();
+    EXPECT_TRUE(dynLink->GetKinematic());
+    StepKinematicWorld(world, 1000);
+    EXPECT_TRUE(PoseNear(linkPose, LinkWorldPose(dynLink), 1e-3));
+
+    // Making it dynamic now lets it fall.
+    dynLink->SetKinematic(false);
+    EXPECT_FALSE(dynLink->GetKinematic());
+    StepKinematicWorld(world, 500);
+    EXPECT_GT(linkPose.Z() - 0.5, LinkWorldPose(dynLink).Z());
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, StaticModelKeepsKinematicLink)
+{
+  // Making a model static and then non-static again must restore the
+  // kinematic state of its links instead of making them dynamic.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    const gz::math::Pose3d linkPose(0, 0, 2, 0, 0, 0);
+    ConstructModelFromString(world, BoxModelSdf("M_kin", linkPose, true));
+
+    auto model = world->GetModel("M_kin");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+    EXPECT_TRUE(link->GetKinematic());
+
+    model->SetStatic(true);
+    EXPECT_TRUE(model->GetStatic());
+    EXPECT_TRUE(link->GetKinematic());
+    StepKinematicWorld(world, 100);
+    EXPECT_TRUE(PoseNear(linkPose, LinkWorldPose(link), 1e-3));
+
+    model->SetStatic(false);
+    EXPECT_FALSE(model->GetStatic());
+    EXPECT_TRUE(link->GetKinematic());
+    StepKinematicWorld(world, 1000);
+    EXPECT_TRUE(PoseNear(linkPose, LinkWorldPose(link), 1e-3));
+
+    // The link can still be made dynamic afterwards
+    link->SetKinematic(false);
+    StepKinematicWorld(world, 500);
+    EXPECT_GT(linkPose.Z() - 0.5, LinkWorldPose(link).Z());
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicChildWeldedToStatic)
+{
+  // The kinematic arm of kDynamicParentKinematicChildSdf, a non-base link
+  // with a dynamic parent, is welded to a static link with a detachable fixed
+  // joint twice. The detached joints remain known to the engine. A joint
+  // velocity set while the arm is welded takes effect once it is detached,
+  // and making the arm dynamic afterwards frees its joint and restores its
+  // position limits.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, kDynamicParentKinematicChildSdf);
+    ConstructModelFromString(world, BoxModelSdf("M_static",
+        gz::math::Pose3d(0, 1.5, 1, 0, 0, 0), false, true));
+
+    auto model = world->GetModel("M1");
+    ASSERT_NE(nullptr, model);
+    auto arm = model->GetLink("arm");
+    ASSERT_NE(nullptr, arm);
+    auto armJoint = model->GetJoint("arm_joint");
+    ASSERT_NE(nullptr, armJoint);
+    auto staticLink = world->GetModel("M_static")->GetLink("link");
+    ASSERT_NE(nullptr, staticLink);
+    armJoint->SetMinPosition(0, -0.4);
+    armJoint->SetMaxPosition(0, 0.6);
+    const gz::math::Pose3d armPose(0, 0.5, 1, 0, 0, 0);
+
+    for (int i = 0; i < 2; ++i)
+    {
+      auto fixedJoint = arm->AttachFixedJoint(staticLink);
+      ASSERT_NE(nullptr, fixedJoint);
+      // Preserve the current pose of the arm relative to the static link
+      fixedJoint->SetTransformFromParent(gz::math::eigen3::convert(
+          gz::math::Pose3d(0, -1, 0, 0, 0, 0)));
+      if (i == 1)
+      {
+        // Set a joint velocity while the arm is welded. It must not move yet.
+        armJoint->SetVelocity(0, 0.5);
+      }
+      StepKinematicWorld(world, 100);
+      EXPECT_TRUE(arm->GetKinematic());
+      EXPECT_NEAR(0.0, armJoint->GetPosition(0), 1e-3);
+      // The weld is a (slightly compliant) constraint between two bodies
+      EXPECT_TRUE(PoseNear(armPose, LinkWorldPose(arm), 1e-2));
+      fixedJoint->Detach();
+    }
+
+    // Detached: the arm is kinematic and turns with the velocity set earlier
+    EXPECT_TRUE(arm->GetKinematic());
+    StepKinematicWorld(world, 200);
+    EXPECT_NEAR(0.1, armJoint->GetPosition(0), 1e-2);
+    EXPECT_NEAR(0.5, armJoint->GetVelocity(0), 1e-3);
+
+    // Dynamic: the arm swings down under gravity and is stopped by the lower
+    // position limit, which must be enforced again.
+    arm->SetKinematic(false);
+    EXPECT_FALSE(arm->GetKinematic());
+    StepKinematicWorld(world, 1000);
+    EXPECT_GT(-0.3, armJoint->GetPosition(0));
+    EXPECT_LT(-0.5, armJoint->GetPosition(0));
+    StepKinematicWorld(world, 1000);
+    EXPECT_GT(-0.3, armJoint->GetPosition(0));
+    EXPECT_LT(-0.5, armJoint->GetPosition(0));
   }
 }
 

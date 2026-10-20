@@ -90,17 +90,13 @@ double JointFeatures::GetJointPosition(
     const Identity &_id, const std::size_t _dof) const
 {
   GZ_PROFILE("JointFeatures::GetJointPosition");
-  const auto *joint = this->ReferenceInterface<JointInfo>(_id);
-  const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
-  if (identifier)
-  {
-    const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-    return model->body->GetJointPosForDof(identifier->indexInBtModel, _dof);
-  }
+  if (!this->ValidateDofParam(_id, _dof))
+    return gz::math::NAN_D;
 
-  // The base joint never really has a position. It is either a Free Joint or
-  // a Fixed Joint, but it doesn't track a "joint position" for Free Joint.
-  return 0.0;
+  const auto *joint = this->ReferenceInterface<JointInfo>(_id);
+  const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  return model->body->GetJointPosForDof(
+      std::get<InternalJoint>(joint->identifier).indexInBtModel, _dof);
 }
 
 /////////////////////////////////////////////////
@@ -108,25 +104,13 @@ double JointFeatures::GetJointVelocity(
     const Identity &_id, const std::size_t _dof) const
 {
   GZ_PROFILE("JointFeatures::GetJointVelocity");
+  if (!this->ValidateDofParam(_id, _dof))
+    return gz::math::NAN_D;
+
   const auto *joint = this->ReferenceInterface<JointInfo>(_id);
-  const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
-  if (identifier)
-  {
-    const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-    return model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof];
-  }
-
-  if (std::get_if<RootJoint>(&joint->identifier))
-  {
-    const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-
-    if (_dof < 3)
-      return model->body->getBaseVel()[_dof];
-    else if (_dof < 6)
-      return model->body->getBaseOmega()[_dof];
-  }
-
-  return gz::math::NAN_D;
+  const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  return model->body->getJointVelMultiDof(
+      std::get<InternalJoint>(joint->identifier).indexInBtModel)[_dof];
 }
 
 /////////////////////////////////////////////////
@@ -138,58 +122,56 @@ double JointFeatures::GetJointAcceleration(
 
 /////////////////////////////////////////////////
 double JointFeatures::GetJointForce(
-    const Identity &_id, const std::size_t /*_dof*/) const
+    const Identity &_id, const std::size_t _dof) const
 {
   GZ_PROFILE("JointFeatures::GetJointForce");
-  double results = gz::math::NAN_D;
-  const auto *joint = this->ReferenceInterface<JointInfo>(_id);
-  const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
+  if (!this->ValidateDofParam(_id, _dof))
+    return gz::math::NAN_D;
 
-  if (identifier)
+  double results = 0.0;
+  const auto *joint = this->ReferenceInterface<JointInfo>(_id);
+  const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
+  const int indexInBtModel =
+      std::get<InternalJoint>(joint->identifier).indexInBtModel;
+  auto feedback = model->body->getLink(indexInBtModel).m_jointFeedback;
+  const auto &link = model->body->getLink(indexInBtModel);
+  if (link.m_jointType == btMultibodyLink::eRevolute)
   {
-    const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-    auto feedback = model->body->getLink(
-      identifier->indexInBtModel).m_jointFeedback;
-    const auto &link = model->body->getLink(identifier->indexInBtModel);
-    results = 0.0;
-    if (link.m_jointType == btMultibodyLink::eRevolute)
-    {
-      // According to the documentation in btMultibodyLink.h,
-      // m_axesTop[0] is the joint axis for revolute joints.
-      Eigen::Vector3d axis = convert(link.getAxisTop(0));
-      math::Vector3d axis_converted(axis[0], axis[1], axis[2]);
-      btVector3 angular = feedback->m_reactionForces.getAngular();
-      math::Vector3d angularTorque(
-        angular.getX(),
-        angular.getY(),
-        angular.getZ());
-      results += axis_converted.Dot(angularTorque);
-      #if BT_BULLET_VERSION < 326
-        // not always true
-        return results / 2.0;
-      #else
-        return results;
-      #endif
-    }
-    else if (link.m_jointType == btMultibodyLink::ePrismatic)
-    {
-      auto axis = convert(link.getAxisBottom(0));
-      math::Vector3d axis_converted(axis[0], axis[1], axis[2]);
-      btVector3 linear = feedback->m_reactionForces.getLinear();
-      math::Vector3d linearForce(
-        linear.getX(),
-        linear.getY(),
-        linear.getZ());
-      results += axis_converted.Dot(linearForce);
-      #if BT_BULLET_VERSION < 326
-        // Not always true see for reference:
-        // https://github.com/bulletphysics/bullet3/discussions/3713
-        // https://github.com/gazebosim/gz-physics/issues/565
-        return results / 2.0;
-      #else
-        return results;
-      #endif
-    }
+    // According to the documentation in btMultibodyLink.h,
+    // m_axesTop[0] is the joint axis for revolute joints.
+    Eigen::Vector3d axis = convert(link.getAxisTop(0));
+    math::Vector3d axis_converted(axis[0], axis[1], axis[2]);
+    btVector3 angular = feedback->m_reactionForces.getAngular();
+    math::Vector3d angularTorque(
+      angular.getX(),
+      angular.getY(),
+      angular.getZ());
+    results += axis_converted.Dot(angularTorque);
+    #if BT_BULLET_VERSION < 326
+      // not always true
+      return results / 2.0;
+    #else
+      return results;
+    #endif
+  }
+  else if (link.m_jointType == btMultibodyLink::ePrismatic)
+  {
+    auto axis = convert(link.getAxisBottom(0));
+    math::Vector3d axis_converted(axis[0], axis[1], axis[2]);
+    btVector3 linear = feedback->m_reactionForces.getLinear();
+    math::Vector3d linearForce(
+      linear.getX(),
+      linear.getY(),
+      linear.getZ());
+    results += axis_converted.Dot(linearForce);
+    #if BT_BULLET_VERSION < 326
+      // Not always true see for reference:
+      // https://github.com/bulletphysics/bullet3/discussions/3713
+      // https://github.com/gazebosim/gz-physics/issues/565
+      return results / 2.0;
+    #else
+      return results;
+    #endif
   }
   return results;
 }
@@ -207,13 +189,13 @@ void JointFeatures::SetJointPosition(
   const Identity &_id, const std::size_t _dof, const double _value)
 {
   GZ_PROFILE("JointFeatures::SetJointPosition");
-  const auto *joint = this->ReferenceInterface<JointInfo>(_id);
-  const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
-  if (!identifier)
+  if (!this->ValidateDofParam(_id, _dof))
     return;
 
+  const auto *joint = this->ReferenceInterface<JointInfo>(_id);
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-  model->body->SetJointPosForDof(identifier->indexInBtModel, _dof, _value);
+  model->body->SetJointPosForDof(
+      std::get<InternalJoint>(joint->identifier).indexInBtModel, _dof, _value);
   model->body->wakeUp();
 }
 
@@ -222,14 +204,36 @@ void JointFeatures::SetJointVelocity(
   const Identity &_id, const std::size_t _dof, const double _value)
 {
   GZ_PROFILE("JointFeatures::SetJointVelocity");
-  const auto *joint = this->ReferenceInterface<JointInfo>(_id);
-  const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
-  if (!identifier)
+  if (!this->ValidateDofParam(_id, _dof))
     return;
 
+  auto *joint = this->ReferenceInterface<JointInfo>(_id);
+
+  // A nan or inf joint velocity corrupts the state of the whole multibody.
+  if (!std::isfinite(_value))
+  {
+    gzerr << "Invalid joint velocity value [" << _value
+          << "] set on joint [" << joint->name << " DOF " << _dof
+          << "]. The value will be ignored\n";
+    return;
+  }
+
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
-  model->body->getJointVelMultiDof(identifier->indexInBtModel)[_dof] =
+  model->body->getJointVelMultiDof(
+      std::get<InternalJoint>(joint->identifier).indexInBtModel)[_dof] =
       static_cast<btScalar>(_value);
+  // Bullet does not integrate the position of a kinematic child link, so
+  // WorldForwardStep does it with this velocity. Unlike a velocity command,
+  // the velocity persists until it is set again. Only the first dof of a
+  // kinematic child joint can currently be driven. The requested kinematic
+  // state is used rather than the collider flags so that a velocity set while
+  // the link is welded to a static link takes effect once it is detached.
+  if (_dof == 0 &&
+      this->ReferenceInterface<LinkInfo>(joint->childLinkID)->isKinematic)
+  {
+    joint->kinematicJointVel = _value;
+    joint->kinematicJointVelCmd = std::nullopt;
+  }
   model->body->wakeUp();
 }
 
@@ -245,6 +249,9 @@ void JointFeatures::SetJointForce(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   GZ_PROFILE("JointFeatures::SetJointForce");
+  if (!this->ValidateDofParam(_id, _dof))
+    return;
+
   auto *joint = this->ReferenceInterface<JointInfo>(_id);
 
   if (!std::isfinite(_value))
@@ -254,10 +261,6 @@ void JointFeatures::SetJointForce(
            << "]. The command will be ignored\n";
     return;
   }
-
-  const auto *identifier = std::get_if<InternalJoint>(&joint->identifier);
-  if (!identifier)
-    return;
 
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
   auto *world = this->ReferenceInterface<WorldInfo>(model->world);
@@ -274,7 +277,8 @@ void JointFeatures::SetJointForce(
       joint->minEffort, joint->maxEffort);
 
   model->body->getJointTorqueMultiDof(
-    identifier->indexInBtModel)[_dof] = static_cast<btScalar>(force);
+      std::get<InternalJoint>(joint->identifier).indexInBtModel)[_dof] =
+      static_cast<btScalar>(force);
   model->body->wakeUp();
 }
 
@@ -293,6 +297,23 @@ std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
   return static_cast<std::size_t>(
       model->body->getLink(identifier->indexInBtModel).m_dofCount);
+}
+
+/////////////////////////////////////////////////
+bool JointFeatures::ValidateDofParam(
+    const Identity &_id, std::size_t _dof) const
+{
+  // Only internal joints have degrees of freedom, so a valid dof also means
+  // that the identifier of the joint is an InternalJoint.
+  const std::size_t dofs = this->GetJointDegreesOfFreedom(_id);
+  if (_dof >= dofs)
+  {
+    gzerr << "Invalid DOF [" << _dof << "] on joint ["
+          << this->ReferenceInterface<JointInfo>(_id)->name << "] with ["
+          << dofs << "] DOFs\n";
+    return false;
+  }
+  return true;
 }
 
 /////////////////////////////////////////////////
@@ -393,6 +414,9 @@ void JointFeatures::SetJointVelocityCommand(
     const Identity &_id, const std::size_t _dof, const double _value)
 {
   GZ_PROFILE("JointFeatures::SetJointVelocityCommand");
+  if (!this->ValidateDofParam(_id, _dof))
+    return;
+
   auto jointInfo = this->ReferenceInterface<JointInfo>(_id);
 
   // Take extra care that the value is finite. A nan can cause the Bullet
@@ -407,6 +431,28 @@ void JointFeatures::SetJointVelocityCommand(
   }
 
   auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
+
+  // clamp the values
+  double velocity = std::clamp(_value,
+      jointInfo->minVelocity, jointInfo->maxVelocity);
+
+  const auto *identifier = std::get_if<InternalJoint>(&jointInfo->identifier);
+  if (identifier &&
+      this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID)->isKinematic)
+  {
+    // The joint of a kinematic child link is driven by WorldForwardStep, which
+    // integrates the joint position with the command for one step and, if the
+    // link has a dynamic ancestor, drives the joint motor itself. Only the
+    // first dof can currently be driven.
+    if (_dof == 0)
+    {
+      jointInfo->kinematicJointVel = 0.0;
+      jointInfo->kinematicJointVelCmd = velocity;
+    }
+    modelInfo->body->wakeUp();
+    return;
+  }
+
   if (!jointInfo->motor)
   {
     auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
@@ -422,10 +468,6 @@ void JointFeatures::SetJointVelocityCommand(
       static_cast<btScalar>(jointInfo->maxEffort * world->stepSize));
     world->world->addMultiBodyConstraint(jointInfo->motor.get());
   }
-
-  // clamp the values
-  double velocity = std::clamp(_value,
-      jointInfo->minVelocity, jointInfo->maxVelocity);
 
   jointInfo->motor->setVelocityTarget(static_cast<btScalar>(velocity));
   modelInfo->body->wakeUp();
@@ -648,19 +690,13 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
       {
         parentCollider->setIgnoreCollisionCheck(childCollider, false);
         childCollider->setIgnoreCollisionCheck(parentCollider, false);
-        btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
-        if (childProxy)
+        // Recursively make child colliders dynamic if they were originally
+        // not static
+        if (!linkInfo->isStaticOrFixed && isColliderStatic(linkInfo))
         {
-          // Recursively make child colliders dynamic if they were originally
-          // not static
-          if (!linkInfo->isStaticOrFixed &&
-              ((childProxy->m_collisionFilterGroup &
-              btBroadphaseProxy::StaticFilter) > 0))
-          {
-            makeColliderDynamic(linkInfo);
-            updateColliderFlagsRecursive(std::size_t(jointInfo->childLinkID),
-                this->joints, this->links, makeColliderDynamic);
-          }
+          makeColliderDynamic(linkInfo);
+          updateColliderFlagsRecursive(std::size_t(jointInfo->childLinkID),
+              this->joints, this->links, makeColliderDynamic);
         }
       }
     }

@@ -950,9 +950,16 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     if (linkSdf->Kinematic())
     {
       auto *linkInfo = this->ReferenceInterface<LinkInfo>(linkID);
-      int indexInModel = linkInfo->indexInModel.value_or(-1);
-      model->body->setLinkDynamicType(indexInModel,
-          btCollisionObject::CF_KINEMATIC_OBJECT);
+      linkInfo->isKinematic = true;
+      // A static or fixed link keeps its static collider flags, as in
+      // SetLinkKinematic. The kinematic flag is applied if the link is made
+      // non-static later.
+      if (!linkInfo->isStaticOrFixed)
+      {
+        int indexInModel = linkInfo->indexInModel.value_or(-1);
+        model->body->setLinkDynamicType(indexInModel,
+            btCollisionObject::CF_KINEMATIC_OBJECT);
+      }
     }
 #endif
   }

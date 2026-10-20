@@ -131,7 +131,7 @@ Identity FreeGroupFeatures::GetFreeGroupRootLink(const Identity &_groupID) const
   // Free groups in bullet-featherstone are always represented by ModelInfo
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
 
-  // btMultiBody user index stores the gz-phsics model root link id
+  // btMultiBody user index stores the gz-physics model root link id
   std::size_t rootID = static_cast<std::size_t>(model->body->getUserIndex());
   return this->GenerateIdentity(rootID, this->links.at(rootID));
 }
@@ -145,7 +145,13 @@ void FreeGroupFeatures::SetFreeGroupWorldAngularVelocity(
 
   if (model)
   {
-    model->body->setBaseOmega(convertVec(_angularVelocity));
+    // Keep the linear velocity of the root link frame, as dartsim does. A
+    // kinematic base moves with the stored velocity of its root link frame,
+    // for a dynamic base it is derived from bullet's center of mass velocity.
+    const Eigen::Vector3d linkLinVel = isBaseKinematic(*model->body) ?
+        model->body->GetBaseLinkFrameLinearVelocity() :
+        convert(getBaseLinkFrameLinearVelocity(*model));
+    setBaseVelocityFromLinkFrame(*model, linkLinVel, _angularVelocity);
     model->body->wakeUp();
   }
 }
@@ -156,10 +162,13 @@ void FreeGroupFeatures::SetFreeGroupWorldLinearVelocity(
 {
   // Free groups in bullet-featherstone are always represented by ModelInfo
   const auto *model = this->ReferenceInterface<ModelInfo>(_groupID);
-  // Set Base Vel
+
   if (model)
   {
-    model->body->setBaseVel(convertVec(_linearVelocity));
+    const Eigen::Vector3d angVel = isBaseKinematic(*model->body) ?
+        model->body->GetBaseLinkFrameAngularVelocity() :
+        convert(model->body->getBaseOmega());
+    setBaseVelocityFromLinkFrame(*model, _linearVelocity, angVel);
     model->body->wakeUp();
   }
 }
@@ -175,6 +184,16 @@ void FreeGroupFeatures::SetFreeGroupWorldPose(
   {
     model->body->SetBaseWorldTransform(
       convertTf(_pose * model->baseInertiaToLinkFrame.inverse()));
+
+    if (isBaseKinematic(*model->body))
+    {
+      // The center of mass velocity bullet stores depends on the orientation
+      // of the base. Derive it again so that a kinematic base keeps the
+      // velocity of its root link frame.
+      setBaseVelocityFromLinkFrame(*model,
+          model->body->GetBaseLinkFrameLinearVelocity(),
+          model->body->GetBaseLinkFrameAngularVelocity());
+    }
 
     model->body->wakeUp();
 

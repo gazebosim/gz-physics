@@ -21,9 +21,14 @@
 
 #include <gz/math/eigen3/Conversions.hh>
 
+#include <algorithm>
+#include <cmath>
 #include <limits>
+#include <memory>
+#include <optional>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include <gz/common/Profiler.hh>
 
@@ -181,6 +186,267 @@ void clearCollisionCache(btMultiBodyDynamicsWorld *_world)
   }
 }
 
+#if BT_BULLET_VERSION >= 307
+/// \brief Velocity of a kinematic base that needs to be restored after a
+/// step.
+struct KinematicBaseVel
+{
+  /// \brief Multibody with the kinematic base.
+  GzMultiBody *body;
+
+  /// \brief World linear velocity of the center of mass of the base.
+  btVector3 linVel;
+
+  /// \brief World angular velocity of the base.
+  btVector3 angVel;
+};
+
+/// \brief Joint velocity of a kinematic child joint that needs to be
+/// restored after a step.
+struct KinematicJointVel
+{
+  /// \brief Multibody the joint belongs to.
+  GzMultiBody *body;
+
+  /// \brief Index of the joint's child link in the multibody.
+  int indexInBtModel;
+
+  /// \brief Number of dofs of the joint.
+  int dofCount;
+
+  /// \brief Velocity of the first dof after clamping to the position limits
+  /// of the joint. All other dofs are held at zero velocity.
+  btScalar vel;
+};
+
+/// \brief Max impulse of the motor that locks or drives the joint of a
+/// kinematic link under a dynamic ancestor. Effectively unlimited so that the
+/// joint follows the commanded velocity exactly.
+constexpr btScalar kKinematicJointMotorMaxImpulse = 1e9;
+
+/// \brief Joint motor that locks or drives the joint of a kinematic link.
+/// Bullet solves a multibody constraint in the simulation island of the
+/// colliders of its links, but kinematic colliders belong to no island. A
+/// plain joint motor between two kinematic links, e.g. a kinematic joint
+/// above a dynamic link in an otherwise kinematic chain, would never be
+/// solved. This motor falls back to the island of the dynamic links of its
+/// multibody, which bullet merges into a single island.
+class KinematicJointMotor : public btMultiBodyJointMotor
+{
+  public: using btMultiBodyJointMotor::btMultiBodyJointMotor;
+
+  // Documentation inherited
+  public: int getIslandIdA() const override
+  {
+    const int island = btMultiBodyJointMotor::getIslandIdA();
+    return island >= 0 ? island : this->DynamicIsland();
+  }
+
+  // Documentation inherited
+  public: int getIslandIdB() const override
+  {
+    const int island = btMultiBodyJointMotor::getIslandIdB();
+    return island >= 0 ? island : this->DynamicIsland();
+  }
+
+  /// \brief Island of the first dynamic collider of the multibody.
+  /// \return Island tag, or -1 if the multibody has no dynamic collider.
+  private: int DynamicIsland() const
+  {
+    const auto island = [](const btMultiBodyLinkCollider *_collider)
+    {
+      return (_collider && !_collider->isStaticOrKinematicObject()) ?
+          _collider->getIslandTag() : -1;
+    };
+    int tag = island(this->m_bodyA->getBaseCollider());
+    for (int i = 0; tag < 0 && i < this->m_bodyA->getNumLinks(); ++i)
+      tag = island(this->m_bodyA->getLink(i).m_collider);
+    return tag;
+  }
+};
+
+/////////////////////////////////////////////////
+/// \brief Set the velocity of the first dof of a joint and zero the velocity
+/// of its other dofs.
+void setKinematicJointVel(GzMultiBody *_body, int _indexInBtModel,
+    int _dofCount, btScalar _vel)
+{
+  btScalar *jointVel = _body->getJointVelMultiDof(_indexInBtModel);
+  jointVel[0] = _vel;
+  for (int d = 1; d < _dofCount; ++d)
+  {
+    jointVel[d] = btScalar(0);
+  }
+}
+
+/////////////////////////////////////////////////
+/// \brief Integrate and lock / drive a joint whose child link is kinematic.
+/// Bullet does not integrate the position of kinematic links and does not
+/// lock the joint of a kinematic link that has a dynamic ancestor, so the
+/// joint position is integrated here from the joint velocity (or one-step
+/// velocity command) and the joint motor is used to lock or drive the joint
+/// when the link has a dynamic ancestor. The joint stops at its position
+/// limits: the velocity is reduced to what is needed to reach a limit and is
+/// zero while the joint sits at a limit and is driven into it. Must be called
+/// before stepping the world.
+/// \param[in] _world Bullet world the multibody belongs to.
+/// \param[in] _joint Joint to update.
+/// \param[in] _body Multibody the joint belongs to.
+/// \param[in] _stepSize Step size in seconds.
+/// \return Joint velocity, clamped to the position limits, to restore after
+/// the step with restoreKinematicJointVelocities, or nullopt if the joint's
+/// child link is not kinematic.
+std::optional<KinematicJointVel> updateKinematicJoint(
+    btMultiBodyDynamicsWorld *_world, JointInfo *_joint, GzMultiBody *_body,
+    double _stepSize)
+{
+  const auto *identifier = std::get_if<InternalJoint>(&_joint->identifier);
+  if (!identifier)
+    return std::nullopt;
+
+  const int idx = identifier->indexInBtModel;
+  const int dofCount = _body->getLink(idx).m_dofCount;
+  // The collider flags are checked rather than LinkInfo::isKinematic: the
+  // collider of a kinematic link is static while the link is welded to a
+  // static link, and the joint must not be driven against that weld. The
+  // recorded velocity / command is applied once the link is detached.
+  if (!_body->isLinkKinematic(idx) || dofCount == 0)
+    return std::nullopt;
+
+  double targetVel = _joint->kinematicJointVelCmd.value_or(
+      _joint->kinematicJointVel);
+  _joint->kinematicJointVelCmd = std::nullopt;
+
+  // The position limits of a kinematic child joint are enforced below by
+  // clamping the integrated position, so disable bullet's joint limit
+  // constraint while the link is kinematic. The constraint is active as soon
+  // as the joint sits on a limit and would stop the joint on its own in the
+  // step the joint reaches the limit, in addition to the motor in the next
+  // step, which pushes a dynamic ancestor twice. SetLinkKinematic restores
+  // the constraint when the link becomes dynamic.
+  if (_joint->jointLimits && _joint->jointLimits->getMaxAppliedImpulse() > 0)
+  {
+    _joint->jointLimitsMaxImpulse =
+        _joint->jointLimits->getMaxAppliedImpulse();
+    _joint->jointLimits->setMaxAppliedImpulse(0);
+  }
+
+  if (dofCount == 1)
+  {
+    const double curPos = _body->GetJointPosForDof(idx, 0);
+    // The joint velocity was set from outside (SetJointVelocity) if it differs
+    // from the velocity written after the last step.
+    const bool velOverridden = std::abs(
+        _body->getJointVelMultiDof(idx)[0] - _joint->kinematicJointVelPinned)
+        > 0;
+
+    // Bullet does not integrate the position of kinematic links, so
+    // integrate the joint position here. The joint stops at its position
+    // limits instead of moving further into them. A joint that already sits
+    // beyond a limit is not snapped back, but it can move back in.
+    bool clamped = false;
+    if ((targetVel > 0.0 && curPos >= _joint->axisUpper) ||
+        (targetVel < 0.0 && curPos <= _joint->axisLower))
+    {
+      // The joint cannot move into a limit it sits at, whatever the step size
+      targetVel = 0.0;
+      clamped = true;
+    }
+    else if (std::abs(targetVel) > 0.0 && _stepSize > 0.0)
+    {
+      const double newPos = curPos + targetVel * _stepSize;
+      const double clampedPos = std::clamp(newPos,
+          std::min(curPos, _joint->axisLower),
+          std::max(curPos, _joint->axisUpper));
+      if (std::abs(clampedPos - newPos) > 0.0)
+      {
+        targetVel = (clampedPos - curPos) / _stepSize;
+        clamped = true;
+      }
+      _body->SetJointPosForDof(idx, 0, static_cast<btScalar>(clampedPos));
+      _body->wakeUp();
+    }
+
+    if (!_body->isLinkAndAllAncestorsKinematic(idx))
+    {
+      // Bullet does not lock the joint of a kinematic link that has a
+      // dynamic ancestor, so use the joint motor to lock or drive the joint.
+      // The joint velocity is deliberately not set here: the motor changes it
+      // during the step so that the dynamic ancestor feels the reaction of a
+      // change in the commanded velocity, including a joint that is stopped
+      // by its limit while moving. The same motor is used by
+      // JointFeatures::SetJointVelocityCommand, which only records the
+      // command while the link is kinematic.
+      if (!dynamic_cast<KinematicJointMotor *>(_joint->motor.get()))
+      {
+        // Replace a motor created by a velocity command while the link was
+        // dynamic: it has the joint effort limit and no island fallback.
+        if (_joint->motor)
+          _world->removeMultiBodyConstraint(_joint->motor.get());
+        _joint->motor = std::make_shared<KinematicJointMotor>(
+            _body, idx, 0, static_cast<btScalar>(targetVel),
+            kKinematicJointMotorMaxImpulse);
+        _world->addMultiBodyConstraint(_joint->motor.get());
+      }
+      _joint->motor->setVelocityTarget(static_cast<btScalar>(targetVel));
+
+      if (velOverridden && clamped)
+      {
+        // The joint velocity was set from outside to a value the joint cannot
+        // follow because of its limits. Correct it before the step: the joint
+        // never moved with that velocity, so the motor must not brake it and
+        // push the dynamic ancestor.
+        setKinematicJointVel(_body, idx, dofCount,
+            static_cast<btScalar>(targetVel));
+      }
+    }
+    else
+    {
+      // Fully kinematic chain: there are no dynamics, so set the joint
+      // velocity directly. A motor left over from a velocity command or from
+      // the time an ancestor was dynamic has no effect on a fully kinematic
+      // chain, remove it.
+      if (_joint->motor)
+      {
+        _world->removeMultiBodyConstraint(_joint->motor.get());
+        _joint->motor.reset();
+      }
+      setKinematicJointVel(_body, idx, dofCount,
+          static_cast<btScalar>(targetVel));
+    }
+    // restoreKinematicJointVelocities writes this velocity after the step
+    _joint->kinematicJointVelPinned = static_cast<btScalar>(targetVel);
+  }
+  else
+  {
+    // \todo(iche033) Driving multi-dof kinematic child joints (e.g. ball
+    // joints) is not supported, which matches the dof support of
+    // JointFeatures::SetJointVelocityCommand. Hold the joint at its
+    // current position instead.
+    targetVel = 0.0;
+    setKinematicJointVel(_body, idx, dofCount, btScalar(0));
+  }
+  return KinematicJointVel{_body, idx, dofCount,
+      static_cast<btScalar>(targetVel)};
+}
+
+/////////////////////////////////////////////////
+/// \brief Pin the joint velocities of kinematic child joints to their
+/// commanded values after a step. Bullet does not reset the joint velocities
+/// of kinematic links and the motor used to lock a kinematic link under a
+/// dynamic ancestor leaves small residuals.
+/// \param[in] _jointVels Joint velocities returned by updateKinematicJoint.
+void restoreKinematicJointVelocities(
+    const std::vector<KinematicJointVel> &_jointVels)
+{
+  for (const auto &entry : _jointVels)
+  {
+    setKinematicJointVel(entry.body, entry.indexInBtModel, entry.dofCount,
+        entry.vel);
+  }
+}
+#endif
+
 /////////////////////////////////////////////////
 void SimulationFeatures::WorldForwardStep(
     const Identity &_worldID,
@@ -200,12 +466,6 @@ void SimulationFeatures::WorldForwardStep(
   }
 
 #if BT_BULLET_VERSION >= 307
-  struct KinematicBaseVel
-  {
-    GzMultiBody *body;
-    btVector3 linVel;
-    btVector3 angVel;
-  };
   std::vector<KinematicBaseVel> kinematicBaseVels;
 
   // Integrate base transform for kinematic root links that have velocity.
@@ -216,17 +476,63 @@ void SimulationFeatures::WorldForwardStep(
     if (!body || !body->isBaseKinematic())
       continue;
 
-    const btVector3 linVel = body->getBaseVel();
-    const btVector3 angVel = body->getBaseOmega();
-    if (!linVel.isZero() || !angVel.isZero())
+    // The velocity of a kinematic base is the velocity of its root link
+    // frame, stored in double precision in the multibody by the free group
+    // velocity setters. Bullet stores the velocity of the center of mass of
+    // the root link, which is derived from the stored velocity at every pose
+    // and never fed back into it, so that a root link with an offset center
+    // of mass moves at exactly the requested velocity instead of orbiting
+    // its center of mass or drifting with bullet's single precision state.
+    const Eigen::Vector3d &linkLinVelCmd =
+        body->GetBaseLinkFrameLinearVelocity();
+    const Eigen::Vector3d &angVelCmd = body->GetBaseLinkFrameAngularVelocity();
+    if (linkLinVelCmd.isZero(0.0) && angVelCmd.isZero(0.0))
+      continue;
+
+    // btMultiBody user index stores the gz-physics model root link id
+    const std::size_t rootID =
+        static_cast<std::size_t>(body->getUserIndex());
+    const auto *model = this->ReferenceInterface<ModelInfo>(
+        this->links.at(rootID)->model);
+    const btTransform baseInertiaToLinkBt =
+        convertTf(model->baseInertiaToLinkFrame);
+    const btTransform linkTf =
+        body->getBaseWorldTransform() * baseInertiaToLinkBt;
+    const btVector3 linkLinVel = convertVec(linkLinVelCmd);
+    const btVector3 angVel = convertVec(angVelCmd);
+
+    btTransform predictedLinkTf;
+    btTransformUtil::integrateTransform(
+        linkTf, linkLinVel, angVel, static_cast<btScalar>(stepSize),
+        predictedLinkTf);
+    const btTransform predictedBaseTf =
+        predictedLinkTf * baseInertiaToLinkBt.inverse();
+    const btVector3 comToLink = getBaseComToLinkFrame(*model, predictedBaseTf);
+    const btVector3 baseLinVel = linkLinVel - angVel.cross(comToLink);
+
+    body->SetBaseWorldTransform(predictedBaseTf);
+    body->setBaseVel(baseLinVel);
+    body->setBaseOmega(angVel);
+    kinematicBaseVels.push_back({body, baseLinVel, angVel});
+  }
+
+  // Integrate and lock/control joints whose child link is kinematic.
+  std::vector<KinematicJointVel> kinematicJointVels;
+  {
+    GZ_PROFILE("bullet_featherstone::updateKinematicJoints");
+    for (auto & joint : this->joints)
     {
-      btTransform predictedTrans;
-      btTransformUtil::integrateTransform(
-          body->getBaseWorldTransform(),
-          linVel, angVel, static_cast<btScalar>(stepSize),
-          predictedTrans);
-      body->SetBaseWorldTransform(predictedTrans);
-      kinematicBaseVels.push_back({body, linVel, angVel});
+      const auto *model =
+          this->ReferenceInterface<ModelInfo>(joint.second->model);
+      if (!model || !model->body ||
+          std::size_t(model->world) != std::size_t(_worldID))
+      {
+        continue;
+      }
+      const auto jointVel = updateKinematicJoint(worldInfo->world.get(),
+          joint.second.get(), model->body.get(), stepSize);
+      if (jointVel.has_value())
+        kinematicJointVels.push_back(*jointVel);
     }
   }
 #endif
@@ -297,7 +603,14 @@ void SimulationFeatures::WorldForwardStep(
   {
     entry.body->setBaseVel(entry.linVel);
     entry.body->setBaseOmega(entry.angVel);
+    // A kinematic base moving slower than bullet's sleep threshold would be
+    // put to sleep after the sleep timeout even though it is moving, which
+    // would freeze the dynamic links attached to it.
+    entry.body->wakeUp();
   }
+  // Pin the joint velocities of kinematic child joints to the commanded
+  // values.
+  restoreKinematicJointVelocities(kinematicJointVels);
 #endif
 
   // Reset joint velocity target after each step to be consistent with dart's

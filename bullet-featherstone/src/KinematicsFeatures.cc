@@ -24,17 +24,48 @@ namespace physics {
 namespace bullet_featherstone {
 
 
-FrameData3d getNonBaseLinkFrameData(const ModelInfo *_modelInfo,
-                                    const LinkInfo *_linkInfo)
+FrameData3d getNonBaseLinkFrameData(
+    const ModelInfo *_modelInfo,
+    const LinkInfo *_linkInfo,
+    const Eigen::Isometry3d &_poseOffset = Eigen::Isometry3d::Identity())
 {
   GZ_PROFILE("bullet_featherstone::getNonBaseLinkFrameData");
   const auto index = _linkInfo->indexInModel.value();
-  FrameData3d data;
-  data.pose = GetWorldTransformOfLink(*_modelInfo, *_linkInfo);
+  const auto &body = *_modelInfo->body;
 
-  const auto &link = _modelInfo->body->getLink(index);
-  data.linearVelocity = convert(link.m_absFrameTotVelocity.getLinear());
-  data.angularVelocity = convert(link.m_absFrameTotVelocity.getAngular());
+  // World transform of the link's center of mass frame (the bullet link
+  // frame). Everything below is derived from it so that the kinematic tree
+  // is traversed only once.
+  const Eigen::Isometry3d comWorldTf =
+      convert(GetWorldTransformOfLinkInertiaFrame(body, index));
+  const Eigen::Matrix3d &comWorldRot = comWorldTf.linear();
+
+  FrameData3d data;
+  const Eigen::Isometry3d comToFrame =
+      _linkInfo->inertiaToLinkFrame * _poseOffset;
+  data.pose = comWorldTf * comToFrame;
+
+  // Velocities of the center of mass frame of every link, expressed in the
+  // respective link frame.
+  auto &localOmega = _modelInfo->linkOmega;
+  auto &localVel = _modelInfo->linkVel;
+  const std::size_t numLinks = static_cast<std::size_t>(body.getNumLinks());
+  localOmega.resize(numLinks + 1);
+  localVel.resize(numLinks + 1);
+  body.compTreeLinkVelocities(localOmega.data(), localVel.data());
+
+  const Eigen::Vector3d comAngVel =
+      comWorldRot * convert(localOmega[index + 1]);
+  const Eigen::Vector3d comLinVel =
+      comWorldRot * convert(localVel[index + 1]);
+
+  data.angularVelocity = comAngVel;
+  // Velocity of the requested frame: v = v_com + w x (p - p_com)
+  data.linearVelocity = comLinVel +
+      comAngVel.cross(comWorldRot * comToFrame.translation());
+
+  // \todo(iche033) Link accelerations are not computed. Bullet does not
+  // expose joint or link accelerations.
   return data;
 }
 
@@ -82,9 +113,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
         // non-base link
         if (linkInfo2->indexInModel.has_value())
         {
-          auto data = getNonBaseLinkFrameData(model, linkInfo2.get());
-          data.pose = data.pose * jointPoseOffset;
-          return data;
+          return getNonBaseLinkFrameData(
+              model, linkInfo2.get(), jointPoseOffset);
         }
       }
     }
@@ -106,9 +136,8 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
           // non-base link
           if (linkInfo2->indexInModel.has_value())
           {
-            auto data = getNonBaseLinkFrameData(model, linkInfo2.get());
-            data.pose = data.pose * collisionPoseOffset;
-            return data;
+            return getNonBaseLinkFrameData(
+                model, linkInfo2.get(), collisionPoseOffset);
           }
         }
       }
@@ -130,16 +159,22 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
   FrameData data;
   if (model && model->body)
   {
-    data.pose = convert(model->body->getBaseWorldTransform())
-        * model->baseInertiaToLinkFrame;
+    Eigen::Isometry3d linkToFrame = Eigen::Isometry3d::Identity();
     if (isModel)
-      data.pose = data.pose * model->rootLinkToModelTf;
+      linkToFrame = model->rootLinkToModelTf;
     else if (isCollision)
-      data.pose = data.pose * collisionPoseOffset;
+      linkToFrame = collisionPoseOffset;
     else if (isJoint)
-      data.pose = data.pose * jointPoseOffset;
-    data.linearVelocity = convert(model->body->getBaseVel());
+      linkToFrame = jointPoseOffset;
+    const Eigen::Isometry3d linkTf =
+        convert(model->body->getBaseWorldTransform()) *
+        model->baseInertiaToLinkFrame;
+    data.pose = linkTf * linkToFrame;
+    // Velocity of the requested frame from the velocity of the root link
+    // frame: v = v_link + w x (p - p_link)
     data.angularVelocity = convert(model->body->getBaseOmega());
+    data.linearVelocity = convert(getBaseLinkFrameLinearVelocity(*model)) +
+        data.angularVelocity.cross(linkTf.linear() * linkToFrame.translation());
   }
   return data;
 }
