@@ -18,7 +18,10 @@ release will remove the deprecated code.
   or with other kinematic links. These contacts had no effect on the simulation
   but were computed on every step; they are no longer reported by
   `GetContactsFromLastStep`. Contacts between kinematic and dynamic links
-  are unchanged.
+  are unchanged. To keep detecting the contacts of a kinematic link, set
+  `//collision/surface/contact/collide_without_contact` to `true` on any of
+  its collisions. The element is not supported on dynamic links yet, where it
+  is ignored.
 
 ## Gazebo Physics 5.X to 6.X
 

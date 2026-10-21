@@ -1295,6 +1295,7 @@ bool SDFFeatures::AddSdfCollision(
   double rollingFriction = 0.0;
   uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
   std::optional<uint16_t> categoryBitmask;
+  bool collideWithoutContact = false;
   if (const auto *surface = _collision.Surface())
   {
     if (const auto *friction = surface->Friction())
@@ -1341,8 +1342,27 @@ bool SDFFeatures::AddSdfCollision(
         {
           categoryBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
         }
+        if (const auto cwc = contact->FindElement("collide_without_contact"))
+        {
+          collideWithoutContact = cwc->Get<bool>();
+        }
       }
     }
+  }
+
+  // collide_without_contact keeps the contacts of a kinematic link with
+  // static and kinematic links detected, see LinkInfo::collideWithoutContact.
+  // Any collision of the link enables it for the whole link, which has a
+  // single collider. Set it before the collider is created so that it is
+  // added to the world with the right broadphase filter; for a collision
+  // added to an existing collider, re-create its broadphase proxy.
+  // \todo(iche033) Support collide_without_contact on dynamic links: disable
+  // the contact response of the link collider (CF_NO_CONTACT_RESPONSE).
+  if (collideWithoutContact && !linkInfo->collideWithoutContact)
+  {
+    linkInfo->collideWithoutContact = true;
+    updateColliderFilter(this->ReferenceInterface<WorldInfo>(model->world),
+        linkInfo);
   }
 
   Eigen::Isometry3d linkFrameToCollision;
@@ -1609,11 +1629,11 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
   else
   {
     // A kinematic link collider does not collide with static or other
-    // kinematic colliders, see colliderFilterGroup.
+    // kinematic colliders unless asked to, see colliderFilterGroup.
     worldInfo->world->addCollisionObject(
       linkInfo->collider.get(),
-      colliderFilterGroup(linkInfo->isKinematic),
-      colliderFilterMask(linkInfo->isKinematic));
+      colliderFilterGroup(*linkInfo),
+      colliderFilterMask(*linkInfo));
   }
 }
 

@@ -272,6 +272,14 @@ struct LinkInfo
   // SetKinematic. The collider of a kinematic link is temporarily static
   // while the link is welded to a static link (see makeColliderStatic).
   bool isKinematic = false;
+  // True if a collision of the link sets
+  // //collision/surface/contact/collide_without_contact. For a kinematic
+  // link this keeps its contacts with static and kinematic links, which have
+  // no collision response, detected and reported (see colliderFilterGroup).
+  // \todo(iche033) On a dynamic link the element should disable the contact
+  // response (btCollisionObject::CF_NO_CONTACT_RESPONSE) while keeping the
+  // contacts detected. This is not supported yet and the element is ignored.
+  bool collideWithoutContact = false;
   // Cached pose from the previous physics step for performance optimization
   mutable std::optional<math::Pose3d> prevPose = std::nullopt;
 };
@@ -508,28 +516,43 @@ inline bool isBaseKinematic([[maybe_unused]] const btMultiBody &_body)
 }
 
 /////////////////////////////////////////////////
+/// \brief Return true if the collider of a link, when not static, uses the
+/// kinematic broadphase filter: the link is kinematic and its contacts with
+/// static and other kinematic links are not detected. A collision with
+/// collide_without_contact keeps them detected, see
+/// LinkInfo::collideWithoutContact.
+inline bool usesKinematicFilter(const LinkInfo &_link)
+{
+  return _link.isKinematic && !_link.collideWithoutContact;
+}
+
+/////////////////////////////////////////////////
 /// \brief Broadphase filter group of the collider of a non-static link.
 /// Kinematic colliders get their own group and, with the mask returned by
 /// colliderFilterMask, do not collide with static or other kinematic
 /// colliders. Such pairs have no collision response, but without the filter
 /// they are narrow-phased every step for as long as the objects overlap,
 /// which is forever for a kinematic object resting in or on static geometry
-/// since nothing pushes it out.
+/// since nothing pushes it out. A kinematic link that keeps these contacts
+/// (see usesKinematicFilter) gets the default group, like a dynamic link, so
+/// that it collides with static colliders and with kinematic colliders that
+/// use the kinematic filter: a pair is created if either side asks for it.
 /// \note The broadphase applies the filter only when it creates pairs, i.e.
 /// when a proxy is added or moves. After changing the filter of an existing
-/// proxy, call btCollisionWorld::refreshBroadphaseProxy to re-create it.
-inline int colliderFilterGroup(bool _kinematic)
+/// proxy, call btCollisionWorld::refreshBroadphaseProxy to re-create it
+/// (see updateColliderFilter).
+inline int colliderFilterGroup(const LinkInfo &_link)
 {
-  return _kinematic ? btBroadphaseProxy::KinematicFilter :
-                      btBroadphaseProxy::DefaultFilter;
+  return usesKinematicFilter(_link) ? btBroadphaseProxy::KinematicFilter :
+                                      btBroadphaseProxy::DefaultFilter;
 }
 
 /////////////////////////////////////////////////
 /// \brief Broadphase filter mask of the collider of a non-static link, see
 /// colliderFilterGroup.
-inline int colliderFilterMask(bool _kinematic)
+inline int colliderFilterMask(const LinkInfo &_link)
 {
-  return _kinematic ? btBroadphaseProxy::AllFilter ^
+  return usesKinematicFilter(_link) ? btBroadphaseProxy::AllFilter ^
       (btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter) :
       btBroadphaseProxy::AllFilter;
 }
@@ -586,10 +609,8 @@ inline void makeColliderDynamic(LinkInfo *_linkInfo)
   // link was originally non-static but made static by AttachJoint
   if (!_linkInfo->isStaticOrFixed && isColliderStatic(_linkInfo))
   {
-    childProxy->m_collisionFilterGroup =
-        colliderFilterGroup(_linkInfo->isKinematic);
-    childProxy->m_collisionFilterMask =
-        colliderFilterMask(_linkInfo->isKinematic);
+    childProxy->m_collisionFilterGroup = colliderFilterGroup(*_linkInfo);
+    childProxy->m_collisionFilterMask = colliderFilterMask(*_linkInfo);
 #if BT_BULLET_VERSION >= 307
     const int collisionFlags = _linkInfo->isKinematic ?
         btCollisionObject::CF_KINEMATIC_OBJECT :
@@ -597,6 +618,35 @@ inline void makeColliderDynamic(LinkInfo *_linkInfo)
     childCollider->setDynamicType(collisionFlags);
 #endif
   }
+}
+
+/////////////////////////////////////////////////
+/// \brief Apply the broadphase filter of colliderFilterGroup and
+/// colliderFilterMask to the collider of a link and re-create its broadphase
+/// proxy if the filter changed. The broadphase applies the filter only when
+/// it creates pairs, so without re-creating the proxy a link made kinematic
+/// would keep its pairs with static colliders and a link made dynamic would
+/// only get them once it has moved. A static collider, including one welded
+/// to a static link by AttachFixedJoint, keeps its static filter;
+/// makeColliderDynamic applies the filter when it is made dynamic.
+inline void updateColliderFilter(WorldInfo *_world, LinkInfo *_link)
+{
+  if (!_link->collider || _link->isStaticOrFixed || isColliderStatic(_link))
+    return;
+
+  btBroadphaseProxy *proxy = _link->collider->getBroadphaseHandle();
+  if (!proxy)
+    return;
+
+  const int group = colliderFilterGroup(*_link);
+  const int mask = colliderFilterMask(*_link);
+  if (proxy->m_collisionFilterGroup == group &&
+      proxy->m_collisionFilterMask == mask)
+    return;
+
+  proxy->m_collisionFilterGroup = group;
+  proxy->m_collisionFilterMask = mask;
+  _world->world->refreshBroadphaseProxy(_link->collider.get());
 }
 
 class Base : public Implements3d<FeatureList<Feature>>
