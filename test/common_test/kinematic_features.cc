@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <sstream>
 #include <string>
+#include <type_traits>
 
 #include <gz/common/Console.hh>
 #include <gz/math/eigen3/Conversions.hh>
@@ -810,6 +811,31 @@ using KinematicContactsFeaturesList = gz::physics::FeatureList<
 using KinematicContactsTestFeaturesList =
   KinematicFeaturesTest<KinematicContactsFeaturesList>;
 
+namespace
+{
+/// \brief Number of contact points of the last step between the models with
+/// the given names.
+template <typename WorldPtrT>
+std::size_t ContactCount(const WorldPtrT &_world, const std::string &_m1,
+    const std::string &_m2)
+{
+  using ContactPoint =
+      typename std::decay_t<decltype(*_world)>::ContactPoint;
+  std::size_t count = 0;
+  for (const auto &contact : _world->GetContactsFromLastStep())
+  {
+    const auto &point = contact.template Get<ContactPoint>();
+    const std::string &n1 =
+        point.collision1->GetLink()->GetModel()->GetName();
+    const std::string &n2 =
+        point.collision2->GetLink()->GetModel()->GetName();
+    if ((n1 == _m1 && n2 == _m2) || (n1 == _m2 && n2 == _m1))
+      ++count;
+  }
+  return count;
+}
+}  // namespace
+
 /////////////////////////////////////////////////
 TEST_F(KinematicContactsTestFeaturesList, KinematicContacts)
 {
@@ -860,23 +886,10 @@ TEST_F(KinematicContactsTestFeaturesList, KinematicContacts)
     ASSERT_NE(nullptr, dynB);
 
     // Number of contact points between the models with the given names
-    using ContactPoint =
-        gz::physics::World3d<KinematicContactsFeaturesList>::ContactPoint;
     auto contactCount = [&world](const std::string &_m1,
                                  const std::string &_m2)
     {
-      std::size_t count = 0;
-      for (const auto &contact : world->GetContactsFromLastStep())
-      {
-        const auto &point = contact.Get<ContactPoint>();
-        const std::string &n1 =
-            point.collision1->GetLink()->GetModel()->GetName();
-        const std::string &n2 =
-            point.collision2->GetLink()->GetModel()->GetName();
-        if ((n1 == _m1 && n2 == _m2) || (n1 == _m2 && n2 == _m1))
-          ++count;
-      }
-      return count;
+      return ContactCount(world, _m1, _m2);
     };
 
     StepKinematicWorld(world, 1000);
@@ -915,6 +928,114 @@ TEST_F(KinematicContactsTestFeaturesList, KinematicContacts)
     StepKinematicWorld(world, 2000);
     EXPECT_LT(0.08, LinkWorldPose(kinA).Z());
     EXPECT_NEAR(0.05, LinkWorldPose(kinB).Z(), 1e-6);
+  }
+}
+
+namespace
+{
+/// \brief SDF string of a model with a single box link (0.2 m) with one or
+/// two collisions, the last of which sets collide_without_contact.
+/// \param[in] _name Model name.
+/// \param[in] _pose Model pose.
+/// \param[in] _kinematic True to make the link kinematic.
+/// \param[in] _collisions Number of collisions (1 or 2). The second
+/// collision, if any, is offset by 0.5 m along Y.
+std::string CollideWithoutContactBoxSdf(const std::string &_name,
+    const gz::math::Pose3d &_pose, bool _kinematic, int _collisions = 1)
+{
+  std::ostringstream sdf;
+  sdf << "<sdf version='1.6'>"
+      << "<model name='" << _name << "'>"
+      << "<pose>" << _pose << "</pose>"
+      << "<link name='link'>"
+      << "<kinematic>" << _kinematic << "</kinematic>";
+  for (int c = 0; c < _collisions; ++c)
+  {
+    const bool last = c == _collisions - 1;
+    sdf << "<collision name='collision_" << c << "'>"
+        << "<pose>0 " << 0.5 * c << " 0 0 0 0</pose>"
+        << "<geometry><box><size>0.2 0.2 0.2</size></box></geometry>"
+        << "<surface><contact><collide_without_contact>" << last
+        << "</collide_without_contact></contact></surface>"
+        << "</collision>";
+  }
+  sdf << "</link></model></sdf>";
+  return sdf.str();
+}
+}  // namespace
+
+/////////////////////////////////////////////////
+TEST_F(KinematicContactsTestFeaturesList, KinematicCollideWithoutContact)
+{
+  // A kinematic link with a collision that sets
+  // //surface/contact/collide_without_contact keeps its contacts with static
+  // and kinematic links detected, including with kinematic links that do not
+  // set it. Any collision of the link enables it for the link. On a dynamic
+  // link the element is not supported yet and ignored.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicContactsFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kGroundSdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    // Kinematic boxes sunk 0.05 m into the ground plane: "kin_plain" and
+    // "kin_cwc" overlap each other by 0.05 m and only kin_cwc sets
+    // collide_without_contact; "kin_far" is alone; "kin_two" has two
+    // collisions and only the second one sets collide_without_contact.
+    ConstructModelFromString(world,
+        BoxModelSdf("kin_plain", gz::math::Pose3d(0, 0, 0.05, 0, 0, 0), true));
+    ConstructModelFromString(world, CollideWithoutContactBoxSdf("kin_cwc",
+        gz::math::Pose3d(0.15, 0, 0.05, 0, 0, 0), true));
+    ConstructModelFromString(world,
+        BoxModelSdf("kin_far", gz::math::Pose3d(1, 0, 0.05, 0, 0, 0), true));
+    ConstructModelFromString(world, CollideWithoutContactBoxSdf("kin_two",
+        gz::math::Pose3d(2, 0, 0.05, 0, 0, 0), true, 2));
+    // A dynamic box with collide_without_contact resting on the ground
+    ConstructModelFromString(world, CollideWithoutContactBoxSdf("dyn_cwc",
+        gz::math::Pose3d(3, 0, 0.1, 0, 0, 0), false));
+
+    auto kinPlain = world->GetModel("kin_plain")->GetLink("link");
+    auto kinCwc = world->GetModel("kin_cwc")->GetLink("link");
+    auto dynCwc = world->GetModel("dyn_cwc")->GetLink("link");
+    ASSERT_NE(nullptr, kinPlain);
+    ASSERT_NE(nullptr, kinCwc);
+    ASSERT_NE(nullptr, dynCwc);
+
+    StepKinematicWorld(world, 1000);
+    // The link with collide_without_contact collides with the ground and
+    // with the kinematic link next to it, which does not set it.
+    EXPECT_LT(0u, ContactCount(world, "kin_cwc", "ground_plane"));
+    EXPECT_LT(0u, ContactCount(world, "kin_cwc", "kin_plain"));
+    EXPECT_LT(0u, ContactCount(world, "kin_two", "ground_plane"));
+    // The other kinematic links do not collide with the ground
+    EXPECT_EQ(0u, ContactCount(world, "kin_plain", "ground_plane"));
+    EXPECT_EQ(0u, ContactCount(world, "kin_far", "ground_plane"));
+    // Nothing moved
+    EXPECT_NEAR(0.05, LinkWorldPose(kinPlain).Z(), 1e-6);
+    EXPECT_NEAR(0.05, LinkWorldPose(kinCwc).Z(), 1e-6);
+    // The element is ignored on the dynamic link, which rests on the ground
+    EXPECT_LT(0u, ContactCount(world, "dyn_cwc", "ground_plane"));
+    EXPECT_NEAR(0.1, LinkWorldPose(dynCwc).Z(), 1e-2);
+
+    // The element follows the link through SetKinematic: made dynamic, the
+    // link is pushed out of the ground; made kinematic again, it keeps
+    // colliding with the ground and the kinematic link next to it.
+    kinCwc->SetKinematic(false);
+    StepKinematicWorld(world, 1000);
+    EXPECT_LT(0.08, LinkWorldPose(kinCwc).Z());
+    kinCwc->SetKinematic(true);
+    StepKinematicWorld(world, 1);
+    EXPECT_LT(0u, ContactCount(world, "kin_cwc", "ground_plane"));
+    EXPECT_EQ(0u, ContactCount(world, "kin_plain", "ground_plane"));
   }
 }
 
