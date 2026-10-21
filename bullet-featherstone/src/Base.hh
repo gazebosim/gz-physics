@@ -106,6 +106,10 @@ struct WorldInfo
 
   double stepSize = 0.001;
   bool collisionMasksDirty = false;
+  // Whether contacts between kinematic links and static or other kinematic
+  // links are detected, see KinematicContacts::SetKinematicContactsEnabled
+  // and LinkInfo::kinematicContacts.
+  bool kinematicContacts = true;
 
   explicit WorldInfo(std::string name);
 };
@@ -276,11 +280,18 @@ struct LinkInfo
   // True if a collision of the link sets
   // //collision/surface/contact/collide_without_contact. For a kinematic
   // link this keeps its contacts with static and kinematic links, which have
-  // no collision response, detected and reported (see colliderFilterGroup).
+  // no collision response, detected and reported while they are disabled
+  // for the world (see kinematicContacts).
   // \todo(iche033) On a dynamic link the element should disable the contact
   // response (btCollisionObject::CF_NO_CONTACT_RESPONSE) while keeping the
   // contacts detected. This is not supported yet and the element is ignored.
   bool collideWithoutContact = false;
+  // True if the contacts of the link, when kinematic, with static and other
+  // kinematic links are detected: WorldInfo::kinematicContacts or
+  // collideWithoutContact. Kept here, up to date with both, so that the
+  // broadphase filter of the collider can be derived from the link alone
+  // (see colliderFilterGroup).
+  bool kinematicContacts = true;
   // Cached pose from the previous physics step for performance optimization
   mutable std::optional<math::Pose3d> prevPose = std::nullopt;
 };
@@ -519,12 +530,11 @@ inline bool isBaseKinematic([[maybe_unused]] const btMultiBody &_body)
 /////////////////////////////////////////////////
 /// \brief Return true if the collider of a link, when not static, uses the
 /// kinematic broadphase filter: the link is kinematic and its contacts with
-/// static and other kinematic links are not detected. A collision with
-/// collide_without_contact keeps them detected, see
-/// LinkInfo::collideWithoutContact.
+/// static and other kinematic links are not detected, see
+/// LinkInfo::kinematicContacts.
 inline bool usesKinematicFilter(const LinkInfo &_link)
 {
-  return _link.isKinematic && !_link.collideWithoutContact;
+  return _link.isKinematic && !_link.kinematicContacts;
 }
 
 /////////////////////////////////////////////////
@@ -648,6 +658,16 @@ inline void updateColliderFilter(WorldInfo *_world, LinkInfo *_link)
   proxy->m_collisionFilterGroup = group;
   proxy->m_collisionFilterMask = mask;
   _world->world->refreshBroadphaseProxy(_link->collider.get());
+
+  // Re-creating the proxy dropped the contact manifolds of the collider.
+  // Wake the body and activate the collider so that they are computed again
+  // on the next step rather than once the body wakes up for another reason:
+  // the narrow phase skips pairs of two inactive colliders, and the collider
+  // of a sleeping body stays inactive until the end of the next step even
+  // after the body is woken up.
+  if (_link->collider->m_multiBody)
+    _link->collider->m_multiBody->wakeUp();
+  _link->collider->activate(true);
 }
 
 class Base : public Implements3d<FeatureList<Feature>>

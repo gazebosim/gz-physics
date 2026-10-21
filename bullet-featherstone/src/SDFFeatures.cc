@@ -1353,16 +1353,18 @@ bool SDFFeatures::AddSdfCollision(
   }
 
   // collide_without_contact keeps the contacts of a kinematic link with
-  // static and kinematic links detected, see LinkInfo::collideWithoutContact.
-  // Any collision of the link enables it for the whole link, which has a
-  // single collider. Set it before the collider is created so that it is
-  // added to the world with the right broadphase filter; for a collision
-  // added to an existing collider, re-create its broadphase proxy.
+  // static and kinematic links detected while they are disabled for the
+  // world, see LinkInfo::collideWithoutContact. Any collision of the link
+  // enables it for the whole link, which has a single collider. Set it
+  // before the collider is created so that it is added to the world with the
+  // right broadphase filter; for a collision added to an existing collider,
+  // re-create its broadphase proxy.
   // \todo(iche033) Support collide_without_contact on dynamic links: disable
   // the contact response of the link collider (CF_NO_CONTACT_RESPONSE).
   if (collideWithoutContact && !linkInfo->collideWithoutContact)
   {
     linkInfo->collideWithoutContact = true;
+    linkInfo->kinematicContacts = true;
     updateColliderFilter(this->ReferenceInterface<WorldInfo>(model->world),
         linkInfo);
   }
@@ -1615,6 +1617,12 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
   linkInfo->collider->collideBitmask = _collideBitmask;
   linkInfo->collider->categoryBitmask = _categoryBitmask;
 
+  // Whether the contacts of the link, when kinematic, with static and other
+  // kinematic links are detected, see KinematicContacts. Kept up to date by
+  // SetWorldKinematicContactsEnabled and AddSdfCollision afterwards.
+  linkInfo->kinematicContacts =
+      worldInfo->kinematicContacts || linkInfo->collideWithoutContact;
+
   if (_isStatic || isFixed)
   {
     worldInfo->world->addCollisionObject(
@@ -1631,7 +1639,8 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
   else
   {
     // A kinematic link collider does not collide with static or other
-    // kinematic colliders unless asked to, see colliderFilterGroup.
+    // kinematic colliders while these contacts are disabled, see
+    // colliderFilterGroup.
     worldInfo->world->addCollisionObject(
       linkInfo->collider.get(),
       colliderFilterGroup(*linkInfo),

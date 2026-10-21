@@ -14,16 +14,19 @@ release will remove the deprecated code.
   now `+INF` on a miss (was `NaN`); `NaN` now means error. Use the new
   `IsHit()` helper instead of `std::isnan(fraction)` to detect hits.
 
-### Modifications
+### Additions
 
-* **bullet-featherstone**: kinematic links no longer collide with static links
-  or with other kinematic links. These contacts had no effect on the simulation
-  but were computed on every step; they are no longer reported by
-  `GetContactsFromLastStep`. Contacts between kinematic and dynamic links
-  are unchanged. To keep detecting the contacts of a kinematic link, set
-  `//collision/surface/contact/collide_without_contact` to `true` on any of
-  its collisions. The element is not supported on dynamic links yet, where it
-  is ignored.
+* **bullet-featherstone**: the new `KinematicContacts` feature controls whether
+  contacts between kinematic links and static or other kinematic links are
+  detected (`World::SetKinematicContactsEnabled`). They are detected by
+  default, as before. These contacts have no effect on the simulation but are
+  computed on every step for as long as the links overlap, which for kinematic
+  links is forever, so disabling them speeds up worlds with many kinematic
+  links resting in or on static geometry or overlapping each other. While
+  disabled, `//collision/surface/contact/collide_without_contact` set to
+  `true` on a collision keeps the contacts of its kinematic link detected.
+  The element is not supported on dynamic links yet, where it is ignored.
+  Contacts between kinematic and dynamic links are always detected.
 
 ## Gazebo Physics 8.X to 9.X
 
