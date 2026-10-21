@@ -415,18 +415,16 @@ TYPED_TEST(JointTransmittedWrenchFixture, JointLosses)
 // Check that the transmitted wrench is affected by contact forces
 TYPED_TEST(JointTransmittedWrenchFixture, ContactForces)
 {
+#if BT_BULLET_VERSION_LE_325
   if (this->engineName == "bullet-featherstone")
   {
     gzwarn << "ContactForces test is skipped. "
-#if BT_BULLET_VERSION_LE_325
            <<  "Requires bullet3 version > 3.25."
     // This test requires https://github.com/bulletphysics/bullet3/pull/4462
-#else
-           <<  "See https://github.com/gazebosim/gz-physics/issues/726."
-#endif
            << std::endl;
     GTEST_SKIP();
   }
+#endif
 
   auto box = this->world->GetModel("box");
   ASSERT_NE(nullptr, box);
