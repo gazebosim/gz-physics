@@ -40,6 +40,24 @@ bool KinematicLink::Link<PolicyT, FeaturesT>::GetKinematic() const
   return this->template Interface<KinematicLink>()
       ->GetLinkKinematic(this->identity);
 }
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+void KinematicContacts::World<PolicyT, FeaturesT>::SetKinematicContactsEnabled(
+    bool _enabled)
+{
+  this->template Interface<KinematicContacts>()
+      ->SetWorldKinematicContactsEnabled(this->identity, _enabled);
+}
+
+/////////////////////////////////////////////////
+template <typename PolicyT, typename FeaturesT>
+bool KinematicContacts::World<PolicyT, FeaturesT>::GetKinematicContactsEnabled()
+    const
+{
+  return this->template Interface<KinematicContacts>()
+      ->GetWorldKinematicContactsEnabled(this->identity);
+}
 }  // namespace physics
 }  // namespace gz
 

@@ -129,6 +129,40 @@ bool KinematicLinkFeatures::GetLinkKinematic(const Identity &_id) const
   // static link, see SetLinkKinematic.
   return this->ReferenceInterface<LinkInfo>(_id)->isKinematic;
 }
+
+/////////////////////////////////////////////////
+void KinematicLinkFeatures::SetWorldKinematicContactsEnabled(
+    const Identity &_id, bool _enabled)
+{
+  auto *world = this->ReferenceInterface<WorldInfo>(_id);
+  if (world->kinematicContacts == _enabled)
+    return;
+  world->kinematicContacts = _enabled;
+
+  // Apply to the links of this world. The broadphase filter of a kinematic
+  // link changes unless one of its collisions sets collide_without_contact;
+  // updateColliderFilter re-creates the broadphase proxy if it changed, so
+  // that the pairs with static and kinematic colliders are dropped or
+  // created right away rather than once the link has moved. Static
+  // colliders, including links welded to a static link, are left alone and
+  // pick up the cached flag when they are made dynamic.
+  for (auto &linkPair : this->links)
+  {
+    auto &link = linkPair.second;
+    const auto *model = this->ReferenceInterface<ModelInfo>(link->model);
+    if (std::size_t(model->world) != std::size_t(_id))
+      continue;
+    link->kinematicContacts = _enabled || link->collideWithoutContact;
+    updateColliderFilter(world, link.get());
+  }
+}
+
+/////////////////////////////////////////////////
+bool KinematicLinkFeatures::GetWorldKinematicContactsEnabled(
+    const Identity &_id) const
+{
+  return this->ReferenceInterface<WorldInfo>(_id)->kinematicContacts;
+}
 #endif
 
 }  // namespace bullet_featherstone
