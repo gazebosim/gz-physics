@@ -12,6 +12,14 @@ release will remove the deprecated code.
 * The macro `GZ_PHYSICS_ENGINE_INSTALL_DIR` has been removed. Use
 `gz::physics::getEngineInstallDir()` instead.
 
+### Modifications
+
+* **bullet-featherstone**: kinematic links no longer collide with static links
+  or with other kinematic links. These contacts had no effect on the simulation
+  but were computed on every step; they are no longer reported by
+  `GetContactsFromLastStep`. Contacts between kinematic and dynamic links
+  are unchanged.
+
 ## Gazebo Physics 5.X to 6.X
 
 ### Deprecations
