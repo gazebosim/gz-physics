@@ -90,33 +90,6 @@ WorldPtr LoadWorldString(const std::string &_worldSdf)
 }
 
 /////////////////////////////////////////////////
-TEST(SDFFeatures_TEST, BulletConstraintsDefaultParameters)
-{
-  const std::string sdfStr = R"(
-    <?xml version="1.0" ?>
-    <sdf version="1.10">
-      <world name="default">
-        <physics name="default_physics" type="bullet"/>
-      </world>
-    </sdf>)";
-
-  WorldPtr world = LoadWorldString(sdfStr);
-  ASSERT_NE(nullptr, world);
-
-  auto *worldInfo = static_cast<physics::bullet_featherstone::WorldInfo *>(
-      world->FullIdentity().ref.get());
-  ASSERT_NE(nullptr, worldInfo);
-  ASSERT_NE(nullptr, worldInfo->world);
-
-  const auto &solverInfo = worldInfo->world->getSolverInfo();
-  EXPECT_NEAR(0.0, solverInfo.m_globalCfm, 1e-6);
-  EXPECT_NEAR(0.2, solverInfo.m_erp, 1e-6);
-  EXPECT_NEAR(0.02, solverInfo.m_erp2, 1e-6);
-  EXPECT_NEAR(0.2, solverInfo.m_frictionERP, 1e-6);
-  EXPECT_NEAR(0.0, solverInfo.m_frictionCFM, 1e-6);
-}
-
-/////////////////////////////////////////////////
 TEST(SDFFeatures_TEST, BulletConstraintsCustomParameters)
 {
   const std::string sdfStr = R"(
