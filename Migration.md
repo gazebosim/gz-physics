@@ -14,6 +14,14 @@ release will remove the deprecated code.
   now `+INF` on a miss (was `NaN`); `NaN` now means error. Use the new
   `IsHit()` helper instead of `std::isnan(fraction)` to detect hits.
 
+### Modifications
+
+* **bullet-featherstone**: kinematic links no longer collide with static links
+  or with other kinematic links. These contacts had no effect on the simulation
+  but were computed on every step; they are no longer reported by
+  `GetContactsFromLastStep`. Contacts between kinematic and dynamic links
+  are unchanged.
+
 ## Gazebo Physics 8.X to 9.X
 
 ### Deprecations

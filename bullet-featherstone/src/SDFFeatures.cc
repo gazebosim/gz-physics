@@ -927,6 +927,14 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 
   for (const auto& [linkSdf, linkID] : linkIDs)
   {
+#if BT_BULLET_VERSION >= 307
+    // Set the kinematic flag before adding collisions so that the collider
+    // is added to the world with the kinematic broadphase filter, see
+    // CreateLinkCollider.
+    if (linkSdf->Kinematic())
+      this->ReferenceInterface<LinkInfo>(linkID)->isKinematic = true;
+#endif
+
     if (linkSdf->CollisionCount() == 0u)
     {
       // create empty link collider and compound shape if there are no
@@ -950,7 +958,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     if (linkSdf->Kinematic())
     {
       auto *linkInfo = this->ReferenceInterface<LinkInfo>(linkID);
-      linkInfo->isKinematic = true;
       // A static or fixed link keeps its static collider flags, as in
       // SetLinkKinematic. The kinematic flag is applied if the link is made
       // non-static later.
@@ -1603,10 +1610,12 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
   }
   else
   {
+    // A kinematic link collider does not collide with static or other
+    // kinematic colliders, see colliderFilterGroup.
     worldInfo->world->addCollisionObject(
       linkInfo->collider.get(),
-      btBroadphaseProxy::DefaultFilter,
-      btBroadphaseProxy::AllFilter);
+      colliderFilterGroup(linkInfo->isKinematic),
+      colliderFilterMask(linkInfo->isKinematic));
   }
 }
 

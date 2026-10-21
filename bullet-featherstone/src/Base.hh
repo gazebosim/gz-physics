@@ -509,6 +509,33 @@ inline bool isBaseKinematic([[maybe_unused]] const btMultiBody &_body)
 }
 
 /////////////////////////////////////////////////
+/// \brief Broadphase filter group of the collider of a non-static link.
+/// Kinematic colliders get their own group and, with the mask returned by
+/// colliderFilterMask, do not collide with static or other kinematic
+/// colliders. Such pairs have no collision response, but without the filter
+/// they are narrow-phased every step for as long as the objects overlap,
+/// which is forever for a kinematic object resting in or on static geometry
+/// since nothing pushes it out.
+/// \note The broadphase applies the filter only when it creates pairs, i.e.
+/// when a proxy is added or moves. After changing the filter of an existing
+/// proxy, call btCollisionWorld::refreshBroadphaseProxy to re-create it.
+inline int colliderFilterGroup(bool _kinematic)
+{
+  return _kinematic ? btBroadphaseProxy::KinematicFilter :
+                      btBroadphaseProxy::DefaultFilter;
+}
+
+/////////////////////////////////////////////////
+/// \brief Broadphase filter mask of the collider of a non-static link, see
+/// colliderFilterGroup.
+inline int colliderFilterMask(bool _kinematic)
+{
+  return _kinematic ? btBroadphaseProxy::AllFilter ^
+      (btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter) :
+      btBroadphaseProxy::AllFilter;
+}
+
+/////////////////////////////////////////////////
 inline void makeColliderStatic(LinkInfo *_linkInfo)
 {
   btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
@@ -561,8 +588,9 @@ inline void makeColliderDynamic(LinkInfo *_linkInfo)
   if (!_linkInfo->isStaticOrFixed && isColliderStatic(_linkInfo))
   {
     childProxy->m_collisionFilterGroup =
-        btBroadphaseProxy::DefaultFilter;
-    childProxy->m_collisionFilterMask = btBroadphaseProxy::AllFilter;
+        colliderFilterGroup(_linkInfo->isKinematic);
+    childProxy->m_collisionFilterMask =
+        colliderFilterMask(_linkInfo->isKinematic);
 #if BT_BULLET_VERSION >= 307
     const int collisionFlags = _linkInfo->isKinematic ?
         btCollisionObject::CF_KINEMATIC_OBJECT :
