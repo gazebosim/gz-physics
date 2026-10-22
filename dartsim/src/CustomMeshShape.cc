@@ -20,6 +20,10 @@
 #include <memory>
 #include <string>
 
+#ifdef DART_USES_TRIMESH
+#include <dart/math/TriMesh.hpp>
+#endif
+
 #include <gz/common/Console.hh>
 #include <gz/common/SubMesh.hh>
 
@@ -74,6 +78,103 @@ unsigned int CheckNumVerticesPerFaces(
   return 0;
 }
 
+#ifdef DART_USES_TRIMESH
+/////////////////////////////////////////////////
+/// \brief Convert a common::Mesh into a DART TriMesh. Only triangle submeshes
+/// contribute geometry; point and line submeshes carry no collision geometry
+/// and are skipped silently, while unsupported primitive types are reported.
+std::shared_ptr<dart::math::TriMesh<double>> MakeTriMesh(
+    const common::Mesh &_input)
+{
+  GZ_PROFILE("CustomMeshShape::MakeTriMesh");
+  using TriMesh = dart::math::TriMesh<double>;
+  auto triMesh = std::make_shared<TriMesh>();
+
+  const unsigned int numSubMeshes = _input.SubMeshCount();
+  for (unsigned int i = 0; i < numSubMeshes; ++i)
+  {
+    const common::SubMeshPtr &inputSubmesh =
+        _input.SubMeshByIndex(i).lock();
+
+    if (!inputSubmesh)
+    {
+      gzerr << "[dartsim::CustomMeshShape] One of the submeshes [" << i
+             << "] in the input mesh [" << _input.Path() << "] has expired!\n";
+      continue;
+    }
+
+    const unsigned int numVertices = inputSubmesh->VertexCount();
+    if (inputSubmesh->NormalCount() != numVertices)
+    {
+      gzerr << "[dartsim::CustomMeshShape] One of the submeshes [" << i << ":"
+             << inputSubmesh->Name() << "] in the input mesh [" << _input.Path()
+             << "] does not have a normal count ["
+             << inputSubmesh->NormalCount() << "] that matches its vertex "
+             << "count [" << numVertices << "]. This submesh will be "
+             << "ignored!\n";
+      continue;
+    }
+
+    const unsigned int numVerticesPerFace =
+        CheckNumVerticesPerFaces(*inputSubmesh, i, _input.Path());
+    // Points and lines are accepted by the legacy Assimp path but they do not
+    // produce any collision geometry, so there is nothing to add to a TriMesh.
+    if (3u != numVerticesPerFace)
+      continue;
+
+    const unsigned int numFaces = inputSubmesh->IndexCount() / 3u;
+
+    // Validate indices before touching the output mesh so that a broken
+    // submesh can be skipped as a whole.
+    bool invalidIndex = false;
+    for (unsigned int j = 0; j < numFaces * 3u; ++j)
+    {
+      const int vertexIndex = inputSubmesh->Index(j);
+      if (vertexIndex < 0 ||
+          static_cast<unsigned int>(vertexIndex) >= numVertices)
+      {
+        gzwarn << "[dartsim::CustomMeshShape] The submesh [" << i << ":"
+                << inputSubmesh->Name() << "] of mesh [" << _input.Path()
+                << "] has an invalid vertex index [" << vertexIndex
+                << "] at primitive index [" << j << "]. Its vertex count is ["
+                << numVertices << "]. This submesh will be ignored.\n";
+        invalidIndex = true;
+        break;
+      }
+    }
+    if (invalidIndex)
+      continue;
+
+    // Submeshes share one vertex buffer in the TriMesh, so offset indices.
+    const auto vertexOffset =
+        static_cast<TriMesh::Index>(triMesh->getVertices().size());
+
+    triMesh->reserveVertices(vertexOffset + numVertices);
+    triMesh->reserveVertexNormals(vertexOffset + numVertices);
+    for (unsigned int j = 0; j < numVertices; ++j)
+    {
+      const math::Vector3d &v = inputSubmesh->Vertex(j);
+      triMesh->addVertex(v.X(), v.Y(), v.Z());
+
+      const math::Vector3d &n = inputSubmesh->Normal(j);
+      triMesh->addVertexNormal(n.X(), n.Y(), n.Z());
+    }
+
+    triMesh->reserveTriangles(triMesh->getTriangles().size() + numFaces);
+    const auto index = [&](unsigned int _k) -> TriMesh::Index
+    {
+      return vertexOffset +
+          static_cast<TriMesh::Index>(inputSubmesh->Index(_k));
+    };
+    for (unsigned int j = 0; j < numFaces; ++j)
+    {
+      triMesh->addTriangle(index(3 * j), index(3 * j + 1), index(3 * j + 2));
+    }
+  }
+
+  return triMesh;
+}
+#else
 /////////////////////////////////////////////////
 unsigned int GetPrimitiveType(
     const common::SubMesh &_inputSubmesh)
@@ -93,8 +194,18 @@ unsigned int GetPrimitiveType(
 
   return 0;
 }
+#endif
 }
 
+#ifdef DART_USES_TRIMESH
+/////////////////////////////////////////////////
+CustomMeshShape::CustomMeshShape(
+    const common::Mesh &_input,
+    const Eigen::Vector3d &_scale)
+  : dart::dynamics::MeshShape(_scale, MakeTriMesh(_input))
+{
+}
+#else
 /////////////////////////////////////////////////
 CustomMeshShape::CustomMeshShape(
     const common::Mesh &_input,
@@ -114,19 +225,24 @@ CustomMeshShape::CustomMeshShape(
   aiScene *scene = new aiScene;
   scene->mNumMeshes = numSubMeshes;
   scene->mMeshes = new aiMesh*[numSubMeshes];
+  for (unsigned int i = 0; i < numSubMeshes; ++i)
+    scene->mMeshes[i] = nullptr;
   scene->mRootNode = node;
 
   // NOTE(MXG): We are ignoring materials and colors from the mesh, because
   // gazebo will only use dartsim for physics, not for rendering.
   scene->mMaterials = nullptr;
 
+  // Number of submeshes that were successfully converted. Skipped submeshes
+  // must not leave null entries in scene->mMeshes since DART iterates over
+  // all of them when computing the bounding box and volume.
+  unsigned int numValidMeshes = 0;
+
   // Fill in submesh contents
   for (unsigned int i = 0; i < numSubMeshes; ++i)
   {
     const common::SubMeshPtr &inputSubmesh =
         _input.SubMeshByIndex(i).lock();
-
-    scene->mMeshes[i] = nullptr;
 
     if (!inputSubmesh)
     {
@@ -214,13 +330,17 @@ CustomMeshShape::CustomMeshShape(
         mesh->mNormals[j][k] = static_cast<ai_real>(n[k]);
     }
 
-    scene->mMeshes[i] = mesh.release();
+    scene->mMeshes[numValidMeshes++] = mesh.release();
   }
+
+  scene->mNumMeshes = numValidMeshes;
+  node->mNumMeshes = numValidMeshes;
 
   this->mMesh = scene;
   this->mIsBoundingBoxDirty = true;
   this->mIsVolumeDirty = true;
 }
+#endif
 
 }
 }
