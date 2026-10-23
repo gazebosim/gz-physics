@@ -26,6 +26,7 @@
 
 #include <gz/common/Console.hh>
 #include <gz/common/SubMesh.hh>
+#include <gz/common/Profiler.hh>
 
 namespace gz {
 namespace physics {
