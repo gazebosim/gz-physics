@@ -1364,9 +1364,8 @@ bool SDFFeatures::AddSdfCollision(
   if (collideWithoutContact && !linkInfo->collideWithoutContact)
   {
     linkInfo->collideWithoutContact = true;
-    linkInfo->kinematicContacts = true;
-    updateColliderFilter(this->ReferenceInterface<WorldInfo>(model->world),
-        linkInfo);
+    updateKinematicContacts(
+        this->ReferenceInterface<WorldInfo>(model->world), linkInfo);
   }
 
   Eigen::Isometry3d linkFrameToCollision;
@@ -1618,10 +1617,11 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
   linkInfo->collider->categoryBitmask = _categoryBitmask;
 
   // Whether the contacts of the link, when kinematic, with static and other
-  // kinematic links are detected, see KinematicContacts. Kept up to date by
-  // SetWorldKinematicContactsEnabled and AddSdfCollision afterwards.
-  linkInfo->kinematicContacts =
-      worldInfo->kinematicContacts || linkInfo->collideWithoutContact;
+  // kinematic links are detected, see KinematicContacts. The collider has no
+  // broadphase proxy yet, so this only sets the flag used for the filter
+  // below; SetWorldKinematicContactsEnabled and AddSdfCollision keep it up to
+  // date afterwards.
+  updateKinematicContacts(worldInfo, linkInfo);
 
   if (_isStatic || isFixed)
   {

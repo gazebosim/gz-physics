@@ -288,9 +288,9 @@ struct LinkInfo
   bool collideWithoutContact = false;
   // True if the contacts of the link, when kinematic, with static and other
   // kinematic links are detected: WorldInfo::kinematicContacts or
-  // collideWithoutContact. Kept here, up to date with both, so that the
-  // broadphase filter of the collider can be derived from the link alone
-  // (see colliderFilterGroup).
+  // collideWithoutContact. Kept here, up to date with both by
+  // updateKinematicContacts, so that the broadphase filter of the collider
+  // can be derived from the link alone (see colliderFilterGroup).
   bool kinematicContacts = true;
   // Cached pose from the previous physics step for performance optimization
   mutable std::optional<math::Pose3d> prevPose = std::nullopt;
@@ -668,6 +668,18 @@ inline void updateColliderFilter(WorldInfo *_world, LinkInfo *_link)
   if (_link->collider->m_multiBody)
     _link->collider->m_multiBody->wakeUp();
   _link->collider->activate(true);
+}
+
+/////////////////////////////////////////////////
+/// \brief Recompute LinkInfo::kinematicContacts from the world setting and
+/// collide_without_contact, and update the broadphase filter of the collider
+/// to match. Before the collider is added to the world this only sets the
+/// flag, which CreateLinkCollider then uses for the initial filter.
+inline void updateKinematicContacts(WorldInfo *_world, LinkInfo *_link)
+{
+  _link->kinematicContacts =
+      _world->kinematicContacts || _link->collideWithoutContact;
+  updateColliderFilter(_world, _link);
 }
 
 class Base : public Implements3d<FeatureList<Feature>>

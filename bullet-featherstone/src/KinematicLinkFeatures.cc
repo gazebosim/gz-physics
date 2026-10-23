@@ -141,7 +141,7 @@ void KinematicLinkFeatures::SetWorldKinematicContactsEnabled(
 
   // Apply to the links of this world. The broadphase filter of a kinematic
   // link changes unless one of its collisions sets collide_without_contact;
-  // updateColliderFilter re-creates the broadphase proxy if it changed, so
+  // updateKinematicContacts re-creates the broadphase proxy if it changed, so
   // that the pairs with static and kinematic colliders are dropped or
   // created right away rather than once the link has moved. Static
   // colliders, including links welded to a static link, are left alone and
@@ -152,8 +152,7 @@ void KinematicLinkFeatures::SetWorldKinematicContactsEnabled(
     const auto *model = this->ReferenceInterface<ModelInfo>(link->model);
     if (std::size_t(model->world) != std::size_t(_id))
       continue;
-    link->kinematicContacts = _enabled || link->collideWithoutContact;
-    updateColliderFilter(world, link.get());
+    updateKinematicContacts(world, link.get());
   }
 }
 
