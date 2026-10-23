@@ -92,6 +92,16 @@ foreach(test ${tests})
     target_compile_definitions(${test_executable} PRIVATE DART_HAS_CONTACT_SURFACE)
   endif()
 
+  # DART >= 6.20.0 ships a complete native "dart" collision detector
+  # (DARTCollisionDetector) which, among other things, supports raycast
+  # queries. Older versions only support raycasts with the bullet and ode
+  # collision detectors.
+  if (DART_VERSION VERSION_GREATER_EQUAL 6.20.0)
+    target_compile_definitions(${test_executable} PRIVATE
+      "DART_HAS_DART_COLLISION_DETECTOR"
+    )
+  endif()
+
   install(TARGETS ${test_executable} DESTINATION ${TEST_INSTALL_DIR})
 
   configure_common_test("bullet" ${test_executable})
