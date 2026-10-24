@@ -17,6 +17,8 @@
 
 #include "CustomHeightmapShape.hh"
 
+#include <memory>
+
 #include <gz/common/Profiler.hh>
 
 namespace gz {
@@ -31,8 +33,32 @@ CustomHeightmapShape::CustomHeightmapShape(
 {
   GZ_PROFILE("CustomHeightmapShape::CustomHeightmapShape");
   this->setHeightField(_sampled.vertSize, _sampled.vertSize, _sampled.heights);
-  this->setScale(Vector3(_size(0) / _sampled.vertSize,
-                         _size(1) / _sampled.vertSize, 1));
+  // The n vertices are n - 1 cells apart, so that the grid spans the full size.
+  this->setScale(Vector3(_size(0) / (_sampled.vertSize - 1),
+                         _size(1) / (_sampled.vertSize - 1), 1));
+}
+
+/////////////////////////////////////////////////
+dart::dynamics::ShapePtr CustomHeightmapShape::clone() const
+{
+  std::shared_ptr<CustomHeightmapShape> clone(new CustomHeightmapShape());
+  clone->setScale(this->getScale());
+  clone->setHeightField(this->getHeightField());
+  return clone;
+}
+
+/////////////////////////////////////////////////
+void CustomHeightmapShape::updateBoundingBox() const
+{
+  // DART's computeBoundingBox uses width * scale, but the grid only spans
+  // (width - 1) * scale: trim half a cell off each side in x and y.
+  Eigen::Vector3d min, max;
+  this->computeBoundingBox(min, max);
+  const Eigen::Vector3d halfCell(
+      0.5 * this->getScale().x(), 0.5 * this->getScale().y(), 0);
+  this->mBoundingBox.setMin(min + halfCell);
+  this->mBoundingBox.setMax(max - halfCell);
+  this->mIsBoundingBoxDirty = false;
 }
 }
 }

@@ -73,8 +73,9 @@ namespace detail
                 std::numeric_limits<int>::max());
 
   /// \brief Sample a heightmap into a grid of heights. This only computes
-  /// heights: the spacing between samples is up to the caller, as engines
-  /// differ in whether size spans vertSize or vertSize - 1 intervals.
+  /// heights: the spacing between samples is up to the caller, which should
+  /// space the vertSize samples size / (vertSize - 1) apart so that the grid
+  /// spans size.
   /// \param[in] _data Heightmap data.
   /// \param[in] _size Size of the heightmap in meters.
   /// \param[in] _subSampling Number of samples per pixel.

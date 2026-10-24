@@ -636,16 +636,17 @@ void ExpectSpheresRestOnHeightmap(const gz::plugin::PluginPtr &_plugin,
 }
 
 /////////////////////////////////////////////////
-// Spheres dropped on each quadrant of a heightmap that is not an image come
+// Spheres dropped near each corner of a heightmap that is not an image come
 // to rest on that quadrant's height, which checks the heightmap's
-// orientation and its height.
+// orientation, its height and that it spans its whole size: it is 40 m wide,
+// so a heightmap one cell shorter would not be under the spheres.
 TYPED_TEST(HeightmapFeaturesTest, SpheresRestOnQuadrants)
 {
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
     ExpectSpheresRestOnHeightmap(
-        this->loader.Instantiate(name), QuadrantHeightmap());
+        this->loader.Instantiate(name), QuadrantHeightmap(), 40.0, 19.5);
   }
 }
 
@@ -719,10 +720,6 @@ TYPED_TEST(HeightmapFeaturesTest, ObjectsRestNearRampEdges)
 
   for (const std::string &name : this->pluginNames)
   {
-    // dartsim spaces the samples size / vertSize apart, so its heightmaps
-    // are one cell short of their size.
-    CHECK_UNSUPPORTED_ENGINE(name, "dartsim")
-
     std::cout << "Testing plugin: " << name << std::endl;
     gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
     auto engine =
