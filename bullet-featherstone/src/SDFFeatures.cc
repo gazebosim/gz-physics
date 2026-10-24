@@ -95,9 +95,49 @@ Identity SDFFeatures::ConstructSdfWorld(
 
   const ::sdf::Physics *physics = _sdfWorld.PhysicsByIndex(0);
   if (physics)
+  {
     worldInfo->stepSize = physics->MaxStepSize();
+    if (const auto physicsElem = physics->Element())
+    {
+      if (const auto bulletElem = physicsElem->FindElement("bullet"))
+      {
+        if (const auto constraintsElem = bulletElem->FindElement("constraints"))
+        {
+          if (const auto cfmElem = constraintsElem->FindElement("cfm"))
+          {
+            worldInfo->world->getSolverInfo().m_globalCfm =
+                static_cast<btScalar>(cfmElem->Get<double>());
+          }
+          if (const auto erpElem = constraintsElem->FindElement("erp"))
+          {
+            worldInfo->world->getSolverInfo().m_erp =
+                static_cast<btScalar>(erpElem->Get<double>());
+          }
+          if (const auto erp2Elem = constraintsElem->FindElement("erp2"))
+          {
+            worldInfo->world->getSolverInfo().m_erp2 =
+                static_cast<btScalar>(erp2Elem->Get<double>());
+          }
+          if (const auto frictionErpElem =
+              constraintsElem->FindElement("friction_erp"))
+          {
+            worldInfo->world->getSolverInfo().m_frictionERP =
+                static_cast<btScalar>(frictionErpElem->Get<double>());
+          }
+          if (const auto frictionCfmElem =
+              constraintsElem->FindElement("friction_cfm"))
+          {
+            worldInfo->world->getSolverInfo().m_frictionCFM =
+                static_cast<btScalar>(frictionCfmElem->Get<double>());
+          }
+        }
+      }
+    }
+  }
   else
+  {
     worldInfo->stepSize = 0.001;
+  }
 
   for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
   {
