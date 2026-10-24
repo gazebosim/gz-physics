@@ -23,6 +23,7 @@
 
 #include <assert.h>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -88,6 +89,9 @@ struct LinkInfo
   std::shared_ptr<btCompoundShape> collisionShape;
   std::shared_ptr<btRigidBody> link;
   std::vector<std::size_t> shapes = {};
+  /// \brief Cached pose from the previous physics step, used for performance
+  /// optimization.
+  std::optional<math::Pose3d> prevPose = std::nullopt;
 };
 
 struct CollisionInfo
