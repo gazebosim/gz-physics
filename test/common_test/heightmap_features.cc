@@ -43,6 +43,7 @@
 #include <gz/physics/FixedJoint.hh>
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/GetBoundingBox.hh>
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/RequestEngine.hh>
@@ -82,6 +83,7 @@ struct HeightmapFeaturesList : gz::physics::FeatureList<
   gz::physics::GetModelFromWorld,
   gz::physics::GetLinkFromModel,
   gz::physics::GetShapeFromLink,
+  gz::physics::GetShapeBoundingBox,
   gz::physics::LinkFrameSemantics,
   gz::physics::ForwardStep,
   gz::physics::AttachFixedJointFeature,
@@ -134,6 +136,22 @@ void ExpectRestingAt(const WorldPtrT &_world, const std::string &_model,
 }
 
 /////////////////////////////////////////////////
+/// \brief Check that the bounding box of a heightmap shape is as large as the
+/// size it reports and centered on its x and y.
+template <class ShapePtrT, class HeightmapPtrT>
+void ExpectBoundingBoxExtent(const ShapePtrT &_shape,
+    const HeightmapPtrT &_heightmap, double _tolerance)
+{
+  const auto box = _shape->GetAxisAlignedBoundingBox();
+  const Eigen::Vector3d size = _heightmap->GetSize();
+  EXPECT_NEAR(size.x(), box.max().x() - box.min().x(), _tolerance);
+  EXPECT_NEAR(size.y(), box.max().y() - box.min().y(), _tolerance);
+  EXPECT_NEAR(size.z(), box.max().z() - box.min().z(), _tolerance);
+  EXPECT_NEAR(0, box.min().x() + box.max().x(), _tolerance);
+  EXPECT_NEAR(0, box.min().y() + box.max().y(), _tolerance);
+}
+
+/////////////////////////////////////////////////
 /// \brief Attach an image heightmap and a DEM to a link and check their
 /// sizes.
 template <class LinkPtrT>
@@ -161,6 +179,7 @@ void AttachImageAndDem(const LinkPtrT &link)
   EXPECT_NEAR(size.X(), heightmapShapeRecast->GetSize()[0], 1e-6);
   EXPECT_NEAR(size.Y(), heightmapShapeRecast->GetSize()[1], 1e-6);
   EXPECT_NEAR(size.Z(), heightmapShapeRecast->GetSize()[2], 1e-6);
+  ExpectBoundingBoxExtent(heightmapShapeGeneric, heightmapShapeRecast, 1e-6);
 
   gz::common::Dem dem;
   EXPECT_EQ(0, dem.Load(gz::physics::test::resources::kVolcanoTif));
@@ -187,6 +206,7 @@ void AttachImageAndDem(const LinkPtrT &link)
   EXPECT_NEAR(sizeDem.X(), demShapeRecast->GetSize()[0], 1e-3);
   EXPECT_NEAR(sizeDem.Y(), demShapeRecast->GetSize()[1], 1e-3);
   EXPECT_NEAR(sizeDem.Z(), demShapeRecast->GetSize()[2], 1e-6);
+  ExpectBoundingBoxExtent(demShapeGeneric, demShapeRecast, 1e-3);
 }
 
 /////////////////////////////////////////////////
@@ -337,9 +357,12 @@ TYPED_TEST(HeightmapFeaturesTest, ObjectsRestOnHeightmap)
 /// \param[in] _link Name of the link that gets the heightmaps.
 /// \param[in] _parent If not empty, name of the link of the model that _link
 /// is attached to with a fixed joint, before attaching the heightmaps.
+/// \param[in] _supported False if the engine is expected to refuse the
+/// heightmaps, which it does by returning a null shape without breaking the
+/// world.
 void AttachToLinkOfSdfWorld(const gz::plugin::PluginPtr &_plugin,
     const std::string &_worldSdf, const std::string &_link,
-    const std::string &_parent = "")
+    const std::string &_parent = "", bool _supported = true)
 {
   auto engine =
       gz::physics::RequestEngine3d<HeightmapFeaturesList>::From(_plugin);
@@ -362,12 +385,28 @@ void AttachToLinkOfSdfWorld(const gz::plugin::PluginPtr &_plugin,
     ASSERT_NE(nullptr, link->AttachFixedJoint(parent, "heightmap_joint"));
   }
 
-  AttachImageAndDem(link);
+  if (_supported)
+  {
+    AttachImageAndDem(link);
+    return;
+  }
+
+  gz::common::ImageHeightmap data;
+  ASSERT_EQ(0, data.Load(gz::physics::test::resources::kHeightmapBowlPng));
+  EXPECT_EQ(nullptr, link->AttachHeightmapShape("heightmap", data,
+      Eigen::Isometry3d::Identity(), Eigen::Vector3d(129, 129, 10)));
+  EXPECT_EQ(nullptr, link->GetShape("heightmap"));
+
+  // The world still steps: gravity pulls the link down.
+  StepWorld(world, 100);
+  EXPECT_GT(0.0, link->FrameDataRelativeToWorld().pose.translation().z());
 }
 
 /////////////////////////////////////////////////
 // Attach heightmaps to a link that is not static but is held to the world by
-// a fixed joint.
+// a fixed joint. The link also has a heightmap collision in SDF, which is
+// skipped while the world is built, since the heightmaps are attached
+// afterwards, the way gz-sim does it.
 TYPED_TEST(HeightmapFeaturesTest, AttachHeightmapToFixedLink)
 {
   const std::string worldSdf = R"(<?xml version="1.0" ?>
@@ -379,6 +418,15 @@ TYPED_TEST(HeightmapFeaturesTest, AttachHeightmapToFixedLink)
           <mass>1.0</mass>
           <inertia><ixx>1</ixx><iyy>1</iyy><izz>1</izz></inertia>
         </inertial>
+        <collision name="sdf_heightmap">
+          <geometry>
+            <heightmap>
+              <uri>)" + std::string(
+      gz::physics::test::resources::kHeightmapBowlPng) + R"(</uri>
+              <size>129 129 10</size>
+            </heightmap>
+          </geometry>
+        </collision>
       </link>
       <joint name="world_joint" type="fixed">
         <parent>world</parent>
@@ -397,7 +445,8 @@ TYPED_TEST(HeightmapFeaturesTest, AttachHeightmapToFixedLink)
 
 /////////////////////////////////////////////////
 // Attach heightmaps to a link that moves: it is fixed to a link with a
-// prismatic joint.
+// prismatic joint. Only dartsim supports it: the other engines refuse the
+// heightmaps and keep stepping.
 TYPED_TEST(HeightmapFeaturesTest, AttachHeightmapToMovingLink)
 {
   const std::string worldSdf = R"(<?xml version="1.0" ?>
@@ -438,12 +487,10 @@ TYPED_TEST(HeightmapFeaturesTest, AttachHeightmapToMovingLink)
 
   for (const std::string &name : this->pluginNames)
   {
-    // Heightmaps on links that move are only supported by dartsim.
-    CHECK_SUPPORTED_ENGINE(name, "dartsim")
-
     std::cout << "Testing plugin: " << name << std::endl;
     AttachToLinkOfSdfWorld(this->loader.Instantiate(name), worldSdf,
-        "heightmap_link", "child");
+        "heightmap_link", "child",
+        gz::physics::TestLibLoader::EngineInList(name, {"dartsim"}));
   }
 }
 
