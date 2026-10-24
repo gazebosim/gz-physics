@@ -17,11 +17,7 @@
 
 #include "CustomHeightmapShape.hh"
 
-#include <vector>
-#include <gz/common/Console.hh>
-#include <gz/common/geospatial/ImageHeightmap.hh>
 #include <gz/common/Profiler.hh>
-#include <gz/math/eigen3/Conversions.hh>
 
 namespace gz {
 namespace physics {
@@ -29,33 +25,14 @@ namespace dartsim {
 
 /////////////////////////////////////////////////
 CustomHeightmapShape::CustomHeightmapShape(
-    const common::HeightmapData &_input,
-    const Eigen::Vector3d &_size,
-    int _subSampling)
+    const heightmap::detail::SampledHeightmap &_sampled,
+    const Eigen::Vector3d &_size)
   : dart::dynamics::HeightmapShape<float>()
 {
   GZ_PROFILE("CustomHeightmapShape::CustomHeightmapShape");
-  float heightmapSizeZ = _input.MaxElevation() - _input.MinElevation();
-  const bool flipY = false;
-  const int vertSize = (_input.Width() * _subSampling) - _subSampling + 1;
-
-  math::Vector3d scale;
-  scale.X(_size(0) / vertSize);
-  scale.Y(_size(1) / vertSize);
-
-  if (math::equal(heightmapSizeZ, 0.0f))
-    scale.Z(1.0);
-  else
-    scale.Z(fabs(_size(2)) / heightmapSizeZ);
-
-  auto sizeGz = gz::math::eigen3::convert(_size);
-
-  std::vector<float> heightsFloat;
-  _input.FillHeightMap(_subSampling, vertSize, sizeGz, scale, flipY,
-      heightsFloat);
-
-  this->setHeightField(vertSize, vertSize, heightsFloat);
-  this->setScale(Vector3(scale.X(), scale.Y(), 1));
+  this->setHeightField(_sampled.vertSize, _sampled.vertSize, _sampled.heights);
+  this->setScale(Vector3(_size(0) / _sampled.vertSize,
+                         _size(1) / _sampled.vertSize, 1));
 }
 }
 }
