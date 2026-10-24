@@ -19,6 +19,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 #include <gz/common/Console.hh>
 #include <gz/common/MeshManager.hh>
@@ -393,6 +394,219 @@ TEST_F(CollisionMeshTestFeaturesList, MeshDecomposition)
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.x(), 1e-3);
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.y(), 1e-3);
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.z(), 1e-3);
+  }
+}
+
+TEST_F(CollisionMeshTestFeaturesList, MeshAssertConvex)
+{
+  // Meshes asserted to be convex are used as a single convex hull, without
+  // running a convex decomposition. Verify the behavior of each assertion
+  // mode with a convex mesh (chassis) and a non convex mesh (V shape).
+
+  auto getMeshModelStr = [](const std::string &_name,
+                            const std::string &_uri,
+                            const std::string &_assertConvex,
+                            const std::string &_optimization,
+                            const gz::math::Pose3d &_pose)
+  {
+    std::stringstream modelStr;
+    modelStr << R"(
+    <sdf version="1.12">
+      <model name=")" << _name << R"(">
+        <pose>)" << _pose << R"(</pose>
+        <link name="link">
+          <collision name="collision">
+            <geometry>
+              <mesh assert_convex=")" << _assertConvex
+             << R"(" optimization=")" << _optimization << R"(">
+                <uri>)" << _uri << R"(</uri>
+              </mesh>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+    return modelStr.str();
+  };
+
+  auto getSphereModelStr = [](const std::string &_name,
+                              const gz::math::Pose3d &_pose)
+  {
+    std::stringstream modelStr;
+    modelStr << R"(
+    <sdf version="1.12">
+      <model name=")" << _name << R"(">
+        <pose>)" << _pose << R"(</pose>
+        <link name="link">
+          <collision name="coll_sphere">
+            <geometry>
+              <sphere>
+                <radius>0.1</radius>
+              </sphere>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+    return modelStr.str();
+  };
+
+  const std::string chassisUri = gz::physics::test::resources::kChassisDae;
+  const std::string boxUri = gz::physics::test::resources::kRotatedBoxObj;
+  const std::string vShapeUri = gz::physics::test::resources::kVShapeObj;
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // currently only bullet-featherstone supports mesh decomposition
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+      continue;
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    sdf::Root rootWorld;
+    const sdf::Errors errorsWorld =
+        rootWorld.Load(common_test::worlds::kGroundSdf);
+    ASSERT_TRUE(errorsWorld.empty()) << errorsWorld;
+
+    auto engine =
+        gz::physics::RequestEngine3d<CollisionMeshFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = engine->ConstructWorld(*rootWorld.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto constructModel = [&](const std::string &_modelStr)
+    {
+      sdf::Root root;
+      sdf::Errors errors = root.LoadSdfString(_modelStr);
+      ASSERT_TRUE(errors.empty()) << errors;
+      ASSERT_NE(nullptr, root.Model());
+      ASSERT_NE(nullptr, world->ConstructModel(*root.Model()));
+    };
+
+    const std::vector<std::string> assertions{"nocheck", "warn", "error"};
+    const std::vector<std::string> optimizations{"", "convex_hull"};
+    auto modelName = [](const std::string &_prefix,
+        const std::string &_assertConvex, const std::string &_optimization)
+    {
+      return _prefix + "_" + _assertConvex +
+          (_optimization.empty() ? "" : "_" + _optimization);
+    };
+
+    // A convex box mesh with all the assertion modes, with and without the
+    // convex hull optimization. They all rest on the ground plane.
+    std::vector<std::string> boxNames;
+    double y = 0.0;
+    for (const auto &assertConvex : assertions)
+    {
+      for (const auto &optimization : optimizations)
+      {
+        boxNames.push_back(modelName("box", assertConvex, optimization));
+        constructModel(getMeshModelStr(boxNames.back(), boxUri, assertConvex,
+            optimization, gz::math::Pose3d(0, y, 2, 0, 0, 0)));
+        y += 2.0;
+      }
+    }
+
+    // The chassis mesh is not strictly convex (it has internal faces), so
+    // with nocheck and warn it is used as a convex hull and rests on the
+    // ground plane, and with error its collision is not created, so the
+    // model falls through the ground plane.
+    std::vector<std::string> chassisNames;
+    std::vector<std::string> chassisErrorNames;
+    for (const auto &assertConvex : assertions)
+    {
+      for (const auto &optimization : optimizations)
+      {
+        const std::string modelStr = getMeshModelStr(
+            modelName("chassis", assertConvex, optimization), chassisUri,
+            assertConvex, optimization, gz::math::Pose3d(-5, y, 2, 0, 0, 0));
+        constructModel(modelStr);
+        if (assertConvex == "error")
+          chassisErrorNames.push_back(modelName("chassis", assertConvex,
+              optimization));
+        else
+          chassisNames.push_back(modelName("chassis", assertConvex,
+              optimization));
+        y += 2.0;
+      }
+    }
+    // The assertion is ignored with convex decomposition
+    constructModel(getMeshModelStr("chassis_decomposed", chassisUri,
+        "error", "convex_decomposition",
+        gz::math::Pose3d(-5, y, 2, 0, 0, 0)));
+    chassisNames.push_back("chassis_decomposed");
+
+    // V shapes with a sphere dropped over each of them.
+    // nocheck and warn: the V shape is used as a convex hull, so the sphere
+    // rests on top of the hull instead of inside of the groove.
+    // error: the collision is not created, so the V shape falls through the
+    // ground plane and the sphere falls to the ground.
+    // convex decomposition: the assertion is ignored and the sphere rests
+    // inside of the groove.
+    constructModel(getMeshModelStr("v_shape_nocheck", vShapeUri, "nocheck",
+        "", gz::math::Pose3d(5, 0, 0, 0, 0, 0)));
+    constructModel(getSphereModelStr("sphere_nocheck",
+        gz::math::Pose3d(5, 0, 1, 0, 0, 0)));
+    constructModel(getMeshModelStr("v_shape_warn", vShapeUri, "warn",
+        "", gz::math::Pose3d(5, 5, 0, 0, 0, 0)));
+    constructModel(getSphereModelStr("sphere_warn",
+        gz::math::Pose3d(5, 5, 1, 0, 0, 0)));
+    constructModel(getMeshModelStr("v_shape_error", vShapeUri, "error",
+        "", gz::math::Pose3d(5, 10, 0, 0, 0, 0)));
+    constructModel(getSphereModelStr("sphere_error",
+        gz::math::Pose3d(5, 10, 1, 0, 0, 0)));
+    constructModel(getMeshModelStr("v_shape_decomposed", vShapeUri, "error",
+        "convex_decomposition", gz::math::Pose3d(5, 15, 0, 0, 0, 0)));
+    constructModel(getSphereModelStr("sphere_decomposed",
+        gz::math::Pose3d(5, 15, 1, 0, 0, 0)));
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    std::size_t stepCount = 3000u;
+    for (unsigned int i = 0; i < stepCount; ++i)
+      world->Step(output, state, input);
+
+    auto frameData = [&](const std::string &_modelName)
+    {
+      auto model = world->GetModel(_modelName);
+      EXPECT_NE(nullptr, model) << _modelName;
+      auto link = model->GetLink(0);
+      EXPECT_NE(nullptr, link) << _modelName;
+      return link->FrameDataRelativeToWorld();
+    };
+    auto expectRestingAt = [&](const std::string &_modelName, double _z,
+        double _tol)
+    {
+      const auto data = frameData(_modelName);
+      EXPECT_NEAR(_z, data.pose.translation().z(), _tol) << _modelName;
+      EXPECT_NEAR(0.0, data.linearVelocity.z(), 1e-2) << _modelName;
+    };
+    auto expectFallen = [&](const std::string &_modelName)
+    {
+      const auto data = frameData(_modelName);
+      EXPECT_GT(-10.0, data.pose.translation().z()) << _modelName;
+      EXPECT_GT(-10.0, data.linearVelocity.z()) << _modelName;
+    };
+
+    // The rotated box is 1m tall
+    for (const std::string &boxName : boxNames)
+      expectRestingAt(boxName, 0.5, 1e-2);
+    for (const std::string &chassisName : chassisNames)
+      expectRestingAt(chassisName, 0.1, 1e-2);
+    for (const std::string &chassisName : chassisErrorNames)
+      expectFallen(chassisName);
+
+    // The V shape is about 0.71m tall and the sphere has a 0.1m radius.
+    expectRestingAt("v_shape_nocheck", 0.0, 1e-2);
+    expectRestingAt("sphere_nocheck", 0.81, 1e-2);
+    expectRestingAt("v_shape_warn", 0.0, 1e-2);
+    expectRestingAt("sphere_warn", 0.81, 1e-2);
+    expectFallen("v_shape_error");
+    expectRestingAt("sphere_error", 0.1, 1e-2);
+    expectRestingAt("v_shape_decomposed", 0.0, 1e-2);
+    expectRestingAt("sphere_decomposed", 0.523, 1e-2);
   }
 }
 

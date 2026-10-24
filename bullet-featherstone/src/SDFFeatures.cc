@@ -46,6 +46,7 @@
 
 #include <limits>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -79,6 +80,49 @@ static std::optional<Eigen::Isometry3d> ResolveSdfPose(
   }
 
   return math::eigen3::convert(pose);
+}
+
+/////////////////////////////////////////////////
+/// \brief Get the convex decomposition parameters of a mesh collision
+/// geometry.
+/// \param[in] _meshSdf Mesh SDF DOM
+/// \param[in] _mesh The loaded mesh
+/// \return The convex decomposition descriptor, or nullopt if the mesh does
+/// not need to be decomposed, i.e. it has no optimization and its convexity
+/// is not asserted.
+static std::optional<common::ConvexDecompositionDescriptor>
+MakeConvexDecompositionDescriptor(const ::sdf::Mesh &_meshSdf,
+                                  const common::Mesh &_mesh)
+{
+  const bool decomposition = _meshSdf.Optimization() ==
+      ::sdf::MeshOptimization::CONVEX_DECOMPOSITION;
+  const bool hull = _meshSdf.Optimization() ==
+      ::sdf::MeshOptimization::CONVEX_HULL;
+  // The convex assertion is ignored with convex decomposition
+  const bool asserted = !decomposition &&
+      _meshSdf.AssertConvex() != ::sdf::ConvexAssertion::NONE;
+  if (!decomposition && !hull && !asserted)
+    return std::nullopt;
+
+  common::ConvexDecompositionDescriptor desc;
+  desc.mesh = &_mesh;
+  desc.submesh = _meshSdf.Submesh();
+  desc.centerSubmesh = _meshSdf.CenterSubmesh();
+  if (_meshSdf.ConvexDecomposition())
+  {
+    // limit max number of convex hulls to generate
+    desc.maxConvexHulls = _meshSdf.ConvexDecomposition()->MaxConvexHulls();
+    desc.voxelResolution = _meshSdf.ConvexDecomposition()->VoxelResolution();
+  }
+  if (hull)
+  {
+    /// create 1 convex hull for the whole submesh
+    desc.maxConvexHulls = 1u;
+  }
+  // A mesh asserted to be convex is its own convex hull, which is much
+  // cheaper to compute than a convex decomposition.
+  desc.assumeConvex = asserted;
+  return desc;
 }
 
 /////////////////////////////////////////////////
@@ -1146,68 +1190,34 @@ bool SDFFeatures::AddSdfCollision(
     auto compoundShape = std::make_unique<btCompoundShape>();
 
     bool meshCreated = false;
-    if (meshSdf->Optimization() ==
-        ::sdf::MeshOptimization::CONVEX_DECOMPOSITION ||
-        meshSdf->Optimization() ==
-        ::sdf::MeshOptimization::CONVEX_HULL)
+    if (auto desc = MakeConvexDecompositionDescriptor(*meshSdf, *mesh))
     {
-      std::size_t maxConvexHulls = 16u;
-      std::size_t voxelResolution = 200000u;
-      if (meshSdf->ConvexDecomposition())
+      // Verify the convexity of a mesh asserted to be convex, as requested
+      // by the SDF. The convex hull of the mesh is used either way, unless
+      // the SDF asks for an error.
+      const auto assertion = meshSdf->AssertConvex();
+      if (desc->assumeConvex &&
+          assertion != ::sdf::ConvexAssertion::NOCHECK &&
+          !common::MeshManager::IsConvex(*mesh, meshSdf->Submesh()))
       {
-        // limit max number of convex hulls to generate
-        maxConvexHulls = meshSdf->ConvexDecomposition()->MaxConvexHulls();
-        voxelResolution = meshSdf->ConvexDecomposition()->VoxelResolution();
-      }
-      if (meshSdf->Optimization() == ::sdf::MeshOptimization::CONVEX_HULL)
-      {
-        /// create 1 convex hull for the whole submesh
-        maxConvexHulls = 1u;
-      }
-
-      // Check if MeshManager contains the decomposed mesh already. If not
-      // add it to the MeshManager so we do not need to decompose it again.
-      const std::string convexMeshName =
-          mesh->Name() + "_" + meshSdf->Submesh() + "_CONVEX_" +
-          std::to_string(maxConvexHulls) + "_" +
-          std::to_string(voxelResolution);
-      auto *decomposedMesh = meshManager.MeshByName(convexMeshName);
-      if (!decomposedMesh)
-      {
-        // Merge meshes before convex decomposition
-        auto mergedMesh = gz::common::MeshManager::MergeSubMeshes(*mesh);
-        if (mergedMesh && mergedMesh->SubMeshCount() == 1u)
+        if (assertion == ::sdf::ConvexAssertion::FAIL)
         {
-          // Decompose and add mesh to MeshManager
-          auto mergedSubmesh = mergedMesh->SubMeshByIndex(0u).lock();
-          std::vector<common::SubMesh> decomposed =
-            gz::common::MeshManager::ConvexDecomposition(
-            *mergedSubmesh.get(), maxConvexHulls, voxelResolution);
-          gzdbg << "Optimizing mesh (" << meshSdf->OptimizationStr() << "): "
-                <<  mesh->Name() << std::endl;
-
-          // Request MeshManager to allocate the mesh within gz-common.
-          // This allows MeshManager to strictly own the allocation, preventing
-          // cross-module DLL deletion crashes during teardown.
-          common::Mesh *convexMesh = meshManager.CreateMesh(convexMeshName);
-          if (convexMesh)
-          {
-            for (const auto & submesh : decomposed)
-              convexMesh->AddSubMesh(submesh);
-          }
-
-          if (decomposed.empty())
-          {
-            // Print an error if convex decomposition returned empty submeshes
-            // but still add it to MeshManager to avoid going through the
-            // expensive convex decomposition process for the same mesh again
-            gzerr << "Convex decomposition generated zero meshes: "
-                   << mesh->Name() << std::endl;
-          }
-          decomposedMesh = convexMesh;
+          gzerr << "Mesh [" << mesh->Name() << "] of collision ["
+                << _collision.Name() << "] in Link [" << linkInfo->name
+                << "] is asserted to be convex but it is not. "
+                << "The collision will not be created." << std::endl;
+          return false;
         }
+        gzwarn << "Mesh [" << mesh->Name() << "] of collision ["
+               << _collision.Name() << "] in Link [" << linkInfo->name
+               << "] is asserted to be convex but it is not. "
+               << "Using its convex hull instead." << std::endl;
       }
 
+      // The decomposed mesh is cached by the MeshManager, so the mesh is only
+      // decomposed if it was not decomposed already.
+      const common::Mesh *decomposedMesh =
+          meshManager.ConvexDecomposition(*desc);
       if (decomposedMesh)
       {
         for (std::size_t j = 0u; j < decomposedMesh->SubMeshCount(); ++j)
