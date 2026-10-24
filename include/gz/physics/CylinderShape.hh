@@ -113,6 +113,8 @@ namespace gz
         public: using ShapePtrType = CylinderShapePtr<PolicyT, FeaturesT>;
 
         /// \brief Rigidly attach a CylinderShape to this link.
+        /// \param[in] _name
+        ///   The name of the BoxShape.
         /// \param[in] _radius
         ///   The radius of the cylinder.
         /// \param[in] _height
