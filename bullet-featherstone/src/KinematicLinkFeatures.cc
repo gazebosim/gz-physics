@@ -28,6 +28,7 @@ void KinematicLinkFeatures::SetLinkKinematic(
 {
   auto *link = this->ReferenceInterface<LinkInfo>(_id);
   auto *model = this->ReferenceInterface<ModelInfo>(link->model);
+  auto *world = this->ReferenceInterface<WorldInfo>(model->world);
 
   link->isKinematic = _kinematic;
   const int collisionFlags = _kinematic ?
@@ -39,6 +40,14 @@ void KinematicLinkFeatures::SetLinkKinematic(
   // flag is applied by makeColliderDynamic when the link is made non-static
   // or detached.
   const bool colliderStatic = link->isStaticOrFixed || isColliderStatic(link);
+
+  // A kinematic collider does not collide with static or other kinematic
+  // colliders unless asked to, see colliderFilterGroup. This re-creates the
+  // broadphase proxy if the filter changed: it drops the pairs of a link
+  // made kinematic with static colliders right away and creates them for a
+  // link made dynamic, which would otherwise only happen once the link has
+  // moved.
+  updateColliderFilter(world, link);
 
   if (link->indexInModel.has_value())
   {
@@ -55,7 +64,6 @@ void KinematicLinkFeatures::SetLinkKinematic(
         model->body->getJointVelMultiDof(idx)[d] = 0;
       }
     }
-    auto *world = this->ReferenceInterface<WorldInfo>(model->world);
     // Note: besides the joint of the link, detachable fixed joints that were
     // attached to the link are also in this map, so do not stop at the first
     // match.
@@ -120,6 +128,39 @@ bool KinematicLinkFeatures::GetLinkKinematic(const Identity &_id) const
   // of a kinematic link is temporarily static while the link is welded to a
   // static link, see SetLinkKinematic.
   return this->ReferenceInterface<LinkInfo>(_id)->isKinematic;
+}
+
+/////////////////////////////////////////////////
+void KinematicLinkFeatures::SetWorldKinematicContactsEnabled(
+    const Identity &_id, bool _enabled)
+{
+  auto *world = this->ReferenceInterface<WorldInfo>(_id);
+  if (world->kinematicContacts == _enabled)
+    return;
+  world->kinematicContacts = _enabled;
+
+  // Apply to the links of this world. The broadphase filter of a kinematic
+  // link changes unless one of its collisions sets collide_without_contact;
+  // updateKinematicContacts re-creates the broadphase proxy if it changed, so
+  // that the pairs with static and kinematic colliders are dropped or
+  // created right away rather than once the link has moved. Static
+  // colliders, including links welded to a static link, are left alone and
+  // pick up the cached flag when they are made dynamic.
+  for (auto &linkPair : this->links)
+  {
+    auto &link = linkPair.second;
+    const auto *model = this->ReferenceInterface<ModelInfo>(link->model);
+    if (std::size_t(model->world) != std::size_t(_id))
+      continue;
+    updateKinematicContacts(world, link.get());
+  }
+}
+
+/////////////////////////////////////////////////
+bool KinematicLinkFeatures::GetWorldKinematicContactsEnabled(
+    const Identity &_id) const
+{
+  return this->ReferenceInterface<WorldInfo>(_id)->kinematicContacts;
 }
 #endif
 

@@ -62,6 +62,59 @@ namespace gz
             const Identity &_shapeID) const = 0;
       };
     };
+
+    /////////////////////////////////////////////////
+    /// \brief This feature controls whether contacts between kinematic links
+    /// and static or other kinematic links are detected. Neither link of
+    /// such a contact responds to it, so it has no effect on the simulation,
+    /// but it can be retrieved with GetContactsFromLastStepFeature, e.g. for
+    /// contact sensors. Detecting these contacts costs collision detection
+    /// time on every step for as long as the links overlap, which for a
+    /// kinematic link resting in or on static geometry is forever, so
+    /// disabling them speeds up worlds with many kinematic links.
+    class GZ_PHYSICS_VISIBLE KinematicContacts
+      : public virtual Feature
+    {
+      /// \brief The World API for enabling kinematic contacts
+      public: template <typename PolicyT, typename FeaturesT>
+      class World : public virtual Feature::World<PolicyT, FeaturesT>
+      {
+        /// \brief Enable or disable the detection of contacts between
+        /// kinematic links and static or other kinematic links. They are
+        /// enabled by default. Contacts between kinematic and dynamic links
+        /// are always detected. While disabled, the contacts of a kinematic
+        /// link with a collision that sets
+        /// `//collision/surface/contact/collide_without_contact` are still
+        /// detected.
+        /// \param[in] _enabled True to detect these contacts.
+        public: void SetKinematicContactsEnabled(bool _enabled);
+
+        /// \brief Get whether contacts between kinematic links and static or
+        /// other kinematic links are detected.
+        /// \return True if they are detected.
+        /// \sa SetKinematicContactsEnabled
+        public: bool GetKinematicContactsEnabled() const;
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        /// \brief Implementation API for enabling kinematic contacts
+        /// \param[in] _id Identity of the world
+        /// \param[in] _enabled True to detect contacts between kinematic
+        /// links and static or other kinematic links
+        public: virtual void SetWorldKinematicContactsEnabled(
+            const Identity &_id, bool _enabled) = 0;
+
+        /// \brief Implementation API for getting whether kinematic contacts
+        /// are enabled
+        /// \param[in] _id Identity of the world
+        /// \return True if contacts between kinematic links and static or
+        /// other kinematic links are detected
+        public: virtual bool GetWorldKinematicContactsEnabled(
+            const Identity &_id) const = 0;
+      };
+    };
   }
 }
 
