@@ -927,6 +927,14 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 
   for (const auto& [linkSdf, linkID] : linkIDs)
   {
+#if BT_BULLET_VERSION >= 307
+    // Set the kinematic flag before adding collisions so that the collider
+    // is added to the world with the kinematic broadphase filter, see
+    // CreateLinkCollider.
+    if (linkSdf->Kinematic())
+      this->ReferenceInterface<LinkInfo>(linkID)->isKinematic = true;
+#endif
+
     if (linkSdf->CollisionCount() == 0u)
     {
       // create empty link collider and compound shape if there are no
@@ -950,7 +958,6 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     if (linkSdf->Kinematic())
     {
       auto *linkInfo = this->ReferenceInterface<LinkInfo>(linkID);
-      linkInfo->isKinematic = true;
       // A static or fixed link keeps its static collider flags, as in
       // SetLinkKinematic. The kinematic flag is applied if the link is made
       // non-static later.
@@ -1290,6 +1297,7 @@ bool SDFFeatures::AddSdfCollision(
   double rollingFriction = 0.0;
   uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
   std::optional<uint16_t> categoryBitmask;
+  bool collideWithoutContact = false;
   if (const auto *surface = _collision.Surface())
   {
     if (const auto *friction = surface->Friction())
@@ -1336,8 +1344,28 @@ bool SDFFeatures::AddSdfCollision(
         {
           categoryBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
         }
+        if (const auto cwc = contact->FindElement("collide_without_contact"))
+        {
+          collideWithoutContact = cwc->Get<bool>();
+        }
       }
     }
+  }
+
+  // collide_without_contact keeps the contacts of a kinematic link with
+  // static and kinematic links detected while they are disabled for the
+  // world, see LinkInfo::collideWithoutContact. Any collision of the link
+  // enables it for the whole link, which has a single collider. Set it
+  // before the collider is created so that it is added to the world with the
+  // right broadphase filter; for a collision added to an existing collider,
+  // re-create its broadphase proxy.
+  // \todo(iche033) Support collide_without_contact on dynamic links: disable
+  // the contact response of the link collider (CF_NO_CONTACT_RESPONSE).
+  if (collideWithoutContact && !linkInfo->collideWithoutContact)
+  {
+    linkInfo->collideWithoutContact = true;
+    updateKinematicContacts(
+        this->ReferenceInterface<WorldInfo>(model->world), linkInfo);
   }
 
   Eigen::Isometry3d linkFrameToCollision;
@@ -1588,6 +1616,13 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
   linkInfo->collider->collideBitmask = _collideBitmask;
   linkInfo->collider->categoryBitmask = _categoryBitmask;
 
+  // Whether the contacts of the link, when kinematic, with static and other
+  // kinematic links are detected, see KinematicContacts. The collider has no
+  // broadphase proxy yet, so this only sets the flag used for the filter
+  // below; SetWorldKinematicContactsEnabled and AddSdfCollision keep it up to
+  // date afterwards.
+  updateKinematicContacts(worldInfo, linkInfo);
+
   if (_isStatic || isFixed)
   {
     worldInfo->world->addCollisionObject(
@@ -1603,10 +1638,13 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
   }
   else
   {
+    // A kinematic link collider does not collide with static or other
+    // kinematic colliders while these contacts are disabled, see
+    // colliderFilterGroup.
     worldInfo->world->addCollisionObject(
       linkInfo->collider.get(),
-      btBroadphaseProxy::DefaultFilter,
-      btBroadphaseProxy::AllFilter);
+      colliderFilterGroup(*linkInfo),
+      colliderFilterMask(*linkInfo));
   }
 }
 
