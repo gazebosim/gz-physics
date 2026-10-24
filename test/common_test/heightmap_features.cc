@@ -45,11 +45,14 @@
 #include <gz/physics/FrameSemantics.hh>
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/GetEntities.hh>
+#include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/heightmap/HeightmapShape.hh>
+#include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
 
 #include <sdf/Root.hh>
+#include <sdf/World.hh>
 
 template <class T>
 class HeightmapFeaturesTest:
@@ -329,6 +332,49 @@ TYPED_TEST(HeightmapFeaturesTest, ObjectsRestOnHeightmap)
   }
 }
 
+struct HeightmapRemoveFeaturesList : gz::physics::FeatureList<
+  HeightmapFeaturesList,
+  gz::physics::RemoveModelFromWorld,
+  gz::physics::sdf::ConstructSdfModel
+> { };
+
+/////////////////////////////////////////////////
+// Remove a model with a heightmap and spawn it again with the same names.
+TYPED_TEST(HeightmapFeaturesTest, RemoveAndRespawnHeightmap)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    auto engine = gz::physics::RequestEngine3d<
+        HeightmapRemoveFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.Load(common_test::worlds::kHeightmapSdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    const sdf::World *sdfWorld = root.WorldByIndex(0);
+    auto world = engine->ConstructWorld(*sdfWorld);
+    ASSERT_NE(nullptr, world);
+
+    ASSERT_NE(nullptr, AttachRamp(world->GetModel("terrain")->GetLink("link")));
+    StepWorld(world, 1);
+
+    ASSERT_TRUE(world->RemoveModel("terrain"));
+    StepWorld(world, 1);
+
+    auto terrain = world->ConstructModel(*sdfWorld->ModelByName("terrain"));
+    ASSERT_NE(nullptr, terrain);
+    ASSERT_NE(nullptr, AttachRamp(terrain->GetLink("link")));
+
+    StepWorld(world, 2000);
+
+    // The sphere rests on the respawned heightmap's low plateau.
+    ExpectRestingAt(world, "sphere_low",
+        {8.5, -8.5, kRampZ + 0.2 * kRampHeight + 0.25}, 0.05);
+  }
+}
+
 /////////////////////////////////////////////////
 /// \brief Construct a world from SDF and attach an image heightmap and a DEM
 /// to a link of its model "model".
@@ -337,9 +383,12 @@ TYPED_TEST(HeightmapFeaturesTest, ObjectsRestOnHeightmap)
 /// \param[in] _link Name of the link that gets the heightmaps.
 /// \param[in] _parent If not empty, name of the link of the model that _link
 /// is attached to with a fixed joint, before attaching the heightmaps.
+/// \param[in] _supported False if the engine is expected to refuse the
+/// heightmaps, which it does by returning a null shape without breaking the
+/// world.
 void AttachToLinkOfSdfWorld(const gz::plugin::PluginPtr &_plugin,
     const std::string &_worldSdf, const std::string &_link,
-    const std::string &_parent = "")
+    const std::string &_parent = "", bool _supported = true)
 {
   auto engine =
       gz::physics::RequestEngine3d<HeightmapFeaturesList>::From(_plugin);
@@ -362,7 +411,21 @@ void AttachToLinkOfSdfWorld(const gz::plugin::PluginPtr &_plugin,
     ASSERT_NE(nullptr, link->AttachFixedJoint(parent, "heightmap_joint"));
   }
 
-  AttachImageAndDem(link);
+  if (_supported)
+  {
+    AttachImageAndDem(link);
+    return;
+  }
+
+  gz::common::ImageHeightmap data;
+  ASSERT_EQ(0, data.Load(gz::physics::test::resources::kHeightmapBowlPng));
+  EXPECT_EQ(nullptr, link->AttachHeightmapShape("heightmap", data,
+      Eigen::Isometry3d::Identity(), Eigen::Vector3d(129, 129, 10)));
+  EXPECT_EQ(nullptr, link->GetShape("heightmap"));
+
+  // The world still steps: gravity pulls the link down.
+  StepWorld(world, 100);
+  EXPECT_GT(0.0, link->FrameDataRelativeToWorld().pose.translation().z());
 }
 
 /////////////////////////////////////////////////
@@ -397,7 +460,8 @@ TYPED_TEST(HeightmapFeaturesTest, AttachHeightmapToFixedLink)
 
 /////////////////////////////////////////////////
 // Attach heightmaps to a link that moves: it is fixed to a link with a
-// prismatic joint.
+// prismatic joint. Only dartsim supports it: the other engines refuse the
+// heightmaps and keep stepping.
 TYPED_TEST(HeightmapFeaturesTest, AttachHeightmapToMovingLink)
 {
   const std::string worldSdf = R"(<?xml version="1.0" ?>
@@ -438,12 +502,10 @@ TYPED_TEST(HeightmapFeaturesTest, AttachHeightmapToMovingLink)
 
   for (const std::string &name : this->pluginNames)
   {
-    // Heightmaps on links that move are only supported by dartsim.
-    CHECK_SUPPORTED_ENGINE(name, "dartsim")
-
     std::cout << "Testing plugin: " << name << std::endl;
     AttachToLinkOfSdfWorld(this->loader.Instantiate(name), worldSdf,
-        "heightmap_link", "child");
+        "heightmap_link", "child",
+        gz::physics::TestLibLoader::EngineInList(name, {"dartsim"}));
   }
 }
 
