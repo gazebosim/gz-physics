@@ -18,6 +18,8 @@
 #ifndef GZ_PHYSICS_BULLET_FEATHERSTONE_BASE_HH_
 #define GZ_PHYSICS_BULLET_FEATHERSTONE_BASE_HH_
 
+#include <BulletCollision/CollisionDispatch/btCollisionObjectWrapper.h>
+#include <BulletCollision/CollisionDispatch/btManifoldResult.h>
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
 #include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
@@ -78,6 +80,26 @@ class GzCollisionDispatcher : public btCollisionDispatcher
   /// filtering based on surface contact parameters
   public: bool needsCollision(const btCollisionObject *_body0,
                               const btCollisionObject *_body1) override;
+
+  /// \brief btCollisionDispatcher::defaultNearCallback, but with a
+  /// GzManifoldResult, so that the contact points identify the collisions.
+  public: static void NearCallback(btBroadphasePair &_collisionPair,
+                                   btCollisionDispatcher &_dispatcher,
+                                   const btDispatcherInfo &_dispatchInfo);
+};
+
+/// \brief Sets the indices of the contact points that it adds to the indices
+/// of the children of the links' compound shapes, which are the collisions.
+/// Bullet sets them to the indices of the innermost shapes instead, e.g. a
+/// triangle of a heightfield or a convex hull of a decomposed mesh.
+class GzManifoldResult : public btManifoldResult
+{
+  public: using btManifoldResult::btManifoldResult;
+
+  // Documentation inherited
+  public: void addContactPoint(const btVector3 &_normalOnBInWorld,
+                               const btVector3 &_pointInWorld,
+                               btScalar _depth) override;
 };
 
 /// \brief The Info structs are used for three reasons:
@@ -296,6 +318,21 @@ struct LinkInfo
   mutable std::optional<math::Pose3d> prevPose = std::nullopt;
 };
 
+/// \brief What a heightmap collision keeps besides its Bullet shape.
+struct HeightmapInfo
+{
+  /// \brief Sampled heights. btHeightfieldTerrainShape keeps a pointer to
+  /// them instead of a copy, so they must not be reallocated. They are
+  /// btScalar, which is double with BT_USE_DOUBLE_PRECISION, because the
+  /// constructor that takes floats is newer than the oldest Bullet supported.
+  std::vector<btScalar> heights;
+  /// \brief Size along x and y of the heightmap, and along z the range of
+  /// the sampled heights, which is what the heightmap reports as its size.
+  Eigen::Vector3d size;
+  /// \brief Lowest sampled height. The highest is minHeight + size.z().
+  double minHeight;
+};
+
 struct CollisionInfo
 {
   std::string name;
@@ -303,6 +340,8 @@ struct CollisionInfo
   Identity link;
   Eigen::Isometry3d linkToCollision;
   int indexInLink = 0;
+  /// \brief Only set for heightmaps.
+  std::optional<HeightmapInfo> heightmap = std::nullopt;
 };
 
 struct InternalJoint
