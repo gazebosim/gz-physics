@@ -37,7 +37,7 @@ endif()
 ExternalProject_Add(
   mujoco_ext
   GIT_REPOSITORY https://github.com/google-deepmind/mujoco
-  GIT_TAG b85fdca54f0e0038b804af146a0b4e94199e00d0 # 3.11.0
+  GIT_TAG 800a109a4bdd02cb60404d565db4ae16fb04a53b # 3.17.0
   INSTALL_DIR    "${MUJOCO_INSTALL_DIR}"
   BUILD_BYPRODUCTS ${MUJOCO_BYPRODUCTS} # Needed for Ninja
   LOG_BUILD ON
