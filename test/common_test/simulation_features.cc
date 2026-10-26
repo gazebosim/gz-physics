@@ -2183,9 +2183,32 @@ using SimulationFeaturesRayIntersectionTestTypes =
 TYPED_TEST_SUITE(SimulationFeaturesRayIntersectionTest,
                  SimulationFeaturesRayIntersectionTestTypes);
 
+// Collision detectors (as accepted by SetCollisionDetector) that support
+// single ray intersection queries in the dartsim plugin, and those that do
+// not. The native "dart" collision detector supports raycast only in
+// DART versions that ship the complete DARTCollisionDetector (>= 6.20.0),
+// so its classification depends on the DART version.
+namespace
+{
+const std::vector<std::string> kRaySupportedCollisionDetectors = {
+  "ode",
+  "bullet",
+#ifdef DART_HAS_DART_COLLISION_DETECTOR
+  "dart",
+#endif
+};
+
+const std::vector<std::string> kRayUnsupportedCollisionDetectors = {
+#ifndef DART_HAS_DART_COLLISION_DETECTOR
+  "dart",
+#endif
+  "fcl",
+};
+}  // namespace
+
 TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
 {
-  std::vector<std::string> supportedCollisionDetectors = {"ode", "bullet"};
+  const auto &supportedCollisionDetectors = kRaySupportedCollisionDetectors;
 
   for (const std::string &name : this->pluginNames)
   {
@@ -2232,7 +2255,7 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
 
 TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
 {
-  std::vector<std::string> unsupportedCollisionDetectors = {"dart", "fcl"};
+  const auto &unsupportedCollisionDetectors = kRayUnsupportedCollisionDetectors;
 
   for (const std::string &name : this->pluginNames)
   {
@@ -2266,7 +2289,7 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
 /////////////////////////////////////////////////
 TYPED_TEST(SimulationFeaturesRayIntersectionTest, ClosestRayIntersection)
 {
-  std::vector<std::string> supportedCollisionDetectors = {"ode", "bullet"};
+  const auto &supportedCollisionDetectors = kRaySupportedCollisionDetectors;
 
   for (const std::string &name : this->pluginNames)
   {

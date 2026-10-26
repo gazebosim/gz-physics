@@ -34,6 +34,10 @@ namespace gz {
 namespace physics {
 namespace dartsim {
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4275)  // non dll-interface class used as base
+#endif
 /// \brief This class creates a custom derivative of dartsim's MeshShape class
 /// which allows a common::Mesh to be converted into a MeshShape that
 /// can be used by dartsim.
@@ -44,6 +48,9 @@ class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE CustomMeshShape
       const common::Mesh &_input,
       const Eigen::Vector3d &_scale);
 };
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 }
 }
