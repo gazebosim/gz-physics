@@ -97,7 +97,7 @@ TEST(SDFFeatures_TEST, BulletConstraintsCustomParameters)
     <sdf version="1.10">
       <world name="default">
         <physics name="custom_physics" type="bullet">
-          <bullet>
+          <gz:bullet>
             <constraints>
               <cfm>0.05</cfm>
               <erp>0.4</erp>
@@ -105,7 +105,7 @@ TEST(SDFFeatures_TEST, BulletConstraintsCustomParameters)
               <friction_erp>0.35</friction_erp>
               <friction_cfm>0.025</friction_cfm>
             </constraints>
-          </bullet>
+          </gz:bullet>
         </physics>
       </world>
     </sdf>)";
@@ -138,12 +138,12 @@ TEST(SDFFeatures_TEST, BulletConstraintsSimulationEffect)
           <gravity>0 0 -9.8</gravity>
           <physics name="custom_physics" type="bullet">
             <max_step_size>0.001</max_step_size>
-            <bullet>
+            <gz:bullet>
               <constraints>
                 <cfm>)" + std::to_string(_cfm) + R"(</cfm>
                 <friction_cfm>)" + std::to_string(_frictionCfm) + R"(</friction_cfm>
               </constraints>
-            </bullet>
+            </gz:bullet>
           </physics>
           <model name="ground">
             <static>true</static>

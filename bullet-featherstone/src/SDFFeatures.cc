@@ -99,7 +99,7 @@ Identity SDFFeatures::ConstructSdfWorld(
     worldInfo->stepSize = physics->MaxStepSize();
     if (const auto physicsElem = physics->Element())
     {
-      if (const auto bulletElem = physicsElem->FindElement("bullet"))
+      if (const auto bulletElem = physicsElem->FindElement("gz:bullet"))
       {
         if (const auto constraintsElem = bulletElem->FindElement("constraints"))
         {
