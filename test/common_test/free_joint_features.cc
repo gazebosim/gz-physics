@@ -58,24 +58,20 @@ using WorldPtr = gz::physics::World3dPtr<TestFeatureList>;
 using ModelPtr = gz::physics::Model3dPtr<TestFeatureList>;
 using LinkPtr = gz::physics::Link3dPtr<TestFeatureList>;
 
-<<<<<<< HEAD
-=======
 struct VelocityTestFeatureList : gz::physics::FeatureList<
-    BaseTestFeatureList,
+    gz::physics::GetEngineInfo,
+    gz::physics::sdf::ConstructSdfWorld,
+    gz::physics::sdf::ConstructSdfModel,
+    gz::physics::GetWorldFromEngine,
+    gz::physics::GetModelFromWorld,
+    gz::physics::GetLinkFromModel,
+    gz::physics::LinkFrameSemantics,
+    gz::physics::FindFreeGroupFeature,
     gz::physics::ForwardStep,
     gz::physics::SetFreeGroupWorldVelocity > { };
 
-using BaseWorldPtr = gz::physics::World3dPtr<BaseTestFeatureList>;
-using BaseModelPtr = gz::physics::Model3dPtr<BaseTestFeatureList>;
-using BaseLinkPtr = gz::physics::Link3dPtr<BaseTestFeatureList>;
-
-using NestedWorldPtr = gz::physics::World3dPtr<NestedTestFeatureList>;
-using NestedModelPtr = gz::physics::Model3dPtr<NestedTestFeatureList>;
-using NestedLinkPtr = gz::physics::Link3dPtr<NestedTestFeatureList>;
-
 template<typename Features>
->>>>>>> b1cf0cc (bullet-featherstone: kinematic base velocity for links with a CoM offset (#1123))
-class FreeGroupFeaturesTest:
+class FreeGroupFeaturesTestT:
   public testing::Test, public gz::physics::TestLibLoader
 {
   // Documentation inherited
@@ -83,11 +79,11 @@ class FreeGroupFeaturesTest:
   {
     gz::common::Console::SetVerbosity(4);
 
-    loader.LoadLib(FreeGroupFeaturesTest::GetLibToTest());
+    loader.LoadLib(FreeGroupFeaturesTestT::GetLibToTest());
 
     // TODO(ahcorde): We should also run the 3f, 2d, and 2f variants of
     // FindFeatures
-    pluginNames = gz::physics::FindFeatures3d<TestFeatureList>::From(loader);
+    pluginNames = gz::physics::FindFeatures3d<Features>::From(loader);
     if (pluginNames.empty())
     {
       std::cerr << "No plugins with required features found in "
@@ -100,19 +96,12 @@ class FreeGroupFeaturesTest:
   public: gz::plugin::Loader loader;
 };
 
-<<<<<<< HEAD
+using FreeGroupFeaturesTest = FreeGroupFeaturesTestT<TestFeatureList>;
+using VelocityFreeGroupFeaturesTest =
+    FreeGroupFeaturesTestT<VelocityTestFeatureList>;
+
 ModelPtr GetModelFromAbsoluteName(const WorldPtr &_world,
                                   const std::string &_absoluteName)
-=======
-using BaseFreeGroupFeaturesTest = FreeGroupFeaturesTest<BaseTestFeatureList>;
-using NestedFreeGroupFeaturesTest =
-    FreeGroupFeaturesTest<NestedTestFeatureList>;
-using VelocityFreeGroupFeaturesTest =
-    FreeGroupFeaturesTest<VelocityTestFeatureList>;
-
-NestedModelPtr GetModelFromAbsoluteName(const NestedWorldPtr &_world,
-                                        const std::string &_absoluteName)
->>>>>>> b1cf0cc (bullet-featherstone: kinematic base velocity for links with a CoM offset (#1123))
 {
   std::vector<std::string> names =
       gz::common::split(_absoluteName, std::string(sdf::kScopeDelimiter));
@@ -646,12 +635,7 @@ TEST_F(VelocityFreeGroupFeaturesTest, FreeGroupSetWorldVelocityCoMOffset)
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
-<<<<<<< HEAD
   FreeGroupFeaturesTest::init(argc, argv);
-=======
-  BaseFreeGroupFeaturesTest::init(argc, argv);
-  NestedFreeGroupFeaturesTest::init(argc, argv);
   VelocityFreeGroupFeaturesTest::init(argc, argv);
->>>>>>> b1cf0cc (bullet-featherstone: kinematic base velocity for links with a CoM offset (#1123))
   return RUN_ALL_TESTS();
 }
