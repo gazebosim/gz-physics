@@ -1103,5 +1103,248 @@ TEST_P(SDFFeatures_TEST, ManyStaticModels)
   world->Step(output, state, input);
 }
 
+/////////////////////////////////////////////////
+// The <gz:mujoco> element of a collision's <surface> sets the contact
+// parameters of the MuJoCo geom.
+TEST_P(SDFFeatures_TEST, MujocoSurfaceParams)
+{
+  const std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="default">
+      <model name="m1">
+        <link name="l1">
+          <collision name="plain">
+            <geometry><box><size>1 1 1</size></box></geometry>
+          </collision>
+          <collision name="full">
+            <geometry><box><size>1 1 1</size></box></geometry>
+            <surface>
+              <gz:mujoco>
+                <friction>0.8 0.005 0.0001</friction>
+                <solref>0.0025 1</solref>
+                <solimp>0.95 0.99 0.001</solimp>
+                <priority>2</priority>
+              </gz:mujoco>
+            </surface>
+          </collision>
+          <collision name="two_friction">
+            <geometry><box><size>1 1 1</size></box></geometry>
+            <surface>
+              <gz:mujoco>
+                <friction>0.7 0.004</friction>
+              </gz:mujoco>
+            </surface>
+          </collision>
+          <collision name="one_friction">
+            <geometry><box><size>1 1 1</size></box></geometry>
+            <surface>
+              <gz:mujoco>
+                <friction>0.6</friction>
+              </gz:mujoco>
+            </surface>
+          </collision>
+          <collision name="explicit_condim">
+            <geometry><box><size>1 1 1</size></box></geometry>
+            <surface>
+              <gz:mujoco>
+                <friction>0.8 0.005 0.0001</friction>
+                <condim>1</condim>
+              </gz:mujoco>
+            </surface>
+          </collision>
+          <collision name="invalid">
+            <geometry><box><size>1 1 1</size></box></geometry>
+            <surface>
+              <gz:mujoco>
+                <friction>-1</friction>
+                <solref>0.01</solref>
+                <solimp>0.9 abc 0.001</solimp>
+                <condim>5</condim>
+              </gz:mujoco>
+            </surface>
+          </collision>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  const mjModel *m = worldInfo->mjModelObj;
+  ASSERT_NE(nullptr, m);
+
+  auto geomId = [&](const std::string &_name)
+  {
+    const int id = mj_name2id(m, mjOBJ_GEOM, ("m1::l1::" + _name).c_str());
+    EXPECT_NE(-1, id) << _name;
+    return id;
+  };
+
+  const int plain = geomId("plain");
+  const int full = geomId("full");
+  const int twoFriction = geomId("two_friction");
+  const int oneFriction = geomId("one_friction");
+  const int explicitCondim = geomId("explicit_condim");
+  const int invalid = geomId("invalid");
+  ASSERT_NE(-1, plain);
+  ASSERT_NE(-1, full);
+  ASSERT_NE(-1, twoFriction);
+  ASSERT_NE(-1, oneFriction);
+  ASSERT_NE(-1, explicitCondim);
+  ASSERT_NE(-1, invalid);
+
+  // Everything set.
+  EXPECT_DOUBLE_EQ(0.8, m->geom_friction[3 * full]);
+  EXPECT_DOUBLE_EQ(0.005, m->geom_friction[3 * full + 1]);
+  EXPECT_DOUBLE_EQ(0.0001, m->geom_friction[3 * full + 2]);
+  EXPECT_EQ(6, m->geom_condim[full]);
+  EXPECT_DOUBLE_EQ(0.0025, m->geom_solref[mjNREF * full]);
+  EXPECT_DOUBLE_EQ(1.0, m->geom_solref[mjNREF * full + 1]);
+  EXPECT_DOUBLE_EQ(0.95, m->geom_solimp[mjNIMP * full]);
+  EXPECT_DOUBLE_EQ(0.99, m->geom_solimp[mjNIMP * full + 1]);
+  EXPECT_DOUBLE_EQ(0.001, m->geom_solimp[mjNIMP * full + 2]);
+  EXPECT_EQ(2, m->geom_priority[full]);
+
+  // The condim follows the number of friction coefficients.
+  EXPECT_EQ(4, m->geom_condim[twoFriction]);
+  EXPECT_DOUBLE_EQ(0.7, m->geom_friction[3 * twoFriction]);
+  EXPECT_DOUBLE_EQ(0.004, m->geom_friction[3 * twoFriction + 1]);
+  EXPECT_EQ(3, m->geom_condim[oneFriction]);
+  EXPECT_DOUBLE_EQ(0.6, m->geom_friction[3 * oneFriction]);
+
+  // An explicit condim wins over the number of friction coefficients.
+  EXPECT_EQ(1, m->geom_condim[explicitCondim]);
+  EXPECT_DOUBLE_EQ(0.8, m->geom_friction[3 * explicitCondim]);
+
+  // Without the element, and with invalid values, the MuJoCo defaults stay.
+  for (const int id : {plain, invalid})
+  {
+    EXPECT_EQ(3, m->geom_condim[id]);
+    EXPECT_EQ(0, m->geom_priority[id]);
+    EXPECT_DOUBLE_EQ(1.0, m->geom_friction[3 * id]);
+    EXPECT_DOUBLE_EQ(0.02, m->geom_solref[mjNREF * id]);
+    EXPECT_DOUBLE_EQ(1.0, m->geom_solref[mjNREF * id + 1]);
+    EXPECT_DOUBLE_EQ(0.9, m->geom_solimp[mjNIMP * id]);
+    EXPECT_DOUBLE_EQ(0.95, m->geom_solimp[mjNIMP * id + 1]);
+  }
+}
+
+/////////////////////////////////////////////////
+// The <gz:mujoco> element of the world's <physics> sets the cone, the impedance
+// ratio and the default contact solref of every collision.
+TEST_P(SDFFeatures_TEST, MujocoPhysicsParams)
+{
+  const std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="default">
+      <physics name="1ms" type="mujoco">
+        <gz:mujoco>
+          <cone>elliptic</cone>
+          <impratio>10</impratio>
+          <contact>
+            <solref>0.0025 1</solref>
+          </contact>
+        </gz:mujoco>
+      </physics>
+      <model name="m1">
+        <link name="l1">
+          <collision name="default_solref">
+            <geometry><box><size>1 1 1</size></box></geometry>
+          </collision>
+          <collision name="own_solref">
+            <geometry><box><size>1 1 1</size></box></geometry>
+            <surface>
+              <gz:mujoco>
+                <solref>0.005 1</solref>
+              </gz:mujoco>
+            </surface>
+          </collision>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  const mjModel *m = worldInfo->mjModelObj;
+  ASSERT_NE(nullptr, m);
+
+  EXPECT_EQ(mjCONE_ELLIPTIC, m->opt.cone);
+  EXPECT_DOUBLE_EQ(10.0, m->opt.impratio);
+
+  const int defaultSolref = mj_name2id(m, mjOBJ_GEOM, "m1::l1::default_solref");
+  const int ownSolref = mj_name2id(m, mjOBJ_GEOM, "m1::l1::own_solref");
+  ASSERT_NE(-1, defaultSolref);
+  ASSERT_NE(-1, ownSolref);
+  EXPECT_DOUBLE_EQ(0.0025, m->geom_solref[mjNREF * defaultSolref]);
+  EXPECT_DOUBLE_EQ(1.0, m->geom_solref[mjNREF * defaultSolref + 1]);
+  EXPECT_DOUBLE_EQ(0.005, m->geom_solref[mjNREF * ownSolref]);
+}
+
+/////////////////////////////////////////////////
+// Invalid world options are ignored, and so are the options of a world whose
+// <physics> element does not reach the plugin, as when a caller builds the
+// sdf::World by hand and leaves <physics> out.
+TEST_P(SDFFeatures_TEST, MujocoPhysicsParamsIgnoredWhenInvalidOrMissing)
+{
+  const std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="default">
+      <physics name="1ms" type="mujoco">
+        <gz:mujoco>
+          <cone>round</cone>
+          <impratio>-1</impratio>
+          <contact>
+            <solref>0.0025</solref>
+          </contact>
+        </gz:mujoco>
+      </physics>
+      <model name="m1">
+        <link name="l1">
+          <collision name="c1">
+            <geometry><box><size>1 1 1</size></box></geometry>
+          </collision>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr invalidWorld = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, invalidWorld);
+  auto *invalidInfo = static_cast<physics::mujoco::WorldInfo *>(
+      invalidWorld->FullIdentity().ref.get());
+  ASSERT_NE(nullptr, invalidInfo->mjModelObj);
+
+  // A world built without <physics>, as gz-sim does today.
+  auto engine = LoadEngine();
+  ASSERT_NE(nullptr, engine);
+  sdf::World bareWorld;
+  bareWorld.SetName("bare");
+  auto world = engine->ConstructWorld(bareWorld);
+  ASSERT_NE(nullptr, world);
+  auto *bareInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  ASSERT_NE(nullptr, bareInfo->mjModelObj);
+
+  // The MuJoCo defaults stay.
+  for (const mjModel *m : {invalidInfo->mjModelObj, bareInfo->mjModelObj})
+  {
+    EXPECT_EQ(mjCONE_PYRAMIDAL, m->opt.cone);
+    EXPECT_DOUBLE_EQ(1.0, m->opt.impratio);
+  }
+
+  const mjModel *m = invalidInfo->mjModelObj;
+  const int id = mj_name2id(m, mjOBJ_GEOM, "m1::l1::c1");
+  ASSERT_NE(-1, id);
+  EXPECT_DOUBLE_EQ(0.02, m->geom_solref[mjNREF * id]);
+  EXPECT_DOUBLE_EQ(1.0, m->geom_solref[mjNREF * id + 1]);
+}
+
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
                         ::testing::Values(LoaderType::Whole));
