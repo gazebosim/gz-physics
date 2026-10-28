@@ -24,6 +24,20 @@ namespace physics {
 namespace bullet_featherstone {
 
 
+/// \brief Acceleration of a point of a rigid body from the acceleration of its
+/// center of mass: a = a_com + alpha x r + omega x (omega x r).
+/// \param[in] _comAcc World linear acceleration of the center of mass.
+/// \param[in] _angAcc World angular acceleration of the body.
+/// \param[in] _angVel World angular velocity of the body.
+/// \param[in] _comToPoint World vector from the center of mass to the point.
+static Eigen::Vector3d frameAcceleration(const Eigen::Vector3d &_comAcc,
+    const Eigen::Vector3d &_angAcc, const Eigen::Vector3d &_angVel,
+    const Eigen::Vector3d &_comToPoint)
+{
+  return _comAcc + _angAcc.cross(_comToPoint) +
+      _angVel.cross(_angVel.cross(_comToPoint));
+}
+
 FrameData3d getNonBaseLinkFrameData(
     const ModelInfo *_modelInfo,
     const LinkInfo *_linkInfo,
@@ -64,8 +78,12 @@ FrameData3d getNonBaseLinkFrameData(
   data.linearVelocity = comLinVel +
       comAngVel.cross(comWorldRot * comToFrame.translation());
 
-  // \todo(iche033) Link accelerations are not computed. Bullet does not
-  // expose joint or link accelerations.
+  data.linearAcceleration = frameAcceleration(
+      body.GetLinkComLinearAcceleration(static_cast<int>(index)),
+      body.GetLinkAngularAcceleration(static_cast<int>(index)),
+      comAngVel, comWorldRot * comToFrame.translation());
+  data.angularAcceleration =
+      body.GetLinkAngularAcceleration(static_cast<int>(index));
   return data;
 }
 
@@ -175,6 +193,14 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
     data.angularVelocity = convert(model->body->getBaseOmega());
     data.linearVelocity = convert(getBaseLinkFrameLinearVelocity(*model)) +
         data.angularVelocity.cross(linkTf.linear() * linkToFrame.translation());
+    const Eigen::Vector3d comToFrame =
+        convert(getBaseComToLinkFrame(
+            *model, model->body->getBaseWorldTransform())) +
+        linkTf.linear() * linkToFrame.translation();
+    data.angularAcceleration = model->body->GetLinkAngularAcceleration(-1);
+    data.linearAcceleration = frameAcceleration(
+        model->body->GetLinkComLinearAcceleration(-1),
+        data.angularAcceleration, data.angularVelocity, comToFrame);
   }
   return data;
 }

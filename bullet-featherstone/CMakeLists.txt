@@ -35,3 +35,22 @@ if (WIN32)
   # disable MSVC inherit via dominance warning
   target_compile_options(${bullet_plugin} PUBLIC "/wd4250")
 endif()
+
+# Testing
+gz_build_tests(
+  TYPE UNIT_bullet-featherstone
+  SOURCES ${test_sources}
+  LIB_DEPS
+    ${bullet_plugin}
+    GzBullet::GzBullet
+    gz-math::eigen3
+  TEST_LIST tests
+  INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+# The plugin does not export its symbols, so the tests compile the classes
+# they test.
+foreach(test ${tests})
+  target_sources(${test} PRIVATE src/Base.cc)
+endforeach()
