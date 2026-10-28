@@ -5,16 +5,12 @@ Deprecated code produces compile-time warnings. These warning serve as
 notification to users that their code should be upgraded. The next major
 release will remove the deprecated code.
 
-<<<<<<< HEAD
-=======
+## Gazebo Physics 8.X to 9.X
 
-## Gazebo Physics 9.X to 10.X
+### Deprecations
 
-### Breaking Changes
-
-* **GetRayIntersectionFromLastStepFeature**: `RayIntersectionT::fraction` is
-  now `+INF` on a miss (was `NaN`); `NaN` now means error. Use the new
-  `IsHit()` helper instead of `std::isnan(fraction)` to detect hits.
+* The macro `GZ_PHYSICS_ENGINE_INSTALL_DIR` has been removed. Use
+`gz::physics::getEngineInstallDir()` instead.
 
 ### Additions
 
@@ -29,14 +25,6 @@ release will remove the deprecated code.
   `true` on a collision keeps the contacts of its kinematic link detected.
   The element is not supported on dynamic links yet, where it is ignored.
   Contacts between kinematic and dynamic links are always detected.
-
->>>>>>> b44cd0d (bullet-featherstone: broadphase filter for kinematic links (#1139))
-## Gazebo Physics 8.X to 9.X
-
-### Deprecations
-
-* The macro `GZ_PHYSICS_ENGINE_INSTALL_DIR` has been removed. Use
-`gz::physics::getEngineInstallDir()` instead.
 
 ## Gazebo Physics 5.X to 6.X
 
