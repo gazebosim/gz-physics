@@ -32,6 +32,7 @@
 #include <sdf/Collision.hh>
 #include <sdf/Root.hh>
 #include <sdf/World.hh>
+#include <test/Resources.hh>
 #include <test/Utils.hh>
 
 #include "test/common_test/Worlds.hh"
@@ -1101,6 +1102,223 @@ TEST_P(SDFFeatures_TEST, ManyStaticModels)
   physics::ForwardStep::State state;
   physics::ForwardStep::Input input;
   world->Step(output, state, input);
+}
+
+/////////////////////////////////////////////////
+// Collisions that use the same mesh file share one MuJoCo mesh asset, and
+// another scale of the file gets its own. MuJoCo requires unique asset names,
+// and the compile of a spec with repeated names fails and leaves an empty
+// model.
+TEST_P(SDFFeatures_TEST, SameMeshFileInSeveralCollisions)
+{
+  const std::string uri = gz::physics::test::resources::kRotatedBoxObj;
+  const std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="default">
+      <model name="static_steps">
+        <static>true</static>
+        <link name="link">
+          <collision name="step_a">
+            <geometry><mesh><uri>)" + uri + R"(</uri></mesh></geometry>
+          </collision>
+          <collision name="step_b">
+            <pose>2 0 0 0 0 0</pose>
+            <geometry><mesh><uri>)" + uri + R"(</uri></mesh></geometry>
+          </collision>
+          <collision name="step_big">
+            <pose>4 0 0 0 0 0</pose>
+            <geometry>
+              <mesh><uri>)" + uri + R"(</uri><scale>2 2 2</scale></mesh>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+      <model name="body">
+        <pose>0 0 3 0 0 0</pose>
+        <link name="link">
+          <inertial>
+            <mass>1</mass>
+            <inertia><ixx>0.1</ixx><iyy>0.1</iyy><izz>0.1</izz></inertia>
+          </inertial>
+          <collision name="box">
+            <geometry><mesh><uri>)" + uri + R"(</uri></mesh></geometry>
+          </collision>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  const mjModel *m = worldInfo->mjModelObj;
+  ASSERT_NE(nullptr, m);
+
+  EXPECT_EQ(4, m->ngeom);
+  EXPECT_EQ(2, m->nmesh);
+
+  const int stepA = mj_name2id(m, mjOBJ_GEOM, "static_steps::link::step_a");
+  const int stepB = mj_name2id(m, mjOBJ_GEOM, "static_steps::link::step_b");
+  const int stepBig =
+      mj_name2id(m, mjOBJ_GEOM, "static_steps::link::step_big");
+  const int box = mj_name2id(m, mjOBJ_GEOM, "body::link::box");
+  for (const int id : {stepA, stepB, stepBig, box})
+  {
+    ASSERT_GE(id, 0);
+    EXPECT_EQ(mjGEOM_MESH, m->geom_type[id]);
+  }
+
+  // The geoms with scale 1 use the same mesh and the scaled one another.
+  EXPECT_EQ(m->geom_dataid[stepA], m->geom_dataid[stepB]);
+  EXPECT_EQ(m->geom_dataid[stepA], m->geom_dataid[box]);
+  EXPECT_NE(m->geom_dataid[stepA], m->geom_dataid[stepBig]);
+  EXPECT_NEAR(2.0 * m->geom_rbound[stepA], m->geom_rbound[stepBig], 1e-6);
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+  world->Step(output, state, input);
+}
+
+/////////////////////////////////////////////////
+// A mesh file that is new to the world, used by several collisions of a model
+// constructed after the world was compiled, must still get one asset. MuJoCo
+// looks assets up in an id map after a compile, and that map does not contain
+// the meshes added since.
+TEST_P(SDFFeatures_TEST, MeshAssetsAddedAfterCompile)
+{
+  const std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="default">
+      <model name="a">
+        <static>true</static>
+        <link name="link">
+          <collision name="c">
+            <geometry><mesh><uri>)" +
+      gz::physics::test::resources::kVShapeObj + R"(</uri></mesh></geometry>
+          </collision>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
+
+  const std::string modelStr = R"(
+  <sdf version="1.9">
+    <model name="b">
+      <static>true</static>
+      <link name="link">
+        <collision name="c1">
+          <geometry><mesh><uri>)" +
+      gz::physics::test::resources::kRotatedBoxObj + R"(</uri></mesh></geometry>
+        </collision>
+        <collision name="c2">
+          <pose>2 0 0 0 0 0</pose>
+          <geometry><mesh><uri>)" +
+      gz::physics::test::resources::kRotatedBoxObj + R"(</uri></mesh></geometry>
+        </collision>
+      </link>
+    </model>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+  world->Step(output, state, input);
+  ASSERT_NE(nullptr, worldInfo->mjModelObj);
+  EXPECT_EQ(1, worldInfo->mjModelObj->ngeom);
+  EXPECT_EQ(1, worldInfo->mjModelObj->nmesh);
+
+  sdf::Root root;
+  const sdf::Errors &errors = root.LoadSdfString(modelStr);
+  EXPECT_EQ(0u, errors.size());
+  const sdf::Model *sdfModel = root.Model();
+  ASSERT_NE(nullptr, sdfModel);
+
+  // Construct the model, remove it, and construct it again. The mesh asset
+  // stays in the spec when the model is removed.
+  for (int i = 0; i < 2; ++i)
+  {
+    ASSERT_NE(nullptr, world->ConstructModel(*sdfModel));
+    world->Step(output, state, input);
+
+    const mjModel *m = worldInfo->mjModelObj;
+    ASSERT_NE(nullptr, m);
+    EXPECT_EQ(3, m->ngeom);
+    EXPECT_EQ(2, m->nmesh);
+    const int c1 = mj_name2id(m, mjOBJ_GEOM, "b::link::c1");
+    const int c2 = mj_name2id(m, mjOBJ_GEOM, "b::link::c2");
+    ASSERT_GE(c1, 0);
+    ASSERT_GE(c2, 0);
+    EXPECT_EQ(m->geom_dataid[c1], m->geom_dataid[c2]);
+
+    ASSERT_TRUE(world->RemoveModel("b"));
+    world->Step(output, state, input);
+  }
+}
+
+/////////////////////////////////////////////////
+// Cone collisions with the same name in different links, and cones of the same
+// size, must not give repeated MuJoCo mesh asset names.
+TEST_P(SDFFeatures_TEST, ConesInSeveralLinks)
+{
+  const std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="default">
+      <model name="m1">
+        <static>true</static>
+        <link name="l1">
+          <collision name="cone">
+            <geometry><cone><radius>0.5</radius><length>1</length></cone>
+            </geometry>
+          </collision>
+        </link>
+        <link name="l2">
+          <collision name="cone">
+            <geometry><cone><radius>0.5</radius><length>1</length></cone>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+      <model name="m2">
+        <static>true</static>
+        <link name="l1">
+          <collision name="cone">
+            <geometry><cone><radius>0.25</radius><length>2</length></cone>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  const mjModel *m = worldInfo->mjModelObj;
+  ASSERT_NE(nullptr, m);
+
+  EXPECT_EQ(3, m->ngeom);
+  EXPECT_EQ(2, m->nmesh);
+
+  const int m1l1 = mj_name2id(m, mjOBJ_GEOM, "m1::l1::cone");
+  const int m1l2 = mj_name2id(m, mjOBJ_GEOM, "m1::l2::cone");
+  const int m2l1 = mj_name2id(m, mjOBJ_GEOM, "m2::l1::cone");
+  for (const int id : {m1l1, m1l2, m2l1})
+  {
+    ASSERT_GE(id, 0);
+    EXPECT_EQ(mjGEOM_MESH, m->geom_type[id]);
+  }
+  EXPECT_EQ(m->geom_dataid[m1l1], m->geom_dataid[m1l2]);
+  EXPECT_NE(m->geom_dataid[m1l1], m->geom_dataid[m2l1]);
 }
 
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
