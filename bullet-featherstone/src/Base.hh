@@ -182,7 +182,64 @@ class GzMultiBody: public btMultiBody
   /// SetBaseLinkFrameVelocity.
   public: const Eigen::Vector3d &GetBaseLinkFrameAngularVelocity() const;
 
+  /// \brief Record the world velocities of the center of mass of the base and
+  /// of every link, as the velocities before a step. Bullet keeps no link
+  /// accelerations, so they are derived from two velocity snapshots, see
+  /// UpdateAccelerations.
+  public: void RecordVelocitiesBeforeStep();
+
+  /// \brief Set the accelerations of the center of mass of the base and of
+  /// every link to the change of velocity since RecordVelocitiesBeforeStep,
+  /// divided by the step size. This is the acceleration the integrator
+  /// applied in the step, contact impulses included. Does nothing if
+  /// _dt is not positive.
+  /// \param[in] _dt Duration of the step in seconds.
+  public: void UpdateAccelerations(double _dt);
+
+  /// \brief World linear acceleration of the center of mass of a link.
+  /// Zero until the first step.
+  /// \param[in] _linkIndex Bullet link index, -1 for the base.
+  public: const Eigen::Vector3d &GetLinkComLinearAcceleration(
+      int _linkIndex) const;
+
+  /// \brief World angular acceleration of a link. Zero until the first step.
+  /// \param[in] _linkIndex Bullet link index, -1 for the base.
+  public: const Eigen::Vector3d &GetLinkAngularAcceleration(
+      int _linkIndex) const;
+
+  /// \brief World velocities of the center of mass of the base (entry 0) and
+  /// of every link (entry i + 1 for link i).
+  private: struct WorldVelocities
+  {
+    /// \brief World linear velocities.
+    std::vector<Eigen::Vector3d> linear;
+
+    /// \brief World angular velocities.
+    std::vector<Eigen::Vector3d> angular;
+  };
+
+  /// \brief Read the current world velocities in one pass over the links.
+  /// \param[out] _out Velocities of the base and of every link.
+  private: void ReadVelocities(WorldVelocities &_out);
+
   private: bool needsCollisionTransformsUpdate = false;
+
+  /// \brief Velocities recorded by RecordVelocitiesBeforeStep.
+  private: WorldVelocities velocitiesBeforeStep;
+
+  /// \brief Velocities read by UpdateAccelerations.
+  private: WorldVelocities velocitiesAfterStep;
+
+  /// \brief Accelerations of the center of mass of the base and of every
+  /// link, same indexing as WorldVelocities. The angular entries are the
+  /// angular accelerations.
+  private: WorldVelocities accelerations;
+
+  /// \brief Buffers of ReadVelocities for the velocities of the links in
+  /// their own frames and for the rotations from these frames to the world.
+  private: std::vector<btVector3> localOmegaScratch;
+  private: std::vector<btVector3> localVelScratch;
+  private: std::vector<btQuaternion> localToWorldScratch;
 
   /// \brief World linear velocity of the root link frame.
   private: Eigen::Vector3d baseLinkFrameLinVel = Eigen::Vector3d::Zero();
