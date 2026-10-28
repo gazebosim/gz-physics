@@ -465,6 +465,17 @@ void SimulationFeatures::WorldForwardStep(
     stepSize = dt.count();
   }
 
+  // Bullet keeps no link accelerations, so record the velocities to derive
+  // them from the velocity change of the step. This is done before the
+  // kinematic bases and joints below advance, so that the change includes the
+  // motion they are driven with.
+  for (int i = 0; i < worldInfo->world->getNumMultibodies(); ++i)
+  {
+    // All multibodies are created as GzMultiBody in SDFFeatures
+    static_cast<GzMultiBody *>(worldInfo->world->getMultiBody(i))
+        ->RecordVelocitiesBeforeStep();
+  }
+
 #if BT_BULLET_VERSION >= 307
   std::vector<KinematicBaseVel> kinematicBaseVels;
 
@@ -612,6 +623,12 @@ void SimulationFeatures::WorldForwardStep(
   // values.
   restoreKinematicJointVelocities(kinematicJointVels);
 #endif
+
+  for (int i = 0; i < worldInfo->world->getNumMultibodies(); ++i)
+  {
+    static_cast<GzMultiBody *>(worldInfo->world->getMultiBody(i))
+        ->UpdateAccelerations(stepSize);
+  }
 
   // Reset joint velocity target after each step to be consistent with dart's
   // joint velocity command behavior
