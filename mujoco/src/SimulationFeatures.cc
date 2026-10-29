@@ -94,6 +94,12 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   mj_comPos(m, d);      // subtree_com, cdof, cinert
   mj_comVel(m, d);      // cvel, needed by mj_objectVelocity
 
+  // Body accelerations (cacc), reported by FrameDataRelativeToWorld. mj_step
+  // computes them only when a sensor needs them, and before the kinematics
+  // above were refreshed, so compute them here from the joint accelerations
+  // (qacc) and contact forces the step solved for.
+  mj_rnePostConstraint(m, d);
+
   // Clear joint control forces so that they are not applied in the next
   // timestep, which is the expected behavior in Gazebo.
   std::fill(d->ctrl, d->ctrl + m->nu, 0.0);
