@@ -1,5 +1,49 @@
 ## Gazebo Physics 7.x
 
+### Gazebo Physics 7.9.0 (2026-10-29)
+
+1. Fix dartsim ray intersection test by updating supported collision detector list
+    * [Pull request #1126](https://github.com/gazebosim/gz-physics/pull/1126)
+
+1. dartsim: use TriMesh in CustomMeshShape for DART 6.20.0
+    * [Pull request #1127](https://github.com/gazebosim/gz-physics/pull/1127)
+
+1. bullet-featherstone: fix 1-based Model GetIndex()
+    * [Pull request #1130](https://github.com/gazebosim/gz-physics/pull/1130)
+
+1. BallJoint: apply axis properties to ball joints
+    * [Pull request #753](https://github.com/gazebosim/gz-physics/pull/753)
+
+1. Features to change joint properties at run-time
+    * [Pull request #723](https://github.com/gazebosim/gz-physics/pull/723)
+
+1. Use the SPDX identifier Apache-2.0 in the license declaration
+    * [Pull request #1101](https://github.com/gazebosim/gz-physics/pull/1101)
+
+1. Fix dangling references when removing models in tpe plugin
+    * [Pull request #1091](https://github.com/gazebosim/gz-physics/pull/1091)
+
+1. dartsim: Remove redundant incrementVersion() calls after moveTo
+    * [Pull request #1030](https://github.com/gazebosim/gz-physics/pull/1030)
+
+1. GZ-PROFILE for bullet-featherstone
+    * [Pull request #1051](https://github.com/gazebosim/gz-physics/pull/1051)
+
+1. Use explicit element overload of Eigen::Vector3d
+    * [Pull request #1043](https://github.com/gazebosim/gz-physics/pull/1043)
+
+1. Backport CPU-lidar raycast (#880, #976) without the NaN->+INF breaking change
+    * [Pull request #1027](https://github.com/gazebosim/gz-physics/pull/1027)
+
+1. Clarify deferred DART mesh construction logs
+    * [Pull request #1035](https://github.com/gazebosim/gz-physics/pull/1035)
+
+1. Remove hash map allocation on every update step
+    * [Pull request #1011](https://github.com/gazebosim/gz-physics/pull/1011)
+
+1. Fix building tests when using a custom install location
+    * [Pull request #1014](https://github.com/gazebosim/gz-physics/pull/1014)
+
 ### Gazebo Physics 7.8.0 (2026-06-03)
 
 1. Enable/Disable collisions at runtime
