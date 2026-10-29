@@ -17,12 +17,18 @@
 
 #include "ShapeFeatures.hh"
 
+#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+
 #include <gz/math/eigen3/Conversions.hh>
+#include <cassert>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
+#include <gz/common/Console.hh>
 #include <gz/common/Profiler.hh>
+#include <gz/physics/heightmap/detail/SampleHeightmap.hh>
 
 namespace gz {
 namespace physics {
@@ -36,6 +42,16 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
   const auto *collider = this->ReferenceInterface<CollisionInfo>(_shapeID);
   if (collider)
   {
+    if (collider->heightmap)
+    {
+      // Bullet pads the box of a heightfield and does not move it to the
+      // heights, so compute it.
+      const auto &h = *collider->heightmap;
+      return AlignedBox3d(
+          Eigen::Vector3d(-h.size.x() / 2, -h.size.y() / 2, h.minHeight),
+          Eigen::Vector3d(h.size.x() / 2, h.size.y() / 2,
+              h.minHeight + h.size.z()));
+    }
     btTransform t;
     t.setIdentity();
     btVector3 minBox(0, 0, 0);
@@ -471,6 +487,100 @@ Identity ShapeFeatures::AttachSphereShape(
       std::move(shape),
       _linkID,
       _pose});
+
+  return identity;
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::CastToHeightmapShape(const Identity &_shapeID) const
+{
+  const auto *shapeInfo = this->ReferenceInterface<CollisionInfo>(_shapeID);
+  if (shapeInfo != nullptr && shapeInfo->heightmap)
+    return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
+
+  return this->GenerateInvalidId();
+}
+
+/////////////////////////////////////////////////
+LinearVector3d ShapeFeatures::GetHeightmapShapeSize(
+    const Identity &_heightmapID) const
+{
+  const auto *shapeInfo =
+      this->ReferenceInterface<CollisionInfo>(_heightmapID);
+  if (shapeInfo != nullptr && shapeInfo->heightmap)
+    return shapeInfo->heightmap->size;
+
+  return LinearVector3d::Zero();
+}
+
+/////////////////////////////////////////////////
+Identity ShapeFeatures::AttachHeightmapShape(
+    const Identity &_linkID,
+    const std::string &_name,
+    const common::HeightmapData &_heightmapData,
+    const Pose3d &_pose,
+    const LinearVector3d &_size,
+    int _subSampling)
+{
+  GZ_PROFILE("ShapeFeatures::AttachHeightmapShape");
+  auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
+  auto *worldInfo = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+
+  // Heightmaps are only supported on links that don't move: static, fixed to
+  // the world or welded to a static link by AttachFixedJoint.
+  if (!linkInfo->isStaticOrFixed && !isColliderStatic(linkInfo))
+  {
+    gzerr << "Unable to attach heightmap [" << _name << "] to link ["
+          << linkInfo->name << "]: heightmaps are only supported on links "
+          << "that are static or fixed to the world." << std::endl;
+    return this->GenerateInvalidId();
+  }
+  // Every link has a collider once its model is constructed.
+  assert(linkInfo->collider);
+
+  // Bullet's row 0 is the -y edge.
+  auto sampled = heightmap::detail::SampleHeightmap(
+      _heightmapData, _size, _subSampling, true);
+  if (!sampled)
+  {
+    gzerr << "Unable to attach heightmap [" << _name << "] to link ["
+          << linkInfo->name << "]: failed to sample the heightmap data."
+          << std::endl;
+    return this->GenerateInvalidId();
+  }
+  const int vertSize = static_cast<int>(sampled->vertSize);
+
+  HeightmapInfo heightmap{
+      std::vector<btScalar>(sampled->heights.begin(), sampled->heights.end()),
+      Eigen::Vector3d(_size.x(), _size.y(),
+          static_cast<double>(sampled->maxHeight) - sampled->minHeight),
+      static_cast<double>(sampled->minHeight)};
+
+  // The shape keeps a pointer to the heights, which moving the vector into
+  // the collision below does not change. This constructor reads PHY_FLOAT
+  // data as btScalar.
+  auto shape = std::make_unique<btHeightfieldTerrainShape>(
+      vertSize, vertSize, heightmap.heights.data(), btScalar(1.0),
+      sampled->minHeight, sampled->maxHeight, 2, PHY_FLOAT, false);
+  // The samples span the whole size.
+  shape->setLocalScaling(btVector3(
+      static_cast<btScalar>(_size.x() / (vertSize - 1)),
+      static_cast<btScalar>(_size.y() / (vertSize - 1)), btScalar(1.0)));
+
+  // Bullet centers the heightfield vertically on its middle height.
+  const Eigen::Isometry3d linkFrameToShape = _pose *
+      Eigen::Translation3d(0, 0, heightmap.minHeight + heightmap.size.z() / 2);
+  linkInfo->shape->addChildShape(
+      convertTf(linkInfo->inertiaToLinkFrame * linkFrameToShape), shape.get());
+  worldInfo->world->updateSingleAabb(linkInfo->collider.get());
+
+  btCollisionShape *shapePtr = shape.get();
+  CollisionInfo info{_name, std::move(shape), _linkID, _pose};
+  info.heightmap = std::move(heightmap);
+  const auto identity = this->AddCollision(std::move(info));
+  // Used by GetContactsFromLastStep to find the collision
+  shapePtr->setUserIndex(static_cast<int>(std::size_t(identity)));
 
   return identity;
 }

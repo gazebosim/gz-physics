@@ -16,6 +16,8 @@
 */
 #include <gtest/gtest.h>
 
+#include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <unordered_set>
@@ -393,6 +395,66 @@ TEST_F(CollisionMeshTestFeaturesList, MeshDecomposition)
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.x(), 1e-3);
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.y(), 1e-3);
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.z(), 1e-3);
+  }
+}
+
+using CollisionMeshContactFeaturesList = gz::physics::FeatureList<
+  CollisionMeshFeaturesList, gz::physics::GetContactsFromLastStepFeature>;
+using CollisionMeshContactTest = CollisionTest<CollisionMeshContactFeaturesList>;
+
+// A sphere rests on each of a box and a convex decomposed mesh of a static
+// link. Its contacts are with that collision, not with the link's first one.
+TEST_F(CollisionMeshContactTest, MeshDecompositionAndBoxContacts)
+{
+  const std::string meshUri = gz::physics::test::resources::kVShapeObj;
+  const std::string sdfStr = R"(<sdf version="1.11"><world name="w">
+    <model name="v_shape"><static>true</static><link name="link">
+      <collision name="box"><pose>3 0 0.1 0 0 0</pose>
+        <geometry><box><size>1 1 0.2</size></box></geometry></collision>
+      <collision name="mesh"><geometry>
+        <mesh optimization="convex_decomposition"><uri>)" + meshUri +
+      R"(</uri></mesh></geometry></collision></link></model>
+    <model name="on_mesh"><pose>0 0 1 0 0 0</pose><link name="link">
+      <collision name="c"><geometry><sphere><radius>0.1</radius></sphere>
+      </geometry></collision></link></model>
+    <model name="on_box"><pose>3 0 1 0 0 0</pose><link name="link">
+      <collision name="c"><geometry><sphere><radius>0.1</radius></sphere>
+      </geometry></collision></link></model></world></sdf>)";
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // currently only bullet-featherstone supports mesh decomposition
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+      continue;
+    ASSERT_NE(nullptr, gz::common::MeshManager::Instance()->Load(meshUri));
+    sdf::Root root;
+    ASSERT_TRUE(root.LoadSdfString(sdfStr).empty());
+    auto world = gz::physics::RequestEngine3d<CollisionMeshContactFeaturesList>
+        ::From(this->loader.Instantiate(name))->ConstructWorld(
+            *root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    for (unsigned int i = 0; i < 1000u; ++i)
+      world->Step(output, state, input);
+
+    // Collisions of the V shape model that each sphere touches
+    std::map<std::string, std::set<std::string>> touched;
+    for (const auto &contact : world->GetContactsFromLastStep())
+    {
+      const auto &point = contact.template Get<gz::physics::World3d<
+          CollisionMeshContactFeaturesList>::ContactPoint>();
+      auto shape = point.collision1;
+      auto other = point.collision2;
+      if (shape->GetLink()->GetModel()->GetName() != "v_shape")
+        std::swap(shape, other);
+      touched[other->GetLink()->GetModel()->GetName()].insert(
+          shape->GetName());
+    }
+    EXPECT_EQ(std::set<std::string>{"mesh"}, touched["on_mesh"]);
+    EXPECT_EQ(std::set<std::string>{"box"}, touched["on_box"]);
   }
 }
 
