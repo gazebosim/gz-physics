@@ -12,6 +12,20 @@ release will remove the deprecated code.
 * The macro `GZ_PHYSICS_ENGINE_INSTALL_DIR` has been removed. Use
 `gz::physics::getEngineInstallDir()` instead.
 
+### Additions
+
+* **bullet-featherstone**: the new `KinematicContacts` feature controls whether
+  contacts between kinematic links and static or other kinematic links are
+  detected (`World::SetKinematicContactsEnabled`). They are detected by
+  default, as before. These contacts have no effect on the simulation but are
+  computed on every step for as long as the links overlap, which for kinematic
+  links is forever, so disabling them speeds up worlds with many kinematic
+  links resting in or on static geometry or overlapping each other. While
+  disabled, `//collision/surface/contact/collide_without_contact` set to
+  `true` on a collision keeps the contacts of its kinematic link detected.
+  The element is not supported on dynamic links yet, where it is ignored.
+  Contacts between kinematic and dynamic links are always detected.
+
 ## Gazebo Physics 5.X to 6.X
 
 ### Deprecations
