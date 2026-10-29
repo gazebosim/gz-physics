@@ -5,20 +5,16 @@
 1. bullet-featherstone: kinematic link support
     * [Pull request #1139](https://github.com/gazebosim/gz-physics/pull/1139)
     * [Pull request #1124](https://github.com/gazebosim/gz-physics/pull/1124)
+    * [Pull request #1125](https://github.com/gazebosim/gz-physics/pull/1125)
     * [Pull request #1123](https://github.com/gazebosim/gz-physics/pull/1123)
     * [Pull request #1122](https://github.com/gazebosim/gz-physics/pull/1122)
     * [Pull request #1118](https://github.com/gazebosim/gz-physics/pull/1118)
     * [Pull request #1113](https://github.com/gazebosim/gz-physics/pull/1113)
+    * [Pull request #1112](https://github.com/gazebosim/gz-physics/pull/1112)
     * [Pull request #1105](https://github.com/gazebosim/gz-physics/pull/1105)
-
-1. bullet-featherstone: fix root joint position and velocity
-    * [Pull request #1125](https://github.com/gazebosim/gz-physics/pull/1125)
 
 1. dartsim: validate the dof index in joint features (partial backport of #980)
     * [Pull request #1165](https://github.com/gazebosim/gz-physics/pull/1165)
-
-1. bullet-featherstone: fix velocities of non-base links
-    * [Pull request #1112](https://github.com/gazebosim/gz-physics/pull/1112)
 
 1. Fix dartsim ray intersection test by updating supported collision detector list
     * [Pull request #1126](https://github.com/gazebosim/gz-physics/pull/1126)
