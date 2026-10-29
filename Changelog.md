@@ -1,5 +1,49 @@
 ## Gazebo Physics 8.x
 
+### Gazebo Physics 8.5.0 (2026-10-29)
+
+1. Fix dartsim ray intersection test by updating supported collision detector list
+    * [Pull request #1126](https://github.com/gazebosim/gz-physics/pull/1126)
+
+1. dartsim: use TriMesh in CustomMeshShape for DART 6.20.0
+    * [Pull request #1127](https://github.com/gazebosim/gz-physics/pull/1127)
+
+1. bullet-featherstone: fix 1-based Model GetIndex()
+    * [Pull request #1130](https://github.com/gazebosim/gz-physics/pull/1130)
+
+1. Restore bullet-featherstone joint wrench test
+    * [Pull request #1131](https://github.com/gazebosim/gz-physics/pull/1131)
+
+1. GZ-PROFILE for dartsim
+    * [Pull request #997](https://github.com/gazebosim/gz-physics/pull/997)
+
+1. Use the SPDX identifier Apache-2.0 in the license declaration
+    * [Pull request #1101](https://github.com/gazebosim/gz-physics/pull/1101)
+
+1. Fix dangling references when removing models in tpe plugin
+    * [Pull request #1091](https://github.com/gazebosim/gz-physics/pull/1091)
+
+1. Bazel updates
+    * [Pull request #1069](https://github.com/gazebosim/gz-physics/pull/1069)
+    * [Pull request #1061](https://github.com/gazebosim/gz-physics/pull/1061)
+    * [Pull request #988](https://github.com/gazebosim/gz-physics/pull/988)
+    * [Pull request #989](https://github.com/gazebosim/gz-physics/pull/989)
+
+1. dartsim: Remove redundant incrementVersion() calls after moveTo
+    * [Pull request #1030](https://github.com/gazebosim/gz-physics/pull/1030)
+
+1. Use explicit element overload of Eigen::Vector3d
+    * [Pull request #1043](https://github.com/gazebosim/gz-physics/pull/1043)
+
+1. Backport CPU-lidar raycast (#880, #976) without the NaN->+INF breaking change
+    * [Pull request #1027](https://github.com/gazebosim/gz-physics/pull/1027)
+
+1. GZ-PROFILE for bullet-featherstone
+    * [Pull request #996](https://github.com/gazebosim/gz-physics/pull/996)
+
+1. Clarify deferred DART mesh construction logs
+    * [Pull request #1035](https://github.com/gazebosim/gz-physics/pull/1035)
+
 ## Gazebo Physics 8.4.0
 
 1. Remove hash map allocation on every update step (backport #1005)
