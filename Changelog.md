@@ -2,29 +2,20 @@
 
 ### Gazebo Physics 9.6.0 (2026-10-29)
 
-1. bullet-featherstone: broadphase filter for kinematic links
+1. bullet-featherstone: kinematic link support
     * [Pull request #1139](https://github.com/gazebosim/gz-physics/pull/1139)
-
-1. bullet-featherstone: lock kinematic joints that hold dynamic links
     * [Pull request #1124](https://github.com/gazebosim/gz-physics/pull/1124)
+    * [Pull request #1123](https://github.com/gazebosim/gz-physics/pull/1123)
+    * [Pull request #1122](https://github.com/gazebosim/gz-physics/pull/1122)
+    * [Pull request #1118](https://github.com/gazebosim/gz-physics/pull/1118)
+    * [Pull request #1113](https://github.com/gazebosim/gz-physics/pull/1113)
+    * [Pull request #1105](https://github.com/gazebosim/gz-physics/pull/1105)
 
 1. bullet-featherstone: fix root joint position and velocity
     * [Pull request #1125](https://github.com/gazebosim/gz-physics/pull/1125)
 
 1. dartsim: validate the dof index in joint features (partial backport of #980)
     * [Pull request #1165](https://github.com/gazebosim/gz-physics/pull/1165)
-
-1. bullet-featherstone: kinematic base velocity for links with a CoM offset
-    * [Pull request #1123](https://github.com/gazebosim/gz-physics/pull/1123)
-
-1. bullet-featherstone: fix toggling links between kinematic and dynamic
-    * [Pull request #1122](https://github.com/gazebosim/gz-physics/pull/1122)
-
-1. bullet-featherstone: enforce position limits on kinematically driven joints
-    * [Pull request #1118](https://github.com/gazebosim/gz-physics/pull/1118)
-
-1. bullet-featherstone: support kinematic links in multi-link models
-    * [Pull request #1113](https://github.com/gazebosim/gz-physics/pull/1113)
 
 1. bullet-featherstone: fix velocities of non-base links
     * [Pull request #1112](https://github.com/gazebosim/gz-physics/pull/1112)
@@ -40,9 +31,6 @@
 
 1. Restore bullet-featherstone joint wrench test
     * [Pull request #1131](https://github.com/gazebosim/gz-physics/pull/1131)
-
-1. Implement kinematic velocity commands in bullet-featherstone
-    * [Pull request #1105](https://github.com/gazebosim/gz-physics/pull/1105)
 
 1. GZ-PROFILE for dartsim
     * [Pull request #997](https://github.com/gazebosim/gz-physics/pull/997)
