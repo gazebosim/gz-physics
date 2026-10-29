@@ -1,5 +1,39 @@
 ## Gazebo Physics 9.x
 
+### Gazebo Physics 9.6.0 (2026-10-29)
+
+1. bullet-featherstone: kinematic link support
+    * [Pull request #1139](https://github.com/gazebosim/gz-physics/pull/1139)
+    * [Pull request #1124](https://github.com/gazebosim/gz-physics/pull/1124)
+    * [Pull request #1125](https://github.com/gazebosim/gz-physics/pull/1125)
+    * [Pull request #1123](https://github.com/gazebosim/gz-physics/pull/1123)
+    * [Pull request #1122](https://github.com/gazebosim/gz-physics/pull/1122)
+    * [Pull request #1118](https://github.com/gazebosim/gz-physics/pull/1118)
+    * [Pull request #1113](https://github.com/gazebosim/gz-physics/pull/1113)
+    * [Pull request #1112](https://github.com/gazebosim/gz-physics/pull/1112)
+    * [Pull request #1105](https://github.com/gazebosim/gz-physics/pull/1105)
+
+1. dartsim: validate the dof index in joint features (partial backport of #980)
+    * [Pull request #1165](https://github.com/gazebosim/gz-physics/pull/1165)
+
+1. Fix dartsim ray intersection test by updating supported collision detector list
+    * [Pull request #1126](https://github.com/gazebosim/gz-physics/pull/1126)
+
+1. dartsim: use TriMesh in CustomMeshShape for DART 6.20.0
+    * [Pull request #1127](https://github.com/gazebosim/gz-physics/pull/1127)
+
+1. bullet-featherstone: fix 1-based Model GetIndex()
+    * [Pull request #1130](https://github.com/gazebosim/gz-physics/pull/1130)
+
+1. Restore bullet-featherstone joint wrench test
+    * [Pull request #1131](https://github.com/gazebosim/gz-physics/pull/1131)
+
+1. GZ-PROFILE for dartsim
+    * [Pull request #997](https://github.com/gazebosim/gz-physics/pull/997)
+
+1. Use the SPDX identifier Apache-2.0 in the license declaration
+    * [Pull request #1101](https://github.com/gazebosim/gz-physics/pull/1101)
+
 ### Gazebo Physics 9.5.2 (2026-09-28)
 
 1. Fix dangling references when removing models in tpe plugin
