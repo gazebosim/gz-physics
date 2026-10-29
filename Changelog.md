@@ -1,5 +1,19 @@
 ## Ignition Physics 5.x
 
+### Ignition Physics 5.4.1 (2026-10-29)
+
+1. Fix dangling references when removing models in tpe plugin
+    * [Pull request #1096](https://github.com/gazebosim/gz-physics/pull/1096)
+
+1. Fix building tests when using a custom install location
+    * [Pull request #1017](https://github.com/gazebosim/gz-physics/pull/1017)
+
+1. Use portable shebang for bash scripts
+    * [Pull request #933](https://github.com/gazebosim/gz-physics/pull/933)
+
+1. Optimize build: Modernize codebase with fold expressions and `std::void_t` (Part 1)
+    * [Pull request #916](https://github.com/gazebosim/gz-physics/pull/916)
+
 ### Ignition Physics 5.4.0 (2026-01-29)
 
 1. Relax tolerances for failing tests on arm64
