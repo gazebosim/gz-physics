@@ -375,7 +375,7 @@ bool EntityManagementFeatures::RemoveModelByIndex(
         this->indexInContainerToId(_worldID.id, _modelIndex, this->models);
     if (modelInfo != nullptr)
     {
-      this->RemoveModelImpl(modelId);
+      return this->RemoveModelImpl(modelId);
     }
   }
   return false;
@@ -390,7 +390,7 @@ bool EntityManagementFeatures::RemoveModelByName(
   {
     std::size_t modelId =
       worldInfo->world->GetChildByName(_modelName).GetId();
-    this->RemoveModelImpl(modelId);
+    return this->RemoveModelImpl(modelId);
   }
   return false;
 }
