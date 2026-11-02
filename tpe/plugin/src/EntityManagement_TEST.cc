@@ -129,13 +129,13 @@ TEST(EntityManagement_TEST, RemoveEntities)
   auto model2 = world->ConstructEmptyModel("model2");
   ASSERT_NE(nullptr, model2);
   EXPECT_EQ(0ul, model2->GetIndex());
-  world->RemoveModel(0);
+  EXPECT_TRUE(world->RemoveModel(0));
   EXPECT_EQ(0ul, world->GetModelCount());
 
   auto model3 = world->ConstructEmptyModel("model 3");
   ASSERT_NE(nullptr, model3);
   EXPECT_EQ(1u, world->GetModelCount());
-  world->RemoveModel("model 3");
+  EXPECT_TRUE(world->RemoveModel("model 3"));
   EXPECT_EQ(0ul, world->GetModelCount());
   EXPECT_EQ(nullptr, world->GetModel("model 3"));
 
