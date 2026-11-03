@@ -1420,18 +1420,20 @@ bool SDFFeatures::AddSdfCollision(
         btVector3(static_cast<btScalar>(mu), static_cast<btScalar>(mu2), 1),
         btCollisionObject::CF_ANISOTROPIC_FRICTION);
 
-      if (kp.has_value() || kd.has_value())
-      {
-        linkInfo->collider->setContactStiffnessAndDamping(
-          static_cast<btScalar>(kp.value_or(1e12)),
-          static_cast<btScalar>(kd.value_or(1.0)));
-      }
-      else if (geom->MeshShape())
+      if (geom->MeshShape())
       {
         // Set meshes to use softer contacts for stability
         const btScalar meshKp = btScalar(1e15);
         const btScalar meshKd = btScalar(1e14);
         linkInfo->collider->setContactStiffnessAndDamping(meshKp, meshKd);
+      }
+      if (kp.has_value() || kd.has_value())
+      {
+        linkInfo->collider->setContactStiffnessAndDamping(
+          static_cast<btScalar>(
+            kp.value_or(linkInfo->collider->getContactStiffness())),
+          static_cast<btScalar>(
+            kd.value_or(linkInfo->collider->getContactDamping())));
       }
     }
     else if (linkInfo->shape)
@@ -1440,8 +1442,10 @@ bool SDFFeatures::AddSdfCollision(
       if (kp.has_value() || kd.has_value())
       {
         linkInfo->collider->setContactStiffnessAndDamping(
-          static_cast<btScalar>(kp.value_or(1e12)),
-          static_cast<btScalar>(kd.value_or(1.0)));
+          static_cast<btScalar>(
+            kp.value_or(linkInfo->collider->getContactStiffness())),
+          static_cast<btScalar>(
+            kd.value_or(linkInfo->collider->getContactDamping())));
       }
     }
     else
