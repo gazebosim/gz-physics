@@ -1,5 +1,13 @@
 ## Gazebo Physics 9.x
 
+### Gazebo Physics 9.6.1 (2026-11-04)
+
+1. Read sdf kp / kd for bullet-featherstone
+    * [Pull request #1176](https://github.com/gazebosim/gz-physics/pull/1176)
+
+1. Fix TPE RemoveModel return values
+    * [Pull request #1172](https://github.com/gazebosim/gz-physics/pull/1172)
+
 ### Gazebo Physics 9.6.0 (2026-10-29)
 
 1. bullet-featherstone: kinematic link support
