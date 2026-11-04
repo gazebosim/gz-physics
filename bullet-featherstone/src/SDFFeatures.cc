@@ -1439,14 +1439,6 @@ bool SDFFeatures::AddSdfCollision(
     else if (linkInfo->shape)
     {
       linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
-      if (kp.has_value() || kd.has_value())
-      {
-        linkInfo->collider->setContactStiffnessAndDamping(
-          static_cast<btScalar>(
-            kp.value_or(linkInfo->collider->getContactStiffness())),
-          static_cast<btScalar>(
-            kd.value_or(linkInfo->collider->getContactDamping())));
-      }
     }
     else
     {
