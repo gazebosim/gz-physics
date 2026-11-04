@@ -616,6 +616,126 @@ TEST_F(CollisionStaticTestFeaturesList, StaticCollisionsWithFixedBaseMovingLink)
   }
 }
 
+TEST_F(CollisionMeshTestFeaturesList, ContactSurfaceBulletKpKd)
+{
+  auto getSphereStr = [](const std::string &_name,
+                         const gz::math::Pose3d &_pose,
+                         const std::string &_contactXml)
+  {
+    std::stringstream modelStr;
+    modelStr << R"(
+    <sdf version="1.11">
+      <model name=")" << _name << R"(">
+        <pose>)" << _pose << R"(</pose>
+        <link name="body">
+          <inertial>
+            <mass>10.0</mass>
+            <inertia>
+              <ixx>1.0</ixx>
+              <iyy>1.0</iyy>
+              <izz>1.0</izz>
+            </inertia>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <sphere><radius>0.5</radius></sphere>
+            </geometry>
+            <surface>
+              <contact>)" << _contactXml << R"(</contact>
+            </surface>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+    return modelStr.str();
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+      continue;
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    sdf::Root rootWorld;
+    const sdf::Errors errorsWorld =
+        rootWorld.Load(common_test::worlds::kGroundSdf);
+    ASSERT_TRUE(errorsWorld.empty()) << errorsWorld.front();
+
+    auto engine =
+        gz::physics::RequestEngine3d<CollisionMeshFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = engine->ConstructWorld(*rootWorld.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    // 1. Soft bullet contact: kp = 1000, kd = 100
+    {
+      sdf::Root root;
+      sdf::Errors errors = root.LoadSdfString(getSphereStr(
+          "sphere_soft_bullet",
+          gz::math::Pose3d(0, 0, 0.5, 0, 0, 0),
+          "<bullet><kp>1000</kp><kd>100</kd></bullet>"));
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+    }
+
+    // 2. Stiff bullet contact: kp = 100000, kd = 100
+    {
+      sdf::Root root;
+      sdf::Errors errors = root.LoadSdfString(getSphereStr(
+          "sphere_stiff_bullet",
+          gz::math::Pose3d(2, 0, 0.5, 0, 0, 0),
+          "<bullet><kp>100000</kp><kd>100</kd></bullet>"));
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+    }
+
+    // 3. ODE contact tag only (should not be parsed by bullet-featherstone)
+    {
+      sdf::Root root;
+      sdf::Errors errors = root.LoadSdfString(getSphereStr(
+          "sphere_ode_only",
+          gz::math::Pose3d(4, 0, 0.5, 0, 0, 0),
+          "<ode><kp>1000</kp><kd>100</kd></ode>"));
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+    }
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    for (std::size_t i = 0; i < 2000; ++i)
+    {
+      world->Step(output, state, input);
+    }
+
+    auto softBody = world->GetModel("sphere_soft_bullet")->GetLink("body");
+    auto stiffBody = world->GetModel("sphere_stiff_bullet")->GetLink("body");
+    auto odeBody = world->GetModel("sphere_ode_only")->GetLink("body");
+
+    const double zSoft =
+        softBody->FrameDataRelativeToWorld().pose.translation().z();
+    const double zStiff =
+        stiffBody->FrameDataRelativeToWorld().pose.translation().z();
+    const double zOde =
+        odeBody->FrameDataRelativeToWorld().pose.translation().z();
+
+    // Steady-state penetration under mg = 10 * 9.8 = 98 N is mg / kp:
+    // - soft (kp = 1000): penetration ~ 0.098 m -> z ~ 0.402 m
+    // - stiff (kp = 100000): penetration ~ 0.00098 m -> z ~ 0.499 m
+    // - ode-only: ignored by bullet-featherstone -> z ~ 0.500 m
+    EXPECT_NEAR(0.402, zSoft, 1e-2);
+    EXPECT_NEAR(0.499, zStiff, 5e-3);
+    EXPECT_NEAR(0.500, zOde, 5e-3);
+    EXPECT_LT(zSoft + 0.08, zStiff);
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
