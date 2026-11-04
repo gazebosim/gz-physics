@@ -265,8 +265,15 @@ void JointFeatures::SetJointForce(
   const auto *model = this->ReferenceInterface<ModelInfo>(joint->model);
   auto *world = this->ReferenceInterface<WorldInfo>(model->world);
 
-  // Disable velocity control by removing joint motor constraint
-  if (joint->motor)
+  // Disable velocity control on this DOF by removing its joint motor constraint
+  auto motorIt = joint->motors.find(_dof);
+  if (motorIt != joint->motors.end())
+  {
+    if (motorIt->second)
+      world->world->removeMultiBodyConstraint(motorIt->second.get());
+    joint->motors.erase(motorIt);
+  }
+  if (_dof == 0 && joint->motor)
   {
     world->world->removeMultiBodyConstraint(joint->motor.get());
     joint->motor.reset();
@@ -274,7 +281,7 @@ void JointFeatures::SetJointForce(
 
   // clamp the values
   double force = std::clamp(_value,
-      joint->minEffort, joint->maxEffort);
+      joint->GetMinEffort(_dof), joint->GetMaxEffort(_dof));
 
   model->body->getJointTorqueMultiDof(
       std::get<InternalJoint>(joint->identifier).indexInBtModel)[_dof] =
@@ -434,7 +441,7 @@ void JointFeatures::SetJointVelocityCommand(
 
   // clamp the values
   double velocity = std::clamp(_value,
-      jointInfo->minVelocity, jointInfo->maxVelocity);
+      jointInfo->GetMinVelocity(_dof), jointInfo->GetMaxVelocity(_dof));
 
   const auto *identifier = std::get_if<InternalJoint>(&jointInfo->identifier);
   if (identifier &&
@@ -453,23 +460,37 @@ void JointFeatures::SetJointVelocityCommand(
     return;
   }
 
-  if (!jointInfo->motor)
+  auto motorIt = jointInfo->motors.find(_dof);
+  if (_dof == 0 && (motorIt == jointInfo->motors.end() || !motorIt->second) &&
+      jointInfo->motor)
+  {
+    jointInfo->motors[0] = jointInfo->motor;
+    motorIt = jointInfo->motors.find(0);
+  }
+
+  if (motorIt == jointInfo->motors.end() || !motorIt->second)
   {
     auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
     // \todo(iche033) The motor constraint is created with a max impulse
     // computed by maxEffort * stepsize. However, our API supports
     // stepping sim with varying dt. We should recompute max impulse
     // if stepSize changes.
-    jointInfo->motor = std::make_shared<btMultiBodyJointMotor>(
+    auto motor = std::make_shared<GzMultiBodyJointMotor>(
       modelInfo->body.get(),
       std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
-      0,
+      static_cast<int>(_dof),
       static_cast<btScalar>(0),
-      static_cast<btScalar>(jointInfo->maxEffort * world->stepSize));
-    world->world->addMultiBodyConstraint(jointInfo->motor.get());
+      static_cast<btScalar>(jointInfo->GetMaxEffort(_dof) * world->stepSize));
+    world->world->addMultiBodyConstraint(motor.get());
+    jointInfo->motors[_dof] = motor;
+    if (_dof == 0)
+    {
+      jointInfo->motor = motor;
+    }
+    motorIt = jointInfo->motors.find(_dof);
   }
 
-  jointInfo->motor->setVelocityTarget(static_cast<btScalar>(velocity));
+  motorIt->second->setVelocityTarget(static_cast<btScalar>(velocity));
   modelInfo->body->wakeUp();
 }
 
@@ -516,6 +537,9 @@ void JointFeatures::SetJointMaxPosition(
 void JointFeatures::SetJointMinVelocity(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  if (!this->ValidateDofParam(_id, _dof))
+    return;
+
   auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
   if (std::isnan(_value))
   {
@@ -525,13 +549,18 @@ void JointFeatures::SetJointMinVelocity(
     return;
   }
 
-  jointInfo->minVelocity = _value;
+  jointInfo->minVelocityMap[_dof] = _value;
+  if (_dof == 0)
+    jointInfo->minVelocity = _value;
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMaxVelocity(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  if (!this->ValidateDofParam(_id, _dof))
+    return;
+
   auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
   if (std::isnan(_value))
   {
@@ -541,13 +570,18 @@ void JointFeatures::SetJointMaxVelocity(
     return;
   }
 
-  jointInfo->maxVelocity = _value;
+  jointInfo->maxVelocityMap[_dof] = _value;
+  if (_dof == 0)
+    jointInfo->maxVelocity = _value;
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMinEffort(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  if (!this->ValidateDofParam(_id, _dof))
+    return;
+
   auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
   if (std::isnan(_value))
   {
@@ -558,13 +592,18 @@ void JointFeatures::SetJointMinEffort(
     return;
   }
 
-  jointInfo->minEffort = _value;
+  jointInfo->minEffortMap[_dof] = _value;
+  if (_dof == 0)
+    jointInfo->minEffort = _value;
 }
 
 /////////////////////////////////////////////////
 void JointFeatures::SetJointMaxEffort(
     const Identity &_id, std::size_t _dof, double _value)
 {
+  if (!this->ValidateDofParam(_id, _dof))
+    return;
+
   auto *jointInfo = this->ReferenceInterface<JointInfo>(_id);
   if (std::isnan(_value))
   {
@@ -578,24 +617,39 @@ void JointFeatures::SetJointMaxEffort(
   if (!identifier)
     return;
 
-  jointInfo->maxEffort = _value;
+  jointInfo->maxEffortMap[_dof] = _value;
+  if (_dof == 0)
+    jointInfo->maxEffort = _value;
 
   auto *modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
   auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
 
-  if (jointInfo->motor)
+  auto motorIt = jointInfo->motors.find(_dof);
+  if (_dof == 0 && (motorIt == jointInfo->motors.end() || !motorIt->second) &&
+      jointInfo->motor)
   {
-    world->world->removeMultiBodyConstraint(jointInfo->motor.get());
-    jointInfo->motor.reset();
+    jointInfo->motors[0] = jointInfo->motor;
+    motorIt = jointInfo->motors.find(0);
   }
 
-  jointInfo->motor = std::make_shared<btMultiBodyJointMotor>(
+  if (motorIt != jointInfo->motors.end() && motorIt->second)
+  {
+    world->world->removeMultiBodyConstraint(motorIt->second.get());
+    motorIt->second.reset();
+  }
+
+  auto motor = std::make_shared<GzMultiBodyJointMotor>(
     modelInfo->body.get(),
     std::get<InternalJoint>(jointInfo->identifier).indexInBtModel,
-    0,
+    static_cast<int>(_dof),
     static_cast<btScalar>(0),
-    static_cast<btScalar>(jointInfo->maxEffort * world->stepSize));
-  world->world->addMultiBodyConstraint(jointInfo->motor.get());
+    static_cast<btScalar>(_value * world->stepSize));
+  world->world->addMultiBodyConstraint(motor.get());
+  jointInfo->motors[_dof] = motor;
+  if (_dof == 0)
+  {
+    jointInfo->motor = motor;
+  }
 }
 
 /////////////////////////////////////////////////
@@ -756,7 +810,7 @@ Wrench3d JointFeatures::GetJointTransmittedWrenchInJointFrame(
   // If a constraint is used to move the joint, e.g motor constraint,
   // account for the applied constraint forces and torques.
   // \todo(iche033) Check whether this is also needed for gearbox constraint
-  if (jointInfo->motor)
+  if (jointInfo->motor || !jointInfo->motors.empty())
   {
     auto linkInfo = this->ReferenceInterface<LinkInfo>(
         jointInfo->childLinkID);
