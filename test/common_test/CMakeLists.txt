@@ -14,6 +14,7 @@ set(tests
   joint_transmitted_wrench_features
   kinematic_features
   link_features
+  model_features
   shape_features
   simulation_features
   world_features
@@ -89,6 +90,16 @@ foreach(test ${tests})
 
   if (DART_HAS_CONTACT_SURFACE_HEADER)
     target_compile_definitions(${test_executable} PRIVATE DART_HAS_CONTACT_SURFACE)
+  endif()
+
+  # DART >= 6.20.0 ships a complete native "dart" collision detector
+  # (DARTCollisionDetector) which, among other things, supports raycast
+  # queries. Older versions only support raycasts with the bullet and ode
+  # collision detectors.
+  if (DART_VERSION VERSION_GREATER_EQUAL 6.20.0)
+    target_compile_definitions(${test_executable} PRIVATE
+      "DART_HAS_DART_COLLISION_DETECTOR"
+    )
   endif()
 
   if (APPLE)

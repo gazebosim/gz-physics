@@ -22,6 +22,8 @@
 #include <string>
 #include <utility>
 
+#include <gz/common/Profiler.hh>
+
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
@@ -30,6 +32,7 @@ namespace bullet_featherstone {
 AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
     const Identity &_shapeID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetShapeAxisAlignedBoundingBox");
   const auto *collider = this->ReferenceInterface<CollisionInfo>(_shapeID);
   if (collider)
   {
@@ -53,7 +56,7 @@ Identity ShapeFeatures::CastToBoxShape(
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btBoxShape*>(shape.get()))
+    if (shape->getShapeType() == BOX_SHAPE_PROXYTYPE)
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 
@@ -64,6 +67,7 @@ Identity ShapeFeatures::CastToBoxShape(
 LinearVector3d ShapeFeatures::GetBoxShapeSize(
       const Identity &_boxID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetBoxShapeSize");
   // _boxID ~= _collisionID
   auto it = this->collisions.find(_boxID);
   if (it != this->collisions.end() && it->second != nullptr)
@@ -86,6 +90,7 @@ Identity ShapeFeatures::AttachBoxShape(
       const LinearVector3d &_size,
       const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::AttachBoxShape");
   const btVector3 halfExtents = convertVec(_size * 0.5);
   std::unique_ptr<btCollisionShape> shape =
     std::make_unique<btBoxShape>(halfExtents);
@@ -107,7 +112,8 @@ Identity ShapeFeatures::CastToCapsuleShape(const Identity &_shapeID) const
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btCapsuleShapeZ*>(shape.get()))
+    if (shape->getShapeType() == CAPSULE_SHAPE_PROXYTYPE &&
+        static_cast<const btCapsuleShape*>(shape.get())->getUpAxis() == 2)
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 
@@ -118,6 +124,7 @@ Identity ShapeFeatures::CastToCapsuleShape(const Identity &_shapeID) const
 double ShapeFeatures::GetCapsuleShapeRadius(
     const Identity &_capsuleID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetCapsuleShapeRadius");
   auto it = this->collisions.find(_capsuleID);
   if (it != this->collisions.end() && it->second != nullptr)
   {
@@ -139,6 +146,7 @@ double ShapeFeatures::GetCapsuleShapeRadius(
 double ShapeFeatures::GetCapsuleShapeLength(
     const Identity &_capsuleID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetCapsuleShapeLength");
   auto it = this->collisions.find(_capsuleID);
   if (it != this->collisions.end() && it->second != nullptr)
   {
@@ -164,6 +172,7 @@ Identity ShapeFeatures::AttachCapsuleShape(
     const double _length,
     const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::AttachCapsuleShape");
   auto shape = std::make_unique<btCapsuleShapeZ>(
       static_cast<btScalar>(_radius), static_cast<btScalar>(_length / 2));
 
@@ -184,7 +193,7 @@ Identity ShapeFeatures::CastToConeShape(const Identity &_shapeID) const
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btConeShape*>(shape.get()))
+    if (shape->getShapeType() == CONE_SHAPE_PROXYTYPE)
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 
@@ -195,6 +204,7 @@ Identity ShapeFeatures::CastToConeShape(const Identity &_shapeID) const
 double ShapeFeatures::GetConeShapeRadius(
     const Identity &_coneID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetConeShapeRadius");
   auto it = this->collisions.find(_coneID);
   if (it != this->collisions.end() && it->second != nullptr)
   {
@@ -216,6 +226,7 @@ double ShapeFeatures::GetConeShapeRadius(
 double ShapeFeatures::GetConeShapeHeight(
     const Identity &_coneID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetConeShapeHeight");
   auto it = this->collisions.find(_coneID);
   if (it != this->collisions.end() && it->second != nullptr)
   {
@@ -241,6 +252,7 @@ Identity ShapeFeatures::AttachConeShape(
     const double _height,
     const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::AttachConeShape");
   const auto radius = static_cast<btScalar>(_radius);
   const auto height = static_cast<btScalar>(_height);
   auto shape =
@@ -264,7 +276,7 @@ Identity ShapeFeatures::CastToCylinderShape(const Identity &_shapeID) const
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btCylinderShape*>(shape.get()))
+    if (shape->getShapeType() == CYLINDER_SHAPE_PROXYTYPE)
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 
@@ -275,6 +287,7 @@ Identity ShapeFeatures::CastToCylinderShape(const Identity &_shapeID) const
 double ShapeFeatures::GetCylinderShapeRadius(
     const Identity &_cylinderID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetCylinderShapeRadius");
   auto it = this->collisions.find(_cylinderID);
   if (it != this->collisions.end() && it->second != nullptr)
   {
@@ -296,6 +309,7 @@ double ShapeFeatures::GetCylinderShapeRadius(
 double ShapeFeatures::GetCylinderShapeHeight(
     const Identity &_cylinderID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetCylinderShapeHeight");
   auto it = this->collisions.find(_cylinderID);
   if (it != this->collisions.end() && it->second != nullptr)
   {
@@ -321,6 +335,7 @@ Identity ShapeFeatures::AttachCylinderShape(
     const double _height,
     const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::AttachCylinderShape");
   const auto radius = static_cast<btScalar>(_radius);
   const auto halfLength = static_cast<btScalar>(_height * 0.5);
   auto shape =
@@ -344,7 +359,7 @@ Identity ShapeFeatures::CastToEllipsoidShape(const Identity &_shapeID) const
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btCompoundShape*>(shape.get()))
+    if (shape->getShapeType() == COMPOUND_SHAPE_PROXYTYPE)
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 
@@ -355,6 +370,7 @@ Identity ShapeFeatures::CastToEllipsoidShape(const Identity &_shapeID) const
 Vector3d ShapeFeatures::GetEllipsoidShapeRadii(
     const Identity &_ellipsoidID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetEllipsoidShapeRadii");
   auto it = this->collisions.find(_ellipsoidID);
   if (it != this->collisions.end() && it->second != nullptr)
   {
@@ -383,6 +399,7 @@ Identity ShapeFeatures::AttachEllipsoidShape(
     const Vector3d &_radii,
     const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::AttachEllipsoidShape");
   btVector3 positions[1];
   btScalar radius[1];
   positions[0] = btVector3(0, 0, 0);
@@ -410,7 +427,7 @@ Identity ShapeFeatures::CastToSphereShape(
   if (shapeInfo != nullptr)
   {
     const auto &shape = shapeInfo->collider;
-    if (dynamic_cast<btSphereShape*>(shape.get()))
+    if (shape->getShapeType() == SPHERE_SHAPE_PROXYTYPE)
       return this->GenerateIdentity(_shapeID, this->Reference(_shapeID));
   }
 
@@ -420,6 +437,7 @@ Identity ShapeFeatures::CastToSphereShape(
 /////////////////////////////////////////////////
 double ShapeFeatures::GetSphereShapeRadius(const Identity &_sphereID) const
 {
+  GZ_PROFILE("ShapeFeatures::GetSphereShapeRadius");
   auto it = this->collisions.find(_sphereID);
   if (it != this->collisions.end() && it->second != nullptr)
   {
@@ -443,6 +461,7 @@ Identity ShapeFeatures::AttachSphereShape(
     const double _radius,
     const Pose3d &_pose)
 {
+  GZ_PROFILE("ShapeFeatures::AttachSphereShape");
   std::unique_ptr<btCollisionShape> shape =
     std::make_unique<btSphereShape>(static_cast<btScalar>(_radius));
 

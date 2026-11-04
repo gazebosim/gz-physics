@@ -16,9 +16,12 @@
 */
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <set>
 #include <sstream>
 #include <string>
+#include <vector>
+#include <unordered_map>
 #include <unordered_set>
 
 #include <gz/common/Console.hh>
@@ -45,6 +48,7 @@
 #include <gz/physics/FreeGroup.hh>
 #include <gz/physics/GetBoundingBox.hh>
 #include <gz/physics/GetContacts.hh>
+#include <gz/physics/GetBatchRayIntersection.hh>
 #include <gz/physics/GetRayIntersection.hh>
 #include <gz/physics/Joint.hh>
 #include "gz/physics/SphereShape.hh"
@@ -218,12 +222,37 @@ TYPED_TEST(SimulationFeaturesContactsTest, Contacts)
       this->loader,
       name,
       common_test::worlds::kShapesWorld);
-    auto checkedOutput = StepWorld<FeaturesContacts>(world, true, 1).first;
+
+    // Step for contact data to be populated
+    auto checkedOutput = StepWorld<FeaturesContacts>(world, true, 5).first;
     EXPECT_TRUE(checkedOutput);
 
     auto contacts = world->GetContactsFromLastStep();
     // Large box collides with other shapes
     EXPECT_NE(0u, contacts.size());
+
+    // TPE does not support generate contact force, normal, depth data.
+    if (this->PhysicsEngineName(name) == "tpe") continue;
+
+    bool checkedForces = false;
+    for (const auto &contact : contacts)
+    {
+      const auto *extraContactData =
+          contact.template Query<
+              gz::physics::World3d<FeaturesContacts>::ExtraContactData>();
+      ASSERT_NE(nullptr, extraContactData);
+      EXPECT_FALSE(extraContactData->normal.isZero());
+      EXPECT_GE(extraContactData->depth, 0.0);
+
+      // check that force and normal are in the same direction if force is
+      // non-zero
+      if (!extraContactData->force.isZero())
+      {
+        EXPECT_GT(extraContactData->force.dot(extraContactData->normal), 0.0);
+        checkedForces = true;
+      }
+    }
+    EXPECT_TRUE(checkedForces);
   }
 }
 
@@ -467,7 +496,7 @@ TYPED_TEST(SimulationFeaturesFallingTest, Falling)
         { return _wPose.body == link->EntityID(); });
     ASSERT_NE(poseIt, worldPoses.end());
     auto pos = poseIt->pose.Pos();
-    EXPECT_NEAR(pos.Z(), 1.0, 5e-2);
+    EXPECT_NEAR(pos.Z(), 1.0, 5e-2) << "link: " << link->EntityID();
   }
 }
 
@@ -1183,11 +1212,13 @@ TYPED_TEST(SimulationFeaturesTestFreeGroup, FreeGroup)
 
     // model free group test
     auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
     auto freeGroup = model->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroup);
     ASSERT_NE(nullptr, freeGroup->RootLink());
 
     auto link = model->GetLink("sphere_link");
+    ASSERT_NE(nullptr, link);
     auto freeGroupLink = link->FindFreeGroup();
     ASSERT_NE(nullptr, freeGroupLink);
 
@@ -1340,15 +1371,35 @@ TEST_F(SimulationFeaturesCollisionFilter, CollideBitmasks)
     auto filteredBox = world->GetModel("box_filtered");
     auto collidingBox = world->GetModel("box_colliding");
 
+    auto collidingShape = collidingBox->GetLink(0)->GetShape(0);
+    auto filteredShape = filteredBox->GetLink(0)->GetShape(0);
+    auto baseShape = baseBox->GetLink(0)->GetShape(0);
+    EXPECT_EQ(0x01, baseShape->GetCollisionFilterMask());
+    EXPECT_EQ(0x02, filteredShape->GetCollisionFilterMask());
+    EXPECT_EQ(0x03, collidingShape->GetCollisionFilterMask());
     auto checkedOutput = StepWorld<FeaturesCollisionFilter>(world, true).first;
     EXPECT_TRUE(checkedOutput);
     auto contacts = world->GetContactsFromLastStep();
     // Only box_colliding should collide with box_base
     EXPECT_NE(0u, contacts.size());
+    for (auto &contact : contacts)
+    {
+      const auto &contactPoint = contact.template Get<
+          gz::physics::World3d<FeaturesCollisionFilter>::ContactPoint>();
+      ASSERT_TRUE(contactPoint.collision1);
+      ASSERT_TRUE(contactPoint.collision2);
+      EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
+      auto c1 = contactPoint.collision1;
+      auto c2 = contactPoint.collision2;
+      auto m1 = c1->GetLink()->GetModel();
+      auto m2 = c2->GetLink()->GetModel();
+      EXPECT_TRUE(m1->GetName() == "box_base" ||
+                  m1->GetName() == "box_colliding");
+      EXPECT_TRUE(m2->GetName() == "box_base" ||
+                  m2->GetName() == "box_colliding");
+    }
 
     // Now disable collisions for the colliding box as well
-    auto collidingShape = collidingBox->GetLink(0)->GetShape(0);
-    auto filteredShape = filteredBox->GetLink(0)->GetShape(0);
     collidingShape->SetCollisionFilterMask(0xF0);
     // Also test the getter
     EXPECT_EQ(0xF0, collidingShape->GetCollisionFilterMask());
@@ -1370,6 +1421,153 @@ TEST_F(SimulationFeaturesCollisionFilter, CollideBitmasks)
   }
 }
 
+using FeaturesCategoryFilter =  gz::physics::FeatureList<
+  FeaturesCollisionFilter,
+  gz::physics::CategoryFilterMaskFeature
+>;
+
+using SimulationFeaturesCategoryFilter =
+    SimulationFeaturesTest<FeaturesCategoryFilter>;
+
+TEST_F(SimulationFeaturesCategoryFilter, CategoryBitmasks)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // World consists of 2 category A shapes, 2 category B shapes,
+    // and 1 category C shape. The shapes in the same category
+    // should not collide with each other.
+    auto world = LoadPluginAndWorld<FeaturesCategoryFilter>(
+      this->loader,
+      name,
+      common_test::worlds::kShapesCategoryBitmaskWorld);
+
+    auto categoryABox0 = world->GetModel("category_a_box_0");
+    auto categoryABox1 = world->GetModel("category_a_box_1");
+    auto categoryBBox0 = world->GetModel("category_b_box_0");
+    auto categoryBBox1 = world->GetModel("category_b_box_1");
+    auto categoryCBox0 = world->GetModel("category_c_box_0");
+
+    auto categoryABox0Shape = categoryABox0->GetLink(0)->GetShape(0);
+    auto categoryABox1Shape = categoryABox1->GetLink(0)->GetShape(0);
+    auto categoryBBox0Shape = categoryBBox0->GetLink(0)->GetShape(0);
+    auto categoryBBox1Shape = categoryBBox1->GetLink(0)->GetShape(0);
+    auto categoryCBox0Shape = categoryCBox0->GetLink(0)->GetShape(0);
+
+    EXPECT_EQ(1, categoryABox0Shape->GetCategoryFilterMask());
+    EXPECT_EQ(6, categoryABox0Shape->GetCollisionFilterMask());
+    EXPECT_EQ(1, categoryABox1Shape->GetCategoryFilterMask());
+    EXPECT_EQ(6, categoryABox1Shape->GetCollisionFilterMask());
+    EXPECT_EQ(2, categoryBBox0Shape->GetCategoryFilterMask());
+    EXPECT_EQ(5, categoryBBox0Shape->GetCollisionFilterMask());
+    EXPECT_EQ(2, categoryBBox1Shape->GetCategoryFilterMask());
+    EXPECT_EQ(5, categoryBBox1Shape->GetCollisionFilterMask());
+    EXPECT_EQ(4, categoryCBox0Shape->GetCategoryFilterMask());
+    EXPECT_EQ(3, categoryCBox0Shape->GetCollisionFilterMask());
+
+    auto checkedOutput = StepWorld<FeaturesCategoryFilter>(world, true).first;
+    EXPECT_TRUE(checkedOutput);
+    auto contacts = world->GetContactsFromLastStep();
+    EXPECT_NE(0u, contacts.size());
+
+    // Here is a map of contact collision pairs that we expect to see.
+    // The first element is the collision name, and the second element
+    // is a list of collisions that we expect it to collide with.
+    std::unordered_map<std::string, std::vector<std::string>>
+        expectedCollisions;
+    expectedCollisions["category_a_box_0"] = {"category_b_box_1",
+                                              "category_c_box_0"};
+    expectedCollisions["category_a_box_1"] = {"category_b_box_1",
+                                              "category_c_box_0"};
+    expectedCollisions["category_b_box_0"] = {"category_c_box_0"};
+    expectedCollisions["category_b_box_1"] = {"category_a_box_0",
+                                              "category_a_box_1",
+                                              "category_c_box_0"};
+    expectedCollisions["category_c_box_0"] = {"category_a_box_0",
+                                              "category_a_box_1",
+                                              "category_b_box_0",
+                                              "ground_plane"};
+    expectedCollisions["ground_plane"] = {"category_c_box_0"};
+
+
+    // Verify expected collisions against actual contacts reported by the
+    // physics engine
+    auto checkCollisions = [](
+        decltype(contacts) _contacts,
+        const std::unordered_map<std::string, std::vector<std::string>>
+            &_expectedCollisions)
+    {
+      for (auto &contact : _contacts)
+      {
+        const auto &contactPoint = contact.template Get<
+            gz::physics::World3d<FeaturesCategoryFilter>::ContactPoint>();
+        ASSERT_TRUE(contactPoint.collision1);
+        ASSERT_TRUE(contactPoint.collision2);
+        EXPECT_NE(contactPoint.collision1, contactPoint.collision2);
+        auto c1 = contactPoint.collision1;
+        auto c2 = contactPoint.collision2;
+        auto m1 = c1->GetLink()->GetModel();
+        auto m2 = c2->GetLink()->GetModel();
+        auto m1It = _expectedCollisions.find(m1->GetName());
+        EXPECT_NE(_expectedCollisions.end(), m1It);
+        const std::vector<std::string> &model1CollidingShapes = m1It->second;
+        auto m2It = std::find(model1CollidingShapes.begin(),
+                              model1CollidingShapes.end(),
+                              m2->GetName());
+        EXPECT_NE(model1CollidingShapes.end(), m2It);
+      }
+    };
+
+    checkCollisions(contacts, expectedCollisions);
+
+    // Now set category and collide bitmasks for cateory_b_box_1 to be the same
+    // as the shapes in Category A
+    categoryBBox1Shape->SetCategoryFilterMask(1);
+    categoryBBox1Shape->SetCollisionFilterMask(6);
+    EXPECT_EQ(1, categoryBBox1Shape->GetCategoryFilterMask());
+    // Step and check collisions
+    checkedOutput = StepWorld<FeaturesCategoryFilter>(world, false).first;
+    EXPECT_FALSE(checkedOutput);
+    auto contacts2 = world->GetContactsFromLastStep();
+    EXPECT_NE(0u, contacts2.size());
+
+    // Update the list of expected collision pairs and verify.
+    // category_b_box_1 should start colliding with the other category B shape.
+    expectedCollisions["category_b_box_0"].push_back("category_b_box_1");
+    expectedCollisions["category_b_box_1"].push_back("category_b_box_0");
+    // category_b_box_1 should no longer collide with category A shapes.
+    auto &catABox0Collisions = expectedCollisions["category_a_box_0"];
+    catABox0Collisions.erase(std::remove(catABox0Collisions.begin(),
+        catABox0Collisions.end(), "category_b_box_1"), catABox0Collisions.end());
+    auto &catABox1Collisions = expectedCollisions["category_a_box_1"];
+    catABox1Collisions.erase(std::remove(catABox1Collisions.begin(),
+        catABox1Collisions.end(), "category_b_box_1"), catABox1Collisions.end());
+
+    checkCollisions(contacts2, expectedCollisions);
+
+    // Now remove category bitmask for category_a_box_0 and verify that it
+    // returns its is now the same as its collide bitmask
+    categoryABox0Shape->RemoveCategoryFilterMask();
+    EXPECT_EQ(categoryABox0Shape->GetCollisionFilterMask(),
+              categoryABox0Shape->GetCategoryFilterMask());
+    // Step and check collisions
+    checkedOutput = StepWorld<FeaturesCategoryFilter>(world, false).first;
+    EXPECT_FALSE(checkedOutput);
+    auto contacts3 = world->GetContactsFromLastStep();
+    EXPECT_NE(0u, contacts3.size());
+    // There should be more contacts
+    EXPECT_LT(contacts2.size(), contacts3.size());
+
+    // Update the list of expected collision pairs and verify.
+    // Category A shapes should start colliding with each other
+    expectedCollisions["category_a_box_0"].push_back("category_a_box_1");
+    expectedCollisions["category_a_box_1"].push_back("category_a_box_0");
+    // It should also start colliding with category_b_box_1 which wa
+    //  previously updated to category A masks.
+    expectedCollisions["category_a_box_0"].push_back("category_b_box_1");
+
+    checkCollisions(contacts3, expectedCollisions);
+  }
+}
 
 TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
 {
@@ -1981,9 +2179,32 @@ using SimulationFeaturesRayIntersectionTestTypes =
 TYPED_TEST_SUITE(SimulationFeaturesRayIntersectionTest,
                  SimulationFeaturesRayIntersectionTestTypes);
 
+// Collision detectors (as accepted by SetCollisionDetector) that support
+// single ray intersection queries in the dartsim plugin, and those that do
+// not. The native "dart" collision detector supports raycast only in
+// DART versions that ship the complete DARTCollisionDetector (>= 6.20.0),
+// so its classification depends on the DART version.
+namespace
+{
+const std::vector<std::string> kRaySupportedCollisionDetectors = {
+  "ode",
+  "bullet",
+#ifdef DART_HAS_DART_COLLISION_DETECTOR
+  "dart",
+#endif
+};
+
+const std::vector<std::string> kRayUnsupportedCollisionDetectors = {
+#ifndef DART_HAS_DART_COLLISION_DETECTOR
+  "dart",
+#endif
+  "fcl",
+};
+}  // namespace
+
 TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
 {
-  std::vector<std::string> supportedCollisionDetectors = {"bullet"};
+  const auto &supportedCollisionDetectors = kRaySupportedCollisionDetectors;
 
   for (const std::string &name : this->pluginNames)
   {
@@ -2030,7 +2251,7 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
 
 TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
 {
-  std::vector<std::string> unsupportedCollisionDetectors = {"ode", "dart", "fcl", "banana"};
+  const auto &unsupportedCollisionDetectors = kRayUnsupportedCollisionDetectors;
 
   for (const std::string &name : this->pluginNames)
   {
@@ -2057,6 +2278,272 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
       ASSERT_TRUE(rayIntersection.point.array().isNaN().any());
       ASSERT_TRUE(rayIntersection.normal.array().isNaN().any());
       ASSERT_TRUE(std::isnan(rayIntersection.fraction));
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesRayIntersectionTest, ClosestRayIntersection)
+{
+  const auto &supportedCollisionDetectors = kRaySupportedCollisionDetectors;
+
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone", "tpe")
+
+    for (const std::string &collisionDetector : supportedCollisionDetectors) {
+      auto world = LoadPluginAndWorld<FeaturesRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kMultipleObjectsComplexSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput = StepWorld<FeaturesRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+
+      // Test ray along X axis, should hit closest sphere at x=1
+      // Objects are at different Y positions to confuse spatial traversal
+      auto result =
+        world->GetRayIntersectionFromLastStep(
+            Eigen::Vector3d(-2, 0, 0), Eigen::Vector3d(10, 0, 0));
+
+      auto rayIntersection =
+          result.template
+            Get<gz::physics::World3d<FeaturesRayIntersections>::RayIntersection>();
+
+      double epsilon = 1e-3;
+
+      // The sphere at x=1 has radius 0.3, so the ray should hit at x=0.7
+      // Ray goes from -2 to 10, total length = 12
+      // Hit point at x=0.7 is 2.7 units from start, fraction = 2.7/12 = 0.225
+      EXPECT_TRUE(
+          rayIntersection.point.isApprox(Eigen::Vector3d(0.7, 0, 0), epsilon));
+      EXPECT_NEAR(rayIntersection.fraction, 0.225, epsilon);
+    }
+  }
+}
+
+// The features that an engine must have to be loaded by this loader.
+struct FeaturesBatchRayIntersections : gz::physics::FeatureList<
+  gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetBatchRayIntersectionFromLastStepFeature,
+  gz::physics::CollisionDetector,
+  gz::physics::ForwardStep
+> {};
+
+template <class T>
+class SimulationFeaturesBatchRayIntersectionTest :
+  public SimulationFeaturesTest<T>{};
+using SimulationFeaturesBatchRayIntersectionTestTypes =
+    ::testing::Types<FeaturesBatchRayIntersections>;
+TYPED_TEST_SUITE(SimulationFeaturesBatchRayIntersectionTest,
+                 SimulationFeaturesBatchRayIntersectionTestTypes);
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
+           SupportedBatchRayIntersections)
+{
+  std::vector<std::string> supportedCollisionDetectors =
+    {"ode", "bullet"};
+
+  for (const std::string &name : this->pluginNames)
+  {
+    for (const std::string &collisionDetector : supportedCollisionDetectors)
+    {
+      auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kSphereSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput =
+        StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+
+      using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
+      using RayQuery = World::RayQuery;
+      using RayIntersection = World::RayIntersection;
+      using BatchedRayIntersectionData = World::BatchedRayIntersectionData;
+
+      // Build a batch: first ray hits the sphere, second misses
+      std::vector<RayQuery> rays = {
+        {Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d(2, 0, 2)},   // hit
+        {Eigen::Vector3d(2, 0, 10), Eigen::Vector3d(-2, 0, 10)},  // miss
+      };
+
+      BatchedRayIntersectionData output;
+      world->GetBatchRayIntersectionFromLastStep(rays, output);
+      const auto &results = output.Get<std::vector<RayIntersection>>();
+
+      ASSERT_EQ(2u, results.size());
+
+      // Ray 0 - hits the unit sphere centred at (0,0,2)
+      {
+        const auto &hit = results[0];
+        EXPECT_TRUE(hit.IsHit());
+        double epsilon = 1e-3;
+        EXPECT_TRUE(hit.point.isApprox(Eigen::Vector3d(-1, 0, 2), epsilon))
+          << "hit point: " << hit.point.transpose();
+        EXPECT_TRUE(hit.normal.isApprox(Eigen::Vector3d(-1, 0, 0), epsilon))
+          << "hit normal: " << hit.normal.transpose();
+        EXPECT_DOUBLE_EQ(0.25, hit.fraction);
+      }
+
+      // Ray 1 - misses; NaN fraction, NaN point/normal.
+      {
+        const auto &miss = results[1];
+        EXPECT_FALSE(miss.IsHit());
+        // gz-physics9 preserves NaN-on-miss for the batch API; +INF is a
+        // gz-physics10 change. This assertion blocks a future cherry-pick from
+        // main silently reintroducing the breaking change.
+        EXPECT_TRUE(std::isnan(miss.fraction))
+            << "gz-physics9 batch raycast must return NaN on miss, not +INF";
+        EXPECT_TRUE(miss.point.array().isNaN().all())
+          << "miss point should be NaN: " << miss.point.transpose();
+        EXPECT_TRUE(miss.normal.array().isNaN().all())
+          << "miss normal should be NaN: " << miss.normal.transpose();
+      }
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
+           EmptyBatchRayIntersections)
+{
+  std::vector<std::string> supportedCollisionDetectors =
+    {"ode", "bullet"};
+
+  for (const std::string &name : this->pluginNames)
+  {
+    for (const std::string &collisionDetector : supportedCollisionDetectors)
+    {
+      auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kSphereSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput =
+        StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+
+      using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
+      using RayQuery = World::RayQuery;
+      using RayIntersection = World::RayIntersection;
+      using BatchedRayIntersectionData = World::BatchedRayIntersectionData;
+
+      std::vector<RayQuery> rays;  // intentionally empty
+      BatchedRayIntersectionData output;
+      world->GetBatchRayIntersectionFromLastStep(rays, output);
+      EXPECT_TRUE(output.Get<std::vector<RayIntersection>>().empty());
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
+           UnsupportedBatchRayIntersections)
+{
+  std::vector<std::string> unsupportedCollisionDetectors =
+    {"dart", "fcl"};
+
+  for (const std::string &name : this->pluginNames)
+  {
+    for (const std::string &collisionDetector : unsupportedCollisionDetectors)
+    {
+      auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kSphereSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput =
+        StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+
+      using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
+      using RayQuery = World::RayQuery;
+      using RayIntersection = World::RayIntersection;
+      using BatchedRayIntersectionData = World::BatchedRayIntersectionData;
+
+      // ray would hit the sphere, but the collision detector does not
+      // support ray intersection - results must be NaN
+      std::vector<RayQuery> rays = {
+        {Eigen::Vector3d(-2, 0, 2), Eigen::Vector3d(2, 0, 2)},
+      };
+
+      BatchedRayIntersectionData output;
+      world->GetBatchRayIntersectionFromLastStep(rays, output);
+      const auto &results = output.Get<std::vector<RayIntersection>>();
+
+      ASSERT_EQ(1u, results.size());
+      EXPECT_FALSE(results[0].IsHit());
+      EXPECT_TRUE(results[0].point.array().isNaN().all());
+      EXPECT_TRUE(results[0].normal.array().isNaN().all());
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+TYPED_TEST(SimulationFeaturesBatchRayIntersectionTest,
+           LargeBatchRayIntersections)
+{
+  std::vector<std::string> supportedCollisionDetectors =
+    {"ode", "bullet"};
+
+  for (const std::string &name : this->pluginNames)
+  {
+    for (const std::string &collisionDetector : supportedCollisionDetectors)
+    {
+      auto world = LoadPluginAndWorld<FeaturesBatchRayIntersections>(
+          this->loader,
+          name,
+          common_test::worlds::kSphereSdf);
+      world->SetCollisionDetector(collisionDetector);
+      auto checkedOutput =
+        StepWorld<FeaturesBatchRayIntersections>(world, true, 1).first;
+      EXPECT_TRUE(checkedOutput);
+
+      using World = gz::physics::World3d<FeaturesBatchRayIntersections>;
+      using RayQuery = World::RayQuery;
+      using RayIntersection = World::RayIntersection;
+      using BatchedRayIntersectionData = World::BatchedRayIntersectionData;
+
+      // Sphere is centred at (0, 0, 2) with radius 1.
+      struct RayCase { RayQuery ray; bool expectedHit; };
+      const std::vector<RayCase> cases = {
+        // equator crossings
+        {{Eigen::Vector3d(-2, 0, 2),    Eigen::Vector3d(2, 0, 2)},    true},
+        {{Eigen::Vector3d(0, -2, 2),    Eigen::Vector3d(0, 2, 2)},    true},
+        // chords above/below equator
+        {{Eigen::Vector3d(-2, 0, 2.5),  Eigen::Vector3d(2, 0, 2.5)},  true},
+        {{Eigen::Vector3d(-2, 0, 1.5),  Eigen::Vector3d(2, 0, 1.5)},  true},
+        // vertical shots
+        {{Eigen::Vector3d(0, 0, 5),     Eigen::Vector3d(0, 0, 1)},    true},
+        {{Eigen::Vector3d(0, 0, 10),    Eigen::Vector3d(0, 0, 2)},    true},
+        // repeat of first hit — verifies multiple hits in sequence
+        {{Eigen::Vector3d(0, -2, 2),    Eigen::Vector3d(0, 2, 2)},    true},
+        // misses
+        {{Eigen::Vector3d(2, 0, 10),    Eigen::Vector3d(-2, 0, 10)},  false},
+        {{Eigen::Vector3d(0, 2, 20),    Eigen::Vector3d(0, -2, 20)},  false},
+        {{Eigen::Vector3d(5, 5, 2),     Eigen::Vector3d(10, 5, 2)},   false},
+        {{Eigen::Vector3d(3, 3, 2),     Eigen::Vector3d(5, 3, 2)},    false},
+        {{Eigen::Vector3d(-2, 1.5, 2),  Eigen::Vector3d(2, 1.5, 2)},  false},
+      };
+
+      std::vector<RayQuery> rays;
+      rays.reserve(cases.size());
+      for (const auto &c : cases)
+        rays.push_back(c.ray);
+
+      BatchedRayIntersectionData output;
+      world->GetBatchRayIntersectionFromLastStep(rays, output);
+      const auto &results = output.Get<std::vector<RayIntersection>>();
+
+      ASSERT_EQ(cases.size(), results.size());
+
+      for (std::size_t i = 0; i < cases.size(); ++i)
+      {
+        EXPECT_EQ(cases[i].expectedHit, results[i].IsHit())
+          << "ray index " << i << " hit mismatch";
+      }
     }
   }
 }
