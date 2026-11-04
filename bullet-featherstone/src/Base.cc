@@ -17,6 +17,7 @@
 
 #include "Base.hh"
 
+#include <BulletCollision/CollisionDispatch/btManifoldResult.h>
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
 
@@ -34,6 +35,25 @@ bool doCollide(uint32_t _categoryBitmask0, uint32_t _collideBitmask0,
 {
   return (_categoryBitmask0 & _collideBitmask1) |
          (_categoryBitmask1 & _collideBitmask0);
+}
+
+/////////////////////////////////////////////////
+btScalar calculateCombinedContactDamping(
+    const btCollisionObject *_body0, const btCollisionObject *_body1)
+{
+  const bool has0 = (_body0->getCollisionFlags() &
+      btCollisionObject::CF_HAS_CONTACT_STIFFNESS_DAMPING) != 0;
+  const bool has1 = (_body1->getCollisionFlags() &
+      btCollisionObject::CF_HAS_CONTACT_STIFFNESS_DAMPING) != 0;
+  if (has0 && !has1)
+    return _body0->getContactDamping();
+  if (has1 && !has0)
+    return _body1->getContactDamping();
+  const btScalar d0 = _body0->getContactDamping();
+  const btScalar d1 = _body1->getContactDamping();
+  if (d0 <= btScalar(0) || d1 <= btScalar(0))
+    return btScalar(0);
+  return btScalar(1) / (btScalar(1) / d0 + btScalar(1) / d1);
 }
 
 }  // namespace
@@ -138,6 +158,7 @@ WorldInfo::WorldInfo(std::string name_)
   pairCache->setOverlapFilterCallback(this->collisionFilterCallback.get());
 
   btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher.get());
+  gCalculateCombinedContactDampingCallback = &calculateCombinedContactDamping;
 
   // Needed for force-torque sensor
   this->world->getSolverInfo().m_jointFeedbackInJointFrame = true;
