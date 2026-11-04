@@ -36,7 +36,7 @@ namespace gz
       // Forward declaration of the Engine type that will be returned
       using EnginePtrType = EnginePtr<FeaturePolicyT, FeatureListT>;
 
-      // Tuple of features that are being requested
+      // List of features that are being requested
       using Features = FeatureListT;
 
       /// \brief Get an Engine from the given physics plugin.
