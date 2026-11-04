@@ -87,6 +87,19 @@ GzCollisionDispatcher::GzCollisionDispatcher(
 }
 
 /////////////////////////////////////////////////
+GzCollisionDispatcher::~GzCollisionDispatcher()
+{
+  std::vector<btPersistentManifold *> manifolds(
+      this->customManifolds.begin(), this->customManifolds.end());
+  for (auto *manifold : manifolds)
+  {
+    this->releaseManifold(manifold);
+  }
+  this->customManifolds.clear();
+  this->shapeManifoldMap.clear();
+}
+
+/////////////////////////////////////////////////
 bool GzCollisionDispatcher::needsCollision(const btCollisionObject *_body0,
     const btCollisionObject *_body1)
 {
@@ -114,6 +127,232 @@ bool GzCollisionDispatcher::needsCollision(const btCollisionObject *_body0,
   }
 
   return btCollisionDispatcher::needsCollision(_body0, _body1);
+}
+
+/////////////////////////////////////////////////
+bool GzCollisionDispatcher::HasConvexHullChildShapes(
+    const btCollisionShape *_shape)
+{
+  if (!_shape || !_shape->isCompound())
+    return false;
+
+  const btCompoundShape *compoundShape =
+      static_cast<const btCompoundShape *>(_shape);
+  return (compoundShape->getNumChildShapes() > 0 &&
+      compoundShape->getChildShape(0)->getShapeType() ==
+      CONVEX_HULL_SHAPE_PROXYTYPE);
+}
+
+/////////////////////////////////////////////////
+const btCollisionShape *GzCollisionDispatcher::FindCollisionShape(
+    const btCompoundShape *_compoundShape, int _childIndex) const
+{
+  GZ_PROFILE("GzCollisionDispatcher::FindCollisionShape");
+  if (!_compoundShape)
+    return nullptr;
+
+  int childCount = _compoundShape->getNumChildShapes();
+  if (childCount <= 0)
+    return nullptr;
+
+  const btCollisionShape *shape =
+      (_childIndex >= 0 && _childIndex < childCount) ?
+      _compoundShape->getChildShape(_childIndex) :
+      _compoundShape->getChildShape(0);
+
+  // When a convex decomposed mesh collision is added to a link's compound
+  // shape, its decomposed btConvexHullShape children are added directly to
+  // the link's compound shape and their userPointer is set to the parent
+  // collision btCompoundShape.
+  if (shape && shape->getUserPointer() != nullptr)
+  {
+    return static_cast<const btCollisionShape *>(shape->getUserPointer());
+  }
+
+  return shape;
+}
+
+/////////////////////////////////////////////////
+void GzCollisionDispatcher::RemoveManifoldByCollisionObject(
+    const btCollisionObject *_obj)
+{
+  std::vector<btPersistentManifold *> toRemove;
+  for (auto *manifold : this->customManifolds)
+  {
+    if (manifold->getBody0() == _obj || manifold->getBody1() == _obj)
+      toRemove.push_back(manifold);
+  }
+
+  for (auto *manifold : toRemove)
+  {
+    this->releaseManifold(manifold);
+  }
+}
+
+/////////////////////////////////////////////////
+void GzCollisionDispatcher::releaseManifold(btPersistentManifold *_manifold)
+{
+  if (this->customManifolds.erase(_manifold) > 0)
+  {
+    for (auto it = this->shapeManifoldMap.begin();
+         it != this->shapeManifoldMap.end();)
+    {
+      if (it->second == _manifold)
+        it = this->shapeManifoldMap.erase(it);
+      else
+        ++it;
+    }
+  }
+  btCollisionDispatcher::releaseManifold(_manifold);
+}
+
+/////////////////////////////////////////////////
+void GzCollisionDispatcher::dispatchAllCollisionPairs(
+    btOverlappingPairCache *_pairCache,
+    const btDispatcherInfo &_dispatchInfo,
+    btDispatcher *_dispatcher)
+{
+  GZ_PROFILE("GzCollisionDispatcher::dispatchAllCollisionPairs");
+  btCollisionDispatcher::dispatchAllCollisionPairs(_pairCache, _dispatchInfo,
+      _dispatcher);
+
+  // Clear custom manifolds for active collision pairs before aggregating
+  // fresh contacts from the narrowphase manifolds, or refresh cached points
+  // if both colliders are sleeping (e.g. if a sleeping model's pose was
+  // updated before activation state is synced).
+  for (auto *customManifold : this->customManifolds)
+  {
+    const btCollisionObject *ob0 = customManifold->getBody0();
+    const btCollisionObject *ob1 = customManifold->getBody1();
+    if (!ob0 || !ob1 || ob0->isActive() || ob1->isActive())
+    {
+      customManifold->clearManifold();
+    }
+    else
+    {
+      customManifold->refreshContactPoints(
+          ob0->getWorldTransform(), ob1->getWorldTransform());
+    }
+  }
+
+  int numManifolds = this->getNumManifolds();
+  for (int i = 0; i < numManifolds; ++i)
+  {
+    btPersistentManifold *contactManifold =
+        this->getManifoldByIndexInternal(i);
+
+    if (this->customManifolds.find(contactManifold) !=
+        this->customManifolds.end())
+    {
+      continue;
+    }
+
+    int numContacts = contactManifold->getNumContacts();
+    if (numContacts <= 0)
+      continue;
+
+    const btMultiBodyLinkCollider *ob0 =
+        btMultiBodyLinkCollider::upcast(contactManifold->getBody0());
+    const btMultiBodyLinkCollider *ob1 =
+        btMultiBodyLinkCollider::upcast(contactManifold->getBody1());
+    if (!ob0 || !ob1)
+      continue;
+
+    const btCollisionShape *linkShape0 = ob0->getCollisionShape();
+    const btCollisionShape *linkShape1 = ob1->getCollisionShape();
+    if (!linkShape0 || !linkShape1 ||
+        !linkShape0->isCompound() || !linkShape1->isCompound())
+    {
+      continue;
+    }
+
+    const btCompoundShape *compoundShape0 =
+        static_cast<const btCompoundShape *>(linkShape0);
+    const btCompoundShape *compoundShape1 =
+        static_cast<const btCompoundShape *>(linkShape1);
+
+    btManifoldPoint &pt0 = contactManifold->getContactPoint(0);
+    const btCollisionShape *colShape0 =
+        this->FindCollisionShape(compoundShape0, pt0.m_index0);
+    const btCollisionShape *colShape1 =
+        this->FindCollisionShape(compoundShape1, pt0.m_index1);
+    if (!colShape0 || !colShape1)
+      continue;
+
+    // Only merge manifolds when at least one collision shape is a convex
+    // decomposed mesh.
+    if (!HasConvexHullChildShapes(colShape0) &&
+        !HasConvexHullChildShapes(colShape1))
+    {
+      continue;
+    }
+
+    btPersistentManifold *colManifold = nullptr;
+    auto colManifoldIt = this->shapeManifoldMap.find(
+        std::make_pair(colShape0, colShape1));
+    if (colManifoldIt == this->shapeManifoldMap.end())
+    {
+      colManifoldIt = this->shapeManifoldMap.find(
+          std::make_pair(colShape1, colShape0));
+    }
+    if (colManifoldIt != this->shapeManifoldMap.end())
+    {
+      colManifold = colManifoldIt->second;
+    }
+    else
+    {
+      colManifold = this->getNewManifold(ob0, ob1);
+      this->shapeManifoldMap[std::make_pair(colShape0, colShape1)] =
+          colManifold;
+      this->customManifolds.insert(colManifold);
+    }
+
+    if (contactManifold->getContactBreakingThreshold() >
+        colManifold->getContactBreakingThreshold())
+    {
+      colManifold->setContactBreakingThreshold(
+          contactManifold->getContactBreakingThreshold());
+    }
+
+    // Add contacts from this convex hull manifold into the shared collision
+    // manifold, which automatically reduces contacts to at most 4 points.
+    for (int j = 0; j < numContacts; ++j)
+    {
+      btManifoldPoint ptToAdd = contactManifold->getContactPoint(j);
+      if (colManifold->getBody0() != ob0)
+      {
+        std::swap(ptToAdd.m_localPointA, ptToAdd.m_localPointB);
+        std::swap(ptToAdd.m_positionWorldOnA, ptToAdd.m_positionWorldOnB);
+        ptToAdd.m_normalWorldOnB = -ptToAdd.m_normalWorldOnB;
+        std::swap(ptToAdd.m_index0, ptToAdd.m_index1);
+        std::swap(ptToAdd.m_partId0, ptToAdd.m_partId1);
+      }
+
+      bool duplicate = false;
+      for (int k = 0; k < colManifold->getNumContacts(); ++k)
+      {
+        btManifoldPoint &existingPt = colManifold->getContactPoint(k);
+        if ((existingPt.m_localPointA - ptToAdd.m_localPointA).length2() <
+            btScalar(1e-6) &&
+            (existingPt.m_localPointB - ptToAdd.m_localPointB).length2() <
+            btScalar(1e-6))
+        {
+          if (ptToAdd.getDistance() < existingPt.getDistance())
+          {
+            colManifold->replaceContactPoint(ptToAdd, k);
+          }
+          duplicate = true;
+          break;
+        }
+      }
+
+      if (!duplicate)
+      {
+        colManifold->addManifoldPoint(ptToAdd);
+      }
+    }
+    contactManifold->clearManifold();
+  }
 }
 
 /////////////////////////////////////////////////

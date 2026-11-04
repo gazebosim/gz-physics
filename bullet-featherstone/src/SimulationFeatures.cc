@@ -37,78 +37,6 @@ namespace physics {
 namespace bullet_featherstone {
 
 /////////////////////////////////////////////////
-bool hasConvexHullChildShapes(
-    const btCollisionShape *_shape)
-{
-  if (!_shape || !_shape->isCompound())
-    return false;
-
-  const btCompoundShape *compoundShape =
-      static_cast<const btCompoundShape *>(_shape);
-  return (compoundShape->getNumChildShapes() > 0 &&
-      compoundShape->getChildShape(0)->getShapeType() ==
-      CONVEX_HULL_SHAPE_PROXYTYPE);
-}
-
-/////////////////////////////////////////////////
-const btCollisionShape *findCollisionShape(
-    const btCompoundShape *_compoundShape, int _childIndex)
-{
-  GZ_PROFILE("bullet_featherstone::findCollisionShape");
-  // _childIndex should give us the index of the child shape within
-  // _compoundShape which represents the collision.
-  // One exception is when the collision is a convex decomposed mesh.
-  // In this case, the child shape is another btCompoundShape (nested), and
-  // _childIndex is the index of one of the decomposed convex hulls
-  // in the nested compound shape. The nested compound shape is the collision.
-  int childCount = _compoundShape->getNumChildShapes();
-  if (childCount > 0)
-  {
-    if (_childIndex >= 0 && _childIndex < childCount)
-    {
-      // todo(iche033) We do not have sufficient info to determine which
-      // child shape is the collision if the link has convex decomposed mesh
-      // collisions alongside of other collisions. See following example:
-      // parentLink -> boxShape0
-      //            -> boxShape1
-      //            -> compoundShape -> convexShape0
-      //                             -> convexShape1
-      // A _childIndex of 1 is ambiguous as it could refer to either
-      // boxShape1 or convexShape1
-      // return nullptr in this case to indicate ambiguity
-      if (childCount > 1)
-      {
-        for (int i = 0; i < childCount; ++i)
-        {
-          const btCollisionShape *shape = _compoundShape->getChildShape(i);
-          if (hasConvexHullChildShapes(shape))
-          {
-            static bool informed{false};
-            if (!informed)
-            {
-              gzwarn << "Unable to determine the collision id for a link with "
-                     << "both simple primitive and convex shape collisions."
-                     << std::endl;
-              informed = true;
-            }
-            return nullptr;
-          }
-        }
-      }
-
-      const btCollisionShape *shape =
-          _compoundShape->getChildShape(_childIndex);
-      return shape;
-    }
-    else
-    {
-      return _compoundShape->getChildShape(0);
-    }
-  }
-  return nullptr;
-}
-
-/////////////////////////////////////////////////
 void enforceFixedConstraint(
     btMultiBodyFixedConstraint *_fixedConstraint)
 {
@@ -677,10 +605,10 @@ SimulationFeatures::GetContactsFromLastStep(const Identity &_worldID) const
     {
       btManifoldPoint& pt = contactManifold->getContactPoint(j);
 
-      const btCollisionShape *colShape0 = findCollisionShape(
-          compoundShape0, pt.m_index0);
-      const btCollisionShape *colShape1 = findCollisionShape(
-          compoundShape1, pt.m_index1);
+      const btCollisionShape *colShape0 =
+          world->dispatcher->FindCollisionShape(compoundShape0, pt.m_index0);
+      const btCollisionShape *colShape1 =
+          world->dispatcher->FindCollisionShape(compoundShape1, pt.m_index1);
 
       std::size_t collision0ID = std::numeric_limits<std::size_t>::max();
       std::size_t collision1ID = std::numeric_limits<std::size_t>::max();

@@ -67,17 +67,73 @@ struct GzCollisionFilterCallback : public btOverlapFilterCallback
       btBroadphaseProxy *_proxy1) const override;
 };
 
-/// \brief Custom gz collision dispatcher
+/// \brief Custom gz collision dispatcher that supports:
+/// * collision filtering by bitmasks
+/// * contact manifold reduction for convex decomposed meshes
 class GzCollisionDispatcher : public btCollisionDispatcher
 {
   /// \brief Constructor
+  /// \param[in] _collisionConfiguration Collision configuration
   public: explicit GzCollisionDispatcher(
               btCollisionConfiguration *_collisionConfiguration);
 
-  /// \brief Overrides base struct's function for additional collision
+  /// \brief Destructor
+  public: ~GzCollisionDispatcher() override;
+
+  /// \brief Overrides base class method for additional collision
   /// filtering based on surface contact parameters
   public: bool needsCollision(const btCollisionObject *_body0,
                               const btCollisionObject *_body1) override;
+
+  /// \brief Overrides base class method to reduce the number of contact points
+  /// generated for convex decomposed shapes to a single contact manifold
+  /// per collision pair.
+  public: void dispatchAllCollisionPairs(btOverlappingPairCache *_pairCache,
+      const btDispatcherInfo &_dispatchInfo,
+      btDispatcher *_dispatcher) override;
+
+  /// \brief Overrides base class method to clean up custom manifolds.
+  public: void releaseManifold(btPersistentManifold *_manifold) override;
+
+  /// \brief Remove custom manifolds associated with a collision object.
+  /// \param[in] _obj The collision object to remove manifolds for.
+  public: void RemoveManifoldByCollisionObject(const btCollisionObject *_obj);
+
+  /// \brief Find the collision shape in a link's compound shape at the
+  /// specified child index.
+  /// \param[in] _compoundShape The link's compound shape.
+  /// \param[in] _childIndex The child shape index from a contact point.
+  /// \return The collision shape representing the SDF collision, or nullptr
+  /// if not found.
+  public: const btCollisionShape *FindCollisionShape(
+      const btCompoundShape *_compoundShape, int _childIndex) const;
+
+  /// \brief Check whether a shape is a compound shape composed of decomposed
+  /// convex hull child shapes.
+  /// \param[in] _shape The collision shape to check.
+  /// \return True if the shape is a compound shape with convex hull child
+  /// shapes.
+  public: static bool HasConvexHullChildShapes(const btCollisionShape *_shape);
+
+  /// \brief Hash function for a pair of collision shapes
+  private: struct ShapePairHash
+  {
+    std::size_t operator () (const std::pair<
+        const btCollisionShape *, const btCollisionShape *> &_p) const
+    {
+      auto h1 = std::hash<const void *>{}(_p.first);
+      auto h2 = std::hash<const void *>{}(_p.second);
+      return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+    }
+  };
+
+  /// \brief A set of custom manifolds created for convex decomposed shapes
+  private: std::unordered_set<btPersistentManifold *> customManifolds;
+
+  /// \brief A map of collision shape pairs to their custom contact manifold
+  private: std::unordered_map<
+      std::pair<const btCollisionShape *, const btCollisionShape *>,
+      btPersistentManifold *, ShapePairHash> shapeManifoldMap;
 };
 
 /// \brief The Info structs are used for three reasons:
@@ -917,6 +973,11 @@ class Base : public Implements3d<FeatureList<Feature>>
       if (link->collider)
       {
         world->world->removeCollisionObject(link->collider.get());
+        if (world->dispatcher)
+        {
+          world->dispatcher->RemoveManifoldByCollisionObject(
+              link->collider.get());
+        }
         for (const auto shapeID : link->collisionEntityIds)
           this->collisions.erase(shapeID);
       }
