@@ -816,6 +816,12 @@ bool JointFeatures::SetJointMimicConstraint(
 
   auto leaderJointId = _leaderJoint->FullIdentity();
   auto leaderJoint = this->ReferenceInterface<JointInfo>(leaderJointId);
+  if (leaderJoint->model.id != followerJoint->model.id)
+  {
+    gzerr << "Failed to set mimic constraint because the follower and leader "
+          << "joints belong to different models." << std::endl;
+    return false;
+  }
   auto leaderChild = this->ReferenceInterface<LinkInfo>(
       leaderJoint->childLinkID);
   auto leaderChildIndexInModel = leaderChild->indexInModel.value_or(-1);
