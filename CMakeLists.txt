@@ -97,6 +97,9 @@ set(IGNITION_PHYSICS_ENGINE_INSTALL_DIR
   ${CMAKE_INSTALL_PREFIX}/${IGN_LIB_INSTALL_DIR}/ign-${GZ_DESIGNATION}-${PROJECT_VERSION_MAJOR}/engine-plugins
 )
 
+# Disable Whole Program Optimization (WPO) to reduce build time
+set(GZ_MSVC_WPO OFF CACHE BOOL "Disable WPO")
+
 #============================================================================
 # Configure the build
 #============================================================================
