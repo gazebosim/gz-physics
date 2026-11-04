@@ -935,22 +935,19 @@ Identity SDFFeatures::ConstructSdfModelImpl(
       this->ReferenceInterface<LinkInfo>(linkID)->isKinematic = true;
 #endif
 
-    if (linkSdf->CollisionCount() == 0u)
+    for (std::size_t c = 0; c < linkSdf->CollisionCount(); ++c)
     {
-      // create empty link collider and compound shape if there are no
-      // collisions
+      // If we fail to add the collision, just keep building the model. It may
+      // need to be constructed outside of the SDF generation pipeline, e.g.
+      // with AttachHeightmap.
+      this->AddSdfCollision(linkID, *linkSdf->CollisionByIndex(c), isStatic);
+    }
+
+    // Create an empty link collider and compound shape if no collision did,
+    // e.g. if the link has no collisions or only a heightmap, which is
+    // attached afterwards.
+    if (!this->ReferenceInterface<LinkInfo>(linkID)->collider)
       this->CreateLinkCollider(linkID, isStatic);
-    }
-    else
-    {
-      for (std::size_t c = 0; c < linkSdf->CollisionCount(); ++c)
-      {
-        // If we fail to add the collision, just keep building the model. It may
-        // need to be constructed outside of the SDF generation pipeline, e.g.
-        // with AttachHeightmap.
-        this->AddSdfCollision(linkID, *linkSdf->CollisionByIndex(c), isStatic);
-      }
-    }
 
 #if BT_BULLET_VERSION >= 307
     // Set kinematic mode
@@ -1279,6 +1276,12 @@ bool SDFFeatures::AddSdfCollision(
       }
     }
     shape = std::move(compoundShape);
+  }
+  else if (geom->HeightmapShape())
+  {
+    // The caller loads the heightmap data and attaches it with
+    // AttachHeightmapShape after the model is constructed, as gz-sim does.
+    return false;
   }
   else
   {

@@ -84,6 +84,75 @@ GzCollisionDispatcher::GzCollisionDispatcher(
     btCollisionConfiguration *_collisionConfiguration)
     : btCollisionDispatcher(_collisionConfiguration)
 {
+  this->setNearCallback(&GzCollisionDispatcher::NearCallback);
+}
+
+/////////////////////////////////////////////////
+void GzCollisionDispatcher::NearCallback(btBroadphasePair &_collisionPair,
+    btCollisionDispatcher &_dispatcher, const btDispatcherInfo &_dispatchInfo)
+{
+  auto *colObj0 = static_cast<btCollisionObject *>(
+      _collisionPair.m_pProxy0->m_clientObject);
+  auto *colObj1 = static_cast<btCollisionObject *>(
+      _collisionPair.m_pProxy1->m_clientObject);
+  if (!_dispatcher.needsCollision(colObj0, colObj1))
+    return;
+
+  btCollisionObjectWrapper obj0Wrap(nullptr, colObj0->getCollisionShape(),
+      colObj0, colObj0->getWorldTransform(), -1, -1);
+  btCollisionObjectWrapper obj1Wrap(nullptr, colObj1->getCollisionShape(),
+      colObj1, colObj1->getWorldTransform(), -1, -1);
+
+  // The dispatcher keeps the algorithm in the pair
+  if (!_collisionPair.m_algorithm)
+  {
+    _collisionPair.m_algorithm = _dispatcher.findAlgorithm(
+        &obj0Wrap, &obj1Wrap, nullptr, BT_CONTACT_POINT_ALGORITHMS);
+  }
+  if (!_collisionPair.m_algorithm)
+    return;
+
+  GzManifoldResult contactPointResult(&obj0Wrap, &obj1Wrap);
+  if (_dispatchInfo.m_dispatchFunc == btDispatcherInfo::DISPATCH_DISCRETE)
+  {
+    _collisionPair.m_algorithm->processCollision(
+        &obj0Wrap, &obj1Wrap, _dispatchInfo, &contactPointResult);
+  }
+  else
+  {
+    const btScalar toi = _collisionPair.m_algorithm->calculateTimeOfImpact(
+        colObj0, colObj1, _dispatchInfo, &contactPointResult);
+    if (_dispatchInfo.m_timeOfImpact > toi)
+      _dispatchInfo.m_timeOfImpact = toi;
+  }
+}
+
+/////////////////////////////////////////////////
+/// \brief Index of the child of a link's compound shape that a collision
+/// object wrapper is in, or -1 for the wrapper of the link itself. Bullet
+/// nests a wrapper in the one of its parent shape: the link's collider, then
+/// the child of its compound shape, which is a collision, then e.g. a
+/// triangle of a heightfield or a convex hull of a decomposed mesh.
+static int compoundChildIndex(const btCollisionObjectWrapper *_wrap)
+{
+  while (_wrap->m_parent && _wrap->m_parent->m_parent)
+    _wrap = _wrap->m_parent;
+  return _wrap->m_parent ? _wrap->m_index : -1;
+}
+
+/////////////////////////////////////////////////
+void GzManifoldResult::addContactPoint(const btVector3 &_normalOnBInWorld,
+    const btVector3 &_pointInWorld, btScalar _depth)
+{
+  // The algorithms set the indices before each shape they process, so
+  // restore them for the next contact points.
+  const int index0 = this->m_index0;
+  const int index1 = this->m_index1;
+  this->m_index0 = compoundChildIndex(this->m_body0Wrap);
+  this->m_index1 = compoundChildIndex(this->m_body1Wrap);
+  btManifoldResult::addContactPoint(_normalOnBInWorld, _pointInWorld, _depth);
+  this->m_index0 = index0;
+  this->m_index1 = index1;
 }
 
 /////////////////////////////////////////////////

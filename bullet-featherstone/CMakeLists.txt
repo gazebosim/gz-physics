@@ -1,7 +1,7 @@
 # This component expresses custom features of the bullet plugin, which can
 # expose native bullet data types.
 gz_add_component(bullet-featherstone INTERFACE
-  DEPENDS_ON_COMPONENTS sdf mesh
+  DEPENDS_ON_COMPONENTS sdf heightmap mesh
   GET_TARGET_NAME features)
 
 link_directories(${BULLET_LIBRARY_DIRS})
@@ -20,6 +20,7 @@ target_link_libraries(${bullet_plugin}
   PUBLIC
     ${features}
     ${PROJECT_LIBRARY_TARGET_NAME}-sdf
+    ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
     ${PROJECT_LIBRARY_TARGET_NAME}-mesh
     gz-common::gz-common
     gz-math::eigen3
