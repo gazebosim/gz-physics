@@ -20,6 +20,7 @@
 #include <gz/common/Mesh.hh>
 #include <gz/common/MeshManager.hh>
 #include <gz/common/SubMesh.hh>
+#include <gz/common/Profiler.hh>
 #include <gz/math/eigen3/Conversions.hh>
 #include <gz/math/Helpers.hh>
 
@@ -43,6 +44,7 @@
 
 #include <LinearMath/btQuaternion.h>
 
+#include <limits>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -84,6 +86,7 @@ Identity SDFFeatures::ConstructSdfWorld(
     const Identity &_engine,
     const ::sdf::World &_sdfWorld)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfWorld");
   const Identity worldID = this->ConstructEmptyWorld(_engine, _sdfWorld.Name());
 
   const WorldInfoPtr &worldInfo = this->worlds.at(worldID);
@@ -163,6 +166,7 @@ void extractInertial(
     const ::sdf::Model *_model,
     const std::string &_joint, const std::string &_link)
 {
+  GZ_PROFILE("bullet_featherstone::resolveJointPoseRelToLink");
   ::sdf::Errors errors;
   const auto *joint = _model->JointByName(_joint);
   if (!joint)
@@ -221,6 +225,7 @@ bool buildTrees(const ::sdf::Model *_sdfModel,
     std::unordered_map<const ::sdf::Link*,
     std::vector<const ::sdf::Link*>> &_linkTree)
 {
+  GZ_PROFILE("bullet_featherstone::buildTrees");
   for (std::size_t i = 0; i < _sdfModel->JointCount(); ++i)
   {
     const auto *joint = _sdfModel->JointByIndex(i);
@@ -317,6 +322,7 @@ void findRootLinks(const ::sdf::Model *_sdfModel,
     const std::unordered_map<const ::sdf::Link*, ParentInfo> &_parentOf,
     std::vector<std::pair<const ::sdf::Link*, const ::sdf::Model*>> &_rootLinks)
 {
+  GZ_PROFILE("bullet_featherstone::findRootLinks");
   for (std::size_t i = 0; i < _sdfModel->LinkCount(); ++i)
   {
     const auto *link = _sdfModel->LinkByIndex(i);
@@ -348,6 +354,7 @@ std::optional<Structure> buildStructure(
     std::unordered_map<const ::sdf::Link*, std::vector<const ::sdf::Link*>>
     &_linkTree)
 {
+  GZ_PROFILE("bullet_featherstone::buildStructure");
   bool fixed = false;
   const ::sdf::Joint *rootJoint = nullptr;
   // rootJoint only exists if root link is connected to world by a joint
@@ -412,6 +419,7 @@ std::optional<Structure> buildStructure(
 /// \return A vector of structures
 std::vector<Structure> validateModel(const ::sdf::Model &_sdfModel)
 {
+  GZ_PROFILE("bullet_featherstone::validateModel");
   // A map of child link and its parent info
   std::unordered_map<const ::sdf::Link*, ParentInfo> parentOf;
 
@@ -460,6 +468,7 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     std::size_t _parentID,
     const ::sdf::Model &_sdfModel)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfModelImpl");
   // The ConstructSdfModelImpl function constructs the entire sdf model tree,
   // including nested models So return the nested model identity if it is
   // constructed already
@@ -828,26 +837,29 @@ Identity SDFFeatures::ConstructSdfModelImpl(
         // bullet-featherstone and so setting them does not have any effect.
         // The lower and uppper limit is supported via the
         // btMultiBodyJointLimitConstraint.
-        model->body->getLink(i).m_jointLowerLimit =
-            static_cast<btScalar>(joint->Axis()->Lower());
-        model->body->getLink(i).m_jointUpperLimit =
-            static_cast<btScalar>(joint->Axis()->Upper());
-        model->body->getLink(i).m_jointFriction =
-            static_cast<btScalar>(joint->Axis()->Friction());
-        model->body->getLink(i).m_jointMaxVelocity =
-            static_cast<btScalar>(joint->Axis()->MaxVelocity());
-        model->body->getLink(i).m_jointMaxForce =
-            static_cast<btScalar>(joint->Axis()->Effort());
+        if (joint->Axis())
+        {
+          model->body->getLink(i).m_jointLowerLimit =
+              static_cast<btScalar>(joint->Axis()->Lower());
+          model->body->getLink(i).m_jointUpperLimit =
+              static_cast<btScalar>(joint->Axis()->Upper());
+          model->body->getLink(i).m_jointFriction =
+              static_cast<btScalar>(joint->Axis()->Friction());
+          model->body->getLink(i).m_jointMaxVelocity =
+              static_cast<btScalar>(joint->Axis()->MaxVelocity());
+          model->body->getLink(i).m_jointMaxForce =
+              static_cast<btScalar>(joint->Axis()->Effort());
 
-        jointInfo->minEffort = -joint->Axis()->Effort();
-        jointInfo->maxEffort = joint->Axis()->Effort();
-        jointInfo->minVelocity = -joint->Axis()->MaxVelocity();
-        jointInfo->maxVelocity = joint->Axis()->MaxVelocity();
-        jointInfo->axisLower = joint->Axis()->Lower();
-        jointInfo->axisUpper = joint->Axis()->Upper();
-        jointInfo->damping = joint->Axis()->Damping();
-        jointInfo->springStiffness = joint->Axis()->SpringStiffness();
-        jointInfo->springReference = joint->Axis()->SpringReference();
+          jointInfo->minEffort = -joint->Axis()->Effort();
+          jointInfo->maxEffort = joint->Axis()->Effort();
+          jointInfo->minVelocity = -joint->Axis()->MaxVelocity();
+          jointInfo->maxVelocity = joint->Axis()->MaxVelocity();
+          jointInfo->axisLower = joint->Axis()->Lower();
+          jointInfo->axisUpper = joint->Axis()->Upper();
+          jointInfo->damping = joint->Axis()->Damping();
+          jointInfo->springStiffness = joint->Axis()->SpringStiffness();
+          jointInfo->springReference = joint->Axis()->SpringReference();
+        }
 
         if (::sdf::JointType::BALL != joint->Type())
         {
@@ -915,6 +927,14 @@ Identity SDFFeatures::ConstructSdfModelImpl(
 
   for (const auto& [linkSdf, linkID] : linkIDs)
   {
+#if BT_BULLET_VERSION >= 307
+    // Set the kinematic flag before adding collisions so that the collider
+    // is added to the world with the kinematic broadphase filter, see
+    // CreateLinkCollider.
+    if (linkSdf->Kinematic())
+      this->ReferenceInterface<LinkInfo>(linkID)->isKinematic = true;
+#endif
+
     if (linkSdf->CollisionCount() == 0u)
     {
       // create empty link collider and compound shape if there are no
@@ -938,9 +958,15 @@ Identity SDFFeatures::ConstructSdfModelImpl(
     if (linkSdf->Kinematic())
     {
       auto *linkInfo = this->ReferenceInterface<LinkInfo>(linkID);
-      int indexInModel = linkInfo->indexInModel.value_or(-1);
-      model->body->setLinkDynamicType(indexInModel,
-          btCollisionObject::CF_KINEMATIC_OBJECT);
+      // A static or fixed link keeps its static collider flags, as in
+      // SetLinkKinematic. The kinematic flag is applied if the link is made
+      // non-static later.
+      if (!linkInfo->isStaticOrFixed)
+      {
+        int indexInModel = linkInfo->indexInModel.value_or(-1);
+        model->body->setLinkDynamicType(indexInModel,
+            btCollisionObject::CF_KINEMATIC_OBJECT);
+      }
     }
 #endif
   }
@@ -1003,6 +1029,7 @@ bool SDFFeatures::AddSdfCollision(
     const ::sdf::Collision &_collision,
     bool _isStatic)
 {
+  GZ_PROFILE("SDFFeatures::AddSdfCollision");
   if (!_collision.Geom())
   {
     gzerr << "The geometry element of collision [" << _collision.Name() << "] "
@@ -1266,6 +1293,11 @@ bool SDFFeatures::AddSdfCollision(
   double restitution = 0.0;
   double torsionalCoefficient = 1.0;
   double rollingFriction = 0.0;
+  std::optional<double> kp;
+  std::optional<double> kd;
+  uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
+  std::optional<uint16_t> categoryBitmask;
+  bool collideWithoutContact = false;
   if (const auto *surface = _collision.Surface())
   {
     if (const auto *friction = surface->Friction())
@@ -1300,7 +1332,47 @@ bool SDFFeatures::AddSdfCollision(
         if (const auto r = bounce->FindElement("restitution_coefficient"))
           restitution = r->Get<double>();
       }
+
+      if (const auto contact = surfaceElement->FindElement("contact"))
+      {
+        if (const auto bitmask = contact->FindElement("collide_bitmask"))
+        {
+          // Get only supports uint32_t so cast back to uint16_t
+          collideBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
+        }
+        if (const auto bitmask = contact->FindElement("category_bitmask"))
+        {
+          categoryBitmask = static_cast<uint16_t>(bitmask->Get<uint32_t>());
+        }
+        if (const auto cwc = contact->FindElement("collide_without_contact"))
+        {
+          collideWithoutContact = cwc->Get<bool>();
+        }
+        if (const auto bullet = contact->FindElement("bullet"))
+        {
+          if (const auto kpElem = bullet->FindElement("kp"))
+            kp = kpElem->Get<double>();
+          if (const auto kdElem = bullet->FindElement("kd"))
+            kd = kdElem->Get<double>();
+        }
+      }
     }
+  }
+
+  // collide_without_contact keeps the contacts of a kinematic link with
+  // static and kinematic links detected while they are disabled for the
+  // world, see LinkInfo::collideWithoutContact. Any collision of the link
+  // enables it for the whole link, which has a single collider. Set it
+  // before the collider is created so that it is added to the world with the
+  // right broadphase filter; for a collision added to an existing collider,
+  // re-create its broadphase proxy.
+  // \todo(iche033) Support collide_without_contact on dynamic links: disable
+  // the contact response of the link collider (CF_NO_CONTACT_RESPONSE).
+  if (collideWithoutContact && !linkInfo->collideWithoutContact)
+  {
+    linkInfo->collideWithoutContact = true;
+    updateKinematicContacts(
+        this->ReferenceInterface<WorldInfo>(model->world), linkInfo);
   }
 
   Eigen::Isometry3d linkFrameToCollision;
@@ -1331,7 +1403,9 @@ bool SDFFeatures::AddSdfCollision(
 
     if (!linkInfo->collider)
     {
-      this->CreateLinkCollider(_linkID, _isStatic, shape.get(),
+
+      this->CreateLinkCollider(_linkID, _isStatic, collideBitmask,
+          categoryBitmask, shape.get(),
           btInertialToCollision);
 
       linkInfo->collider->setRestitution(static_cast<btScalar>(restitution));
@@ -1347,10 +1421,17 @@ bool SDFFeatures::AddSdfCollision(
       if (geom->MeshShape())
       {
         // Set meshes to use softer contacts for stability
-        // \todo(iche033) load <kp> and <kd> values from SDF
-        const btScalar kp = btScalar(1e15);
-        const btScalar kd = btScalar(1e14);
-        linkInfo->collider->setContactStiffnessAndDamping(kp, kd);
+        const btScalar meshKp = btScalar(1e15);
+        const btScalar meshKd = btScalar(1e14);
+        linkInfo->collider->setContactStiffnessAndDamping(meshKp, meshKd);
+      }
+      if (kp.has_value() || kd.has_value())
+      {
+        linkInfo->collider->setContactStiffnessAndDamping(
+          static_cast<btScalar>(
+            kp.value_or(linkInfo->collider->getContactStiffness())),
+          static_cast<btScalar>(
+            kd.value_or(linkInfo->collider->getContactDamping())));
       }
     }
     else if (linkInfo->shape)
@@ -1363,12 +1444,18 @@ bool SDFFeatures::AddSdfCollision(
       // match the existing collider and issue a warning if they don't.
     }
 
-    this->AddCollision(
+    btCollisionShape *shapePtr = shape.get();
+    auto colID = this->AddCollision(
       CollisionInfo{
         _collision.Name(),
         std::move(shape),
         _linkID,
         linkFrameToCollision});
+
+    // Use user index to store the collision id in gz-physics
+    // This is used by GetContactsFromLastStep to retrieve the collision id
+    // from btCollisionShape
+    shapePtr->setUserIndex(std::size_t(colID));
   }
 
   return true;
@@ -1378,6 +1465,7 @@ Identity SDFFeatures::ConstructSdfCollision(
     const Identity &_linkID,
     const ::sdf::Collision &_collision)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfCollision");
   if(this->AddSdfCollision(_linkID, _collision, false))
   {
     for (const auto& collision : this->collisions)
@@ -1397,6 +1485,7 @@ Identity SDFFeatures::ConstructSdfJoint(
     const Identity &_modelID,
     const ::sdf::Joint &_sdfJoint)
 {
+  GZ_PROFILE("SDFFeatures::ConstructSdfJoint");
 #if BT_BULLET_VERSION < 289
   // The btMultiBody::setFixedBase function is only available in versions
   // >= 2.89. This is needed for dynamically creating world joints,
@@ -1475,8 +1564,10 @@ Identity SDFFeatures::ConstructSdfJoint(
 
 /////////////////////////////////////////////////
 void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
+    uint16_t _collideBitmask, std::optional<uint16_t> _categoryBitmask,
     btCollisionShape *_shape, const btTransform &_shapeTF)
 {
+  GZ_PROFILE("SDFFeatures::CreateLinkCollider");
   auto *linkInfo = this->ReferenceInterface<LinkInfo>(_linkID);
   auto *modelInfo = this->ReferenceInterface<ModelInfo>(linkInfo->model);
   auto *worldInfo = this->ReferenceInterface<WorldInfo>(modelInfo->world);
@@ -1529,6 +1620,23 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
       isFixed = totalLinkDofs == 0;
     }
   }
+
+  // Set the collideBimask variable in the GzMultiBodyLinkCollider class
+  // instead of calling setCollisionFlags so we don't override bullet's
+  // internal collision flags which are used to indicate whether a collision
+  // is static, dynamic, kinematic, etc
+  // Set these masks before calling addCollisionObject so that
+  // the masks are available during the needBroadPhaseCollision check
+  linkInfo->collider->collideBitmask = _collideBitmask;
+  linkInfo->collider->categoryBitmask = _categoryBitmask;
+
+  // Whether the contacts of the link, when kinematic, with static and other
+  // kinematic links are detected, see KinematicContacts. The collider has no
+  // broadphase proxy yet, so this only sets the flag used for the filter
+  // below; SetWorldKinematicContactsEnabled and AddSdfCollision keep it up to
+  // date afterwards.
+  updateKinematicContacts(worldInfo, linkInfo);
+
   if (_isStatic || isFixed)
   {
     worldInfo->world->addCollisionObject(
@@ -1544,10 +1652,13 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
   }
   else
   {
+    // A kinematic link collider does not collide with static or other
+    // kinematic colliders while these contacts are disabled, see
+    // colliderFilterGroup.
     worldInfo->world->addCollisionObject(
       linkInfo->collider.get(),
-      btBroadphaseProxy::DefaultFilter,
-      btBroadphaseProxy::AllFilter);
+      colliderFilterGroup(*linkInfo),
+      colliderFilterMask(*linkInfo));
   }
 }
 

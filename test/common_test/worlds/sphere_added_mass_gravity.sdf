@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="sphere_added_mass_gravity">
+    <gravity>0 0 -10</gravity>
+
+    <!-- Plain sphere: no added mass, reference for fall-rate comparison. -->
+    <model name="sphere">
+      <pose>0 0 10 0 0 0</pose>
+      <link name="sphere_link">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.4</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.4</iyy><iyz>0</iyz>
+            <izz>0.4</izz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><sphere><radius>0.5</radius></sphere></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- Sphere with non-zero fluid added mass.
+         SetLinkAddedMass disables DART built-in gravity for this link and
+         applies it manually each step as F=ma. -->
+    <model name="sphere_added_mass">
+      <pose>0 0 10 0 0 0</pose>
+      <link name="sphere_link">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.4</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.4</iyy><iyz>0</iyz>
+            <izz>0.4</izz>
+          </inertia>
+          <fluid_added_mass>
+            <xx>1</xx><xy>0</xy><xz>0</xz><xp>0</xp><xq>0</xq><xr>0</xr>
+            <yy>1</yy><yz>0</yz><yp>0</yp><yq>0</yq><yr>0</yr>
+            <zz>1</zz><zp>0</zp><zq>0</zq><zr>0</zr>
+            <pp>0</pp><pq>0</pq><pr>0</pr>
+            <qq>0</qq><qr>0</qr>
+            <rr>0</rr>
+          </fluid_added_mass>
+        </inertial>
+        <collision name="collision">
+          <geometry><sphere><radius>0.5</radius></sphere></geometry>
+        </collision>
+      </link>
+    </model>
+
+  </world>
+</sdf>

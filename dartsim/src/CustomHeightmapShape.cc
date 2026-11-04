@@ -20,6 +20,7 @@
 #include <vector>
 #include <gz/common/Console.hh>
 #include <gz/common/geospatial/ImageHeightmap.hh>
+#include <gz/common/Profiler.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
 namespace gz {
@@ -33,6 +34,7 @@ CustomHeightmapShape::CustomHeightmapShape(
     int _subSampling)
   : dart::dynamics::HeightmapShape<float>()
 {
+  GZ_PROFILE("CustomHeightmapShape::CustomHeightmapShape");
   float heightmapSizeZ = _input.MaxElevation() - _input.MinElevation();
   const bool flipY = false;
   const int vertSize = (_input.Width() * _subSampling) - _subSampling + 1;

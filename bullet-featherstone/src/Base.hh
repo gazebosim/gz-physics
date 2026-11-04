@@ -37,7 +37,9 @@
 #include <Eigen/Geometry>
 
 #include <algorithm>
+#include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -47,11 +49,35 @@
 
 #include <gz/common/Console.hh>
 #include <gz/math/eigen3/Conversions.hh>
+#include <gz/math/Pose3.hh>
 #include <gz/physics/Implements.hh>
 
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
+
+/// \brief Custom collision filter callback struct for handling
+/// collisions based on surface contact parameters
+struct GzCollisionFilterCallback : public btOverlapFilterCallback
+{
+  /// \brief Overrides base struct's function for additional collision
+  /// filtering based on surface contact parameters
+  bool needBroadphaseCollision(btBroadphaseProxy *_proxy0,
+      btBroadphaseProxy *_proxy1) const override;
+};
+
+/// \brief Custom gz collision dispatcher
+class GzCollisionDispatcher : public btCollisionDispatcher
+{
+  /// \brief Constructor
+  public: explicit GzCollisionDispatcher(
+              btCollisionConfiguration *_collisionConfiguration);
+
+  /// \brief Overrides base struct's function for additional collision
+  /// filtering based on surface contact parameters
+  public: bool needsCollision(const btCollisionObject *_body0,
+                              const btCollisionObject *_body1) override;
+};
 
 /// \brief The Info structs are used for three reasons:
 /// 1) Holding extra information such as the name
@@ -67,16 +93,22 @@ struct WorldInfo
 {
   std::string name;
   std::unique_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
-  std::unique_ptr<btCollisionDispatcher> dispatcher;
+  std::unique_ptr<GzCollisionDispatcher> dispatcher;
   std::unique_ptr<btBroadphaseInterface> broadphase;
   std::unique_ptr<btMultiBodyConstraintSolver> solver;
   std::unique_ptr<btMultiBodyDynamicsWorld> world;
+  std::unique_ptr<GzCollisionFilterCallback> collisionFilterCallback;
 
   std::unordered_map<int, std::size_t> modelIndexToEntityId;
   std::unordered_map<std::string, std::size_t> modelNameToEntityId;
   int nextModelIndex = 0;
 
   double stepSize = 0.001;
+  bool collisionMasksDirty = false;
+  // Whether contacts between kinematic links and static or other kinematic
+  // links are detected, see KinematicContacts::SetKinematicContactsEnabled
+  // and LinkInfo::kinematicContacts.
+  bool kinematicContacts = true;
 
   explicit WorldInfo(std::string name);
 };
@@ -130,7 +162,32 @@ class GzMultiBody: public btMultiBody
   public: void AddJointDampingStiffnessTorque(int _jointIndex, double _damping,
       double _springStiffness, double _springReference);
 
+  /// \brief Set the velocity of the root link frame of the base in world
+  /// coordinates. The velocity of a free group is the velocity of its root
+  /// link frame, while bullet stores the velocity of the center of mass of
+  /// the base in btScalar precision. The velocity is kept here in double
+  /// precision and is the velocity a kinematic base is moved with, so that
+  /// bullet's state never feeds back into the requested velocity.
+  /// \param[in] _linVel World linear velocity of the root link frame.
+  /// \param[in] _angVel World angular velocity.
+  public: void SetBaseLinkFrameVelocity(const Eigen::Vector3d &_linVel,
+      const Eigen::Vector3d &_angVel);
+
+  /// \brief Get the world linear velocity of the root link frame, see
+  /// SetBaseLinkFrameVelocity.
+  public: const Eigen::Vector3d &GetBaseLinkFrameLinearVelocity() const;
+
+  /// \brief Get the world angular velocity of the base, see
+  /// SetBaseLinkFrameVelocity.
+  public: const Eigen::Vector3d &GetBaseLinkFrameAngularVelocity() const;
+
   private: bool needsCollisionTransformsUpdate = false;
+
+  /// \brief World linear velocity of the root link frame.
+  private: Eigen::Vector3d baseLinkFrameLinVel = Eigen::Vector3d::Zero();
+
+  /// \brief World angular velocity of the base.
+  private: Eigen::Vector3d baseLinkFrameAngVel = Eigen::Vector3d::Zero();
 };
 
 struct ModelInfo
@@ -154,6 +211,12 @@ struct ModelInfo
   /// These are joints that connect this model to other models, e.g. fixed
   /// constraints.
   std::unordered_set<std::size_t> external_constraints;
+
+  /// \brief Buffers for btMultiBody::compTreeLinkVelocities, sized to the
+  /// number of links + 1. Kept here so that link velocity queries, which may
+  /// happen for every link at every step, do not allocate.
+  mutable std::vector<btVector3> linkOmega;
+  mutable std::vector<btVector3> linkVel;
 
   ModelInfo(
     std::string _name,
@@ -187,6 +250,12 @@ class GzMultiBodyLinkCollider: public btMultiBodyLinkCollider {
     return btMultiBodyLinkCollider::checkCollideWithOverride(_co) &&
            btCollisionObject::checkCollideWithOverride(_co);
   }
+
+  /// \brief Collision contact surface collide bitmask parameter
+  public: uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
+
+  /// \brief Collision contact surface category bitmask parameter
+  public: std::optional<uint16_t> categoryBitmask;
 };
 
 /// Link information is embedded inside the model, so all we need to store here
@@ -203,6 +272,27 @@ struct LinkInfo
   std::unordered_map<std::string, std::size_t> collisionNameToEntityId = {};
   // Link is either static, fixed to world, or has zero dofs
   bool isStaticOrFixed = false;
+  // True if the link is kinematic, as requested with <kinematic> in SDF or
+  // SetKinematic. The collider of a kinematic link is temporarily static
+  // while the link is welded to a static link (see makeColliderStatic).
+  bool isKinematic = false;
+  // True if a collision of the link sets
+  // //collision/surface/contact/collide_without_contact. For a kinematic
+  // link this keeps its contacts with static and kinematic links, which have
+  // no collision response, detected and reported while they are disabled
+  // for the world (see kinematicContacts).
+  // \todo(iche033) On a dynamic link the element should disable the contact
+  // response (btCollisionObject::CF_NO_CONTACT_RESPONSE) while keeping the
+  // contacts detected. This is not supported yet and the element is ignored.
+  bool collideWithoutContact = false;
+  // True if the contacts of the link, when kinematic, with static and other
+  // kinematic links are detected: WorldInfo::kinematicContacts or
+  // collideWithoutContact. Kept here, up to date with both by
+  // updateKinematicContacts, so that the broadphase filter of the collider
+  // can be derived from the link alone (see colliderFilterGroup).
+  bool kinematicContacts = true;
+  // Cached pose from the previous physics step for performance optimization
+  mutable std::optional<math::Pose3d> prevPose = std::nullopt;
 };
 
 struct CollisionInfo
@@ -257,8 +347,8 @@ struct JointInfo
   double maxEffort = 0.0;
   double minVelocity = 0.0;
   double maxVelocity = 0.0;
-  double axisLower = 0.0;
-  double axisUpper = 0.0;
+  double axisLower = -std::numeric_limits<double>::infinity();
+  double axisUpper = std::numeric_limits<double>::infinity();
 
   // joint damping, spring stiffness and reference
   double damping = 0.0;
@@ -269,6 +359,27 @@ struct JointInfo
   // they are part of the same body.
   bool fixedConstraintWeldChildToParent = false;
 
+  // Joint velocity and one-step velocity command of the first dof of a joint
+  // whose child link is kinematic. The velocity persists until it is set
+  // again, the command is consumed by the next step. Only the first dof can
+  // be driven.
+  double kinematicJointVel = 0.0;
+  std::optional<double> kinematicJointVelCmd = std::nullopt;
+
+  // Velocity of the first dof that WorldForwardStep last wrote to the joint
+  // of a kinematic child link, i.e. the commanded velocity after clamping to
+  // the position limits. A different joint velocity means that the velocity
+  // was set from outside (SetJointVelocity) since the last step.
+  btScalar kinematicJointVelPinned = 0;
+
+  // Max impulse of jointLimits before it was disabled for a kinematic child
+  // link, whose position limits are enforced by WorldForwardStep instead.
+  // Zero if jointLimits is not disabled.
+  btScalar jointLimitsMaxImpulse = 0;
+
+  // Velocity motor of the first dof. Created by SetJointVelocityCommand with
+  // the joint effort limit, or by WorldForwardStep with an unlimited impulse
+  // to lock / drive the joint of a kinematic link under a dynamic ancestor.
   std::shared_ptr<btMultiBodyJointMotor> motor = nullptr;
   std::shared_ptr<btMultiBodyJointLimitConstraint> jointLimits = nullptr;
   std::shared_ptr<btMultiBodyFixedConstraint> fixedConstraint = nullptr;
@@ -353,6 +464,221 @@ inline Eigen::Isometry3d GetWorldTransformOfLink(
   }
 
   return convert(body.getBaseWorldTransform()) * model.baseInertiaToLinkFrame;
+}
+
+/////////////////////////////////////////////////
+/// \brief Vector from the center of mass of the root link, which is the
+/// origin of the bullet base frame, to the origin of the root link frame, in
+/// world coordinates. The offset is rotated rather than taken as the
+/// difference of two world positions, which loses precision far from the
+/// world origin in single precision builds of bullet.
+/// \param[in] _model Model the root link belongs to.
+/// \param[in] _baseTf World transform of the base frame.
+inline btVector3 getBaseComToLinkFrame(const ModelInfo &_model,
+    const btTransform &_baseTf)
+{
+  return _baseTf.getBasis() *
+      convertVec(_model.baseInertiaToLinkFrame.translation());
+}
+
+/////////////////////////////////////////////////
+/// \brief World linear velocity of the root link frame of a model, derived
+/// from the velocity of the center of mass of the root link that bullet
+/// stores: v_link = v_com + w x r, with r from the center of mass to the
+/// root link frame.
+/// \param[in] _model Model to query.
+inline btVector3 getBaseLinkFrameLinearVelocity(const ModelInfo &_model)
+{
+  const btVector3 comToLink =
+      getBaseComToLinkFrame(_model, _model.body->getBaseWorldTransform());
+  return _model.body->getBaseVel() +
+      _model.body->getBaseOmega().cross(comToLink);
+}
+
+/////////////////////////////////////////////////
+/// \brief Set the velocity of the base of a model from the velocity of its
+/// root link frame: v_com = v_link - w x r, see
+/// getBaseLinkFrameLinearVelocity. The velocity of the root link frame is
+/// also stored in the multibody, see GzMultiBody::SetBaseLinkFrameVelocity.
+/// \param[in] _model Model to update.
+/// \param[in] _linkLinVel World linear velocity of the root link frame.
+/// \param[in] _angVel World angular velocity.
+inline void setBaseVelocityFromLinkFrame(const ModelInfo &_model,
+    const Eigen::Vector3d &_linkLinVel, const Eigen::Vector3d &_angVel)
+{
+  _model.body->SetBaseLinkFrameVelocity(_linkLinVel, _angVel);
+  const btVector3 angVel = convertVec(_angVel);
+  const btVector3 comToLink =
+      getBaseComToLinkFrame(_model, _model.body->getBaseWorldTransform());
+  _model.body->setBaseOmega(angVel);
+  _model.body->setBaseVel(convertVec(_linkLinVel) - angVel.cross(comToLink));
+}
+
+/////////////////////////////////////////////////
+/// \brief Return true if the base of a multibody is kinematic. Bullet
+/// versions without kinematic multibodies have no kinematic bases.
+inline bool isBaseKinematic([[maybe_unused]] const btMultiBody &_body)
+{
+#if BT_BULLET_VERSION >= 307
+  return _body.isBaseKinematic();
+#else
+  return false;
+#endif
+}
+
+/////////////////////////////////////////////////
+/// \brief Return true if the collider of a link, when not static, uses the
+/// kinematic broadphase filter: the link is kinematic and its contacts with
+/// static and other kinematic links are not detected, see
+/// LinkInfo::kinematicContacts.
+inline bool usesKinematicFilter(const LinkInfo &_link)
+{
+  return _link.isKinematic && !_link.kinematicContacts;
+}
+
+/////////////////////////////////////////////////
+/// \brief Broadphase filter group of the collider of a non-static link.
+/// Kinematic colliders get their own group and, with the mask returned by
+/// colliderFilterMask, do not collide with static or other kinematic
+/// colliders. Such pairs have no collision response, but without the filter
+/// they are narrow-phased every step for as long as the objects overlap,
+/// which is forever for a kinematic object resting in or on static geometry
+/// since nothing pushes it out. A kinematic link that keeps these contacts
+/// (see usesKinematicFilter) gets the default group, like a dynamic link, so
+/// that it collides with static colliders and with kinematic colliders that
+/// use the kinematic filter: a pair is created if either side asks for it.
+/// \note The broadphase applies the filter only when it creates pairs, i.e.
+/// when a proxy is added or moves. After changing the filter of an existing
+/// proxy, call btCollisionWorld::refreshBroadphaseProxy to re-create it
+/// (see updateColliderFilter).
+inline int colliderFilterGroup(const LinkInfo &_link)
+{
+  return usesKinematicFilter(_link) ? btBroadphaseProxy::KinematicFilter :
+                                      btBroadphaseProxy::DefaultFilter;
+}
+
+/////////////////////////////////////////////////
+/// \brief Broadphase filter mask of the collider of a non-static link, see
+/// colliderFilterGroup.
+inline int colliderFilterMask(const LinkInfo &_link)
+{
+  return usesKinematicFilter(_link) ? btBroadphaseProxy::AllFilter ^
+      (btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter) :
+      btBroadphaseProxy::AllFilter;
+}
+
+/////////////////////////////////////////////////
+inline void makeColliderStatic(LinkInfo *_linkInfo)
+{
+  btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
+  if (!childCollider)
+    return;
+
+  // if link is already static or fixed, we do not need to change its
+  // collision flags
+  if (_linkInfo->isStaticOrFixed)
+    return;
+
+  btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
+  if (!childProxy)
+    return;
+
+  childProxy->m_collisionFilterGroup = btBroadphaseProxy::StaticFilter;
+  childProxy->m_collisionFilterMask =
+      btBroadphaseProxy::AllFilter ^ btBroadphaseProxy::StaticFilter;
+#if BT_BULLET_VERSION >= 307
+  childCollider->setDynamicType(btCollisionObject::CF_STATIC_OBJECT);
+#endif
+}
+
+/////////////////////////////////////////////////
+/// \brief Return true if the collider of a link currently has the static
+/// broadphase filter group, i.e. the link is static, fixed to the world or
+/// welded to a static link by AttachFixedJoint (see makeColliderStatic).
+inline bool isColliderStatic(const LinkInfo *_linkInfo)
+{
+  if (!_linkInfo->collider)
+    return false;
+  const btBroadphaseProxy *proxy = _linkInfo->collider->getBroadphaseHandle();
+  return proxy &&
+      (proxy->m_collisionFilterGroup & btBroadphaseProxy::StaticFilter) > 0;
+}
+
+/////////////////////////////////////////////////
+inline void makeColliderDynamic(LinkInfo *_linkInfo)
+{
+  btMultiBodyLinkCollider *childCollider = _linkInfo->collider.get();
+  if (!childCollider)
+    return;
+
+  btBroadphaseProxy *childProxy = childCollider->getBroadphaseHandle();
+  if (!childProxy)
+    return;
+
+  // If broadphase and collision object flags do not agree, the
+  // link was originally non-static but made static by AttachJoint
+  if (!_linkInfo->isStaticOrFixed && isColliderStatic(_linkInfo))
+  {
+    childProxy->m_collisionFilterGroup = colliderFilterGroup(*_linkInfo);
+    childProxy->m_collisionFilterMask = colliderFilterMask(*_linkInfo);
+#if BT_BULLET_VERSION >= 307
+    const int collisionFlags = _linkInfo->isKinematic ?
+        btCollisionObject::CF_KINEMATIC_OBJECT :
+        btCollisionObject::CF_DYNAMIC_OBJECT;
+    childCollider->setDynamicType(collisionFlags);
+#endif
+  }
+}
+
+/////////////////////////////////////////////////
+/// \brief Apply the broadphase filter of colliderFilterGroup and
+/// colliderFilterMask to the collider of a link and re-create its broadphase
+/// proxy if the filter changed. The broadphase applies the filter only when
+/// it creates pairs, so without re-creating the proxy a link made kinematic
+/// would keep its pairs with static colliders and a link made dynamic would
+/// only get them once it has moved. A static collider, including one welded
+/// to a static link by AttachFixedJoint, keeps its static filter;
+/// makeColliderDynamic applies the filter when it is made dynamic.
+inline void updateColliderFilter(WorldInfo *_world, LinkInfo *_link)
+{
+  if (!_link->collider || _link->isStaticOrFixed || isColliderStatic(_link))
+    return;
+
+  btBroadphaseProxy *proxy = _link->collider->getBroadphaseHandle();
+  if (!proxy)
+    return;
+
+  const int group = colliderFilterGroup(*_link);
+  const int mask = colliderFilterMask(*_link);
+  if (proxy->m_collisionFilterGroup == group &&
+      proxy->m_collisionFilterMask == mask)
+    return;
+
+  proxy->m_collisionFilterGroup = group;
+  proxy->m_collisionFilterMask = mask;
+  _world->world->refreshBroadphaseProxy(_link->collider.get());
+
+  // Re-creating the proxy dropped the contact manifolds of the collider.
+  // Wake the body and activate the collider so that they are computed again
+  // on the next step rather than once the body wakes up for another reason:
+  // the narrow phase skips pairs of two inactive colliders, and the collider
+  // of a sleeping body stays inactive until the end of the next step even
+  // after the body is woken up.
+  if (_link->collider->m_multiBody)
+    _link->collider->m_multiBody->wakeUp();
+  _link->collider->activate(true);
+}
+
+/////////////////////////////////////////////////
+/// \brief Recompute LinkInfo::kinematicContacts from the world setting and
+/// collide_without_contact, and update the broadphase filter of the collider
+/// to match. Before the collider is added to the world this only sets the
+/// flag, which CreateLinkCollider then uses for the initial filter.
+inline void updateKinematicContacts(WorldInfo *_world, LinkInfo *_link)
+{
+  _link->kinematicContacts =
+      _world->kinematicContacts || _link->collideWithoutContact;
+  updateColliderFilter(_world, _link);
 }
 
 class Base : public Implements3d<FeatureList<Feature>>
@@ -501,8 +827,34 @@ class Base : public Implements3d<FeatureList<Feature>>
     if (!model)
       return false;
 
-    // Remove nested models
-    for (auto &nestedModelID : model->nestedModelEntityIds)
+    auto *world = this->ReferenceInterface<WorldInfo>(model->world);
+    if (!world)
+      return false;
+
+    // If it's a top-level model, remove its multibody from the dynamics world
+    // first to ensure that when we later delete colliders (which happens
+    // when we erase links from our map), the multibody is no longer in the
+    // world and won't have dangling pointers to these colliders.
+    bool isNested = this->worlds.find(_parentID) == this->worlds.end();
+    if (!isNested)
+    {
+      if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
+      {
+        // The model has already been removed at some point
+        return false;
+      }
+      world->modelNameToEntityId.erase(model->name);
+
+      if (model->body)
+      {
+        world->world->removeMultiBody(model->body.get());
+      }
+    }
+
+    // Remove nested models recursively using a copy of the ID vector to avoid
+    // iterator invalidation.
+    auto nestedModelEntityIds = model->nestedModelEntityIds;
+    for (auto &nestedModelID : nestedModelEntityIds)
     {
       this->RemoveModelImpl(_modelID, this->GenerateIdentity(nestedModelID,
                             this->models.at(nestedModelID)));
@@ -528,26 +880,8 @@ class Base : public Implements3d<FeatureList<Feature>>
       }
     }
 
-    // If nested, no need to remove multibody
-    // \todo(iche033) Remove links and joints in nested model
-    bool isNested =  this->worlds.find(_parentID) == this->worlds.end();
-    if (isNested)
-    {
-      return true;
-    }
 
-    // Remove model from world
-    auto *world = this->ReferenceInterface<WorldInfo>(model->world);
-    if (!world)
-      return false;
-    if (world->modelIndexToEntityId.erase(model->indexInWorld) == 0)
-    {
-      // The model has already been removed at some point
-      return false;
-    }
-    world->modelNameToEntityId.erase(model->name);
-
-    // Remove all constraints related to this model
+    // Cleanup joints
     for (const auto jointID : model->jointEntityIds)
     {
       const auto joint = this->joints.at(jointID);
@@ -563,12 +897,15 @@ class Base : public Implements3d<FeatureList<Feature>>
       {
         world->world->removeMultiBodyConstraint(joint->jointLimits.get());
       }
+      if (joint->gearConstraint)
+      {
+        world->world->removeMultiBodyConstraint(joint->gearConstraint.get());
+      }
       this->joints.erase(jointID);
     }
-    // \todo(iche033) Remove external constraints related to this model
-    // (model->external_constraints) once this is supported
+    model->jointEntityIds.clear();
 
-    world->world->removeMultiBody(model->body.get());
+    // Cleanup links and their collisions
     for (const auto linkID : model->linkEntityIds)
     {
       const auto &link = this->links.at(linkID);
@@ -578,9 +915,9 @@ class Base : public Implements3d<FeatureList<Feature>>
         for (const auto shapeID : link->collisionEntityIds)
           this->collisions.erase(shapeID);
       }
-
       this->links.erase(linkID);
     }
+    model->linkEntityIds.clear();
 
     this->models.erase(_modelID);
 

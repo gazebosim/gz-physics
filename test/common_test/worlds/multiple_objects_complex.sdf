@@ -1,0 +1,204 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="multiple_objects_complex">
+    <gravity>0 0 0</gravity>
+    <physics name="default_physics" type="ode">
+    </physics>
+
+    <!-- Far object first in SDF so it is inserted into ODE's linked list first.
+         ODE's hash space processes the linked list from head (last inserted) to
+         tail (first inserted), so the first inserted object is processed last.
+         With the buggy ODE raycast, the last processed object overwrites the
+         closest hit. This should cause the test to fail when the bug is not fixed.
+    -->
+    <model name="far_box">
+      <pose>8 0 1.5 0 0 0</pose>
+      <static>true</static>
+      <link name="box_link">
+        <collision name="box_collision">
+          <geometry>
+            <box>
+              <size>4 4 4</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- Many objects along the X axis to confuse spatial traversal -->
+    <model name="box_1">
+      <pose>2 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="box_link">
+        <collision name="box_collision">
+          <geometry>
+            <box>
+              <size>0.6 0.6 0.6</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="sphere_1">
+      <pose>2.5 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="sphere_link">
+        <collision name="sphere_collision">
+          <geometry>
+            <sphere>
+              <radius>0.25</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="cylinder_1">
+      <pose>3 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="cylinder_link">
+        <collision name="cylinder_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.25</radius>
+              <length>0.5</length>
+            </cylinder>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="box_2">
+      <pose>3.5 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="box_link">
+        <collision name="box_collision">
+          <geometry>
+            <box>
+              <size>0.5 0.5 0.5</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="sphere_2">
+      <pose>4 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="sphere_link">
+        <collision name="sphere_collision">
+          <geometry>
+            <sphere>
+              <radius>0.2</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="cylinder_2">
+      <pose>4.5 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="cylinder_link">
+        <collision name="cylinder_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.2</radius>
+              <length>0.4</length>
+            </cylinder>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="box_3">
+      <pose>5 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="box_link">
+        <collision name="box_collision">
+          <geometry>
+            <box>
+              <size>0.4 0.4 0.4</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="sphere_3">
+      <pose>5.5 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="sphere_link">
+        <collision name="sphere_collision">
+          <geometry>
+            <sphere>
+              <radius>0.15</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="cylinder_3">
+      <pose>6 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="cylinder_link">
+        <collision name="cylinder_collision">
+          <geometry>
+            <cylinder>
+              <radius>0.15</radius>
+              <length>0.3</length>
+            </cylinder>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="box_4">
+      <pose>6.5 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="box_link">
+        <collision name="box_collision">
+          <geometry>
+            <box>
+              <size>0.3 0.3 0.3</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="sphere_4">
+      <pose>7 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="sphere_link">
+        <collision name="sphere_collision">
+          <geometry>
+            <sphere>
+              <radius>0.1</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- Closest object last in SDF so it is inserted into ODE's linked list last.
+         It will be processed first, allowing a later processed (far) object to
+         overwrite the closest hit with the ODE raycast bug.
+    -->
+    <model name="sphere_close">
+      <pose>1 0 0 0 0 0</pose>
+      <static>true</static>
+      <link name="sphere_link">
+        <collision name="sphere_collision">
+          <geometry>
+            <sphere>
+              <radius>0.3</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+  </world>
+</sdf>
