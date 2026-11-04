@@ -1293,6 +1293,8 @@ bool SDFFeatures::AddSdfCollision(
   double restitution = 0.0;
   double torsionalCoefficient = 1.0;
   double rollingFriction = 0.0;
+  std::optional<double> kp;
+  std::optional<double> kd;
   uint16_t collideBitmask = std::numeric_limits<uint16_t>::max();
   std::optional<uint16_t> categoryBitmask;
   bool collideWithoutContact = false;
@@ -1345,6 +1347,13 @@ bool SDFFeatures::AddSdfCollision(
         if (const auto cwc = contact->FindElement("collide_without_contact"))
         {
           collideWithoutContact = cwc->Get<bool>();
+        }
+        if (const auto bullet = contact->FindElement("bullet"))
+        {
+          if (const auto kpElem = bullet->FindElement("kp"))
+            kp = kpElem->Get<double>();
+          if (const auto kdElem = bullet->FindElement("kd"))
+            kd = kdElem->Get<double>();
         }
       }
     }
@@ -1412,10 +1421,17 @@ bool SDFFeatures::AddSdfCollision(
       if (geom->MeshShape())
       {
         // Set meshes to use softer contacts for stability
-        // \todo(iche033) load <kp> and <kd> values from SDF
-        const btScalar kp = btScalar(1e15);
-        const btScalar kd = btScalar(1e14);
-        linkInfo->collider->setContactStiffnessAndDamping(kp, kd);
+        const btScalar meshKp = btScalar(1e15);
+        const btScalar meshKd = btScalar(1e14);
+        linkInfo->collider->setContactStiffnessAndDamping(meshKp, meshKd);
+      }
+      if (kp.has_value() || kd.has_value())
+      {
+        linkInfo->collider->setContactStiffnessAndDamping(
+          static_cast<btScalar>(
+            kp.value_or(linkInfo->collider->getContactStiffness())),
+          static_cast<btScalar>(
+            kd.value_or(linkInfo->collider->getContactDamping())));
       }
     }
     else if (linkInfo->shape)
