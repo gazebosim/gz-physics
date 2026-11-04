@@ -64,18 +64,47 @@ FrameData3d KinematicsFeatures::FrameDataRelativeToWorld(
 
   if (m->body_weldid[bodyId] == 0)
   {
-    // Static bodies have zero velocity.
+    // Static bodies have zero velocity and acceleration.
     data.linearVelocity.setZero();
     data.angularVelocity.setZero();
+    data.linearAcceleration.setZero();
+    data.angularAcceleration.setZero();
   }
   else
   {
+    const mjtNum *subtreeCom = &d->subtree_com[3 * m->body_rootid[bodyId]];
     mjtNum velocity[6];
     mju_transformSpatial(velocity, &d->cvel[6 * bodyId], 0,
-                         data.pose.translation().data(),
-                         &d->subtree_com[3 * m->body_rootid[bodyId]], nullptr);
+                         data.pose.translation().data(), subtreeCom, nullptr);
     mju_copy3(data.angularVelocity.data(), velocity);
     mju_copy3(data.linearVelocity.data(), velocity + 3);
+
+    // cacc is only valid after mj_rnePostConstraint, which WorldForwardStep
+    // calls after every step. mj_forward clears the flag, so before the first
+    // step the accelerations stay zero.
+    if (d->flg_rnepost)
+    {
+      mjtNum acceleration[6];
+      mju_transformSpatial(acceleration, &d->cacc[6 * bodyId], 0,
+                           data.pose.translation().data(), subtreeCom,
+                           nullptr);
+      mju_copy3(data.angularAcceleration.data(), acceleration);
+
+      // cacc is a spatial acceleration. The acceleration of the frame's
+      // origin adds the angular velocity crossed with its linear velocity.
+      data.linearAcceleration =
+          Eigen::Vector3d(acceleration[3], acceleration[4], acceleration[5]) +
+          data.angularVelocity.cross(data.linearVelocity);
+
+      // MuJoCo offsets cacc by -gravity, which is what an accelerometer
+      // measures. Add gravity back to report the acceleration of the frame.
+      if (!(m->opt.disableflags & mjDSBL_GRAVITY))
+      {
+        data.linearAcceleration +=
+            Eigen::Vector3d(m->opt.gravity[0], m->opt.gravity[1],
+                            m->opt.gravity[2]);
+      }
+    }
   }
   return data;
 }
