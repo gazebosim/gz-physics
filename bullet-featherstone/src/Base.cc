@@ -24,6 +24,7 @@
 #include <gz/math/Quaternion.hh>
 #include <gz/math/Vector3.hh>
 
+#include <algorithm>
 #include <utility>
 
 namespace
@@ -279,6 +280,101 @@ const Eigen::Vector3d &GzMultiBody::GetBaseLinkFrameLinearVelocity() const
 const Eigen::Vector3d &GzMultiBody::GetBaseLinkFrameAngularVelocity() const
 {
   return this->baseLinkFrameAngVel;
+}
+
+void GzMultiBody::ReadVelocities(WorldVelocities &_out)
+{
+  const int numLinks = this->getNumLinks();
+  const std::size_t count = static_cast<std::size_t>(numLinks) + 1;
+  _out.linear.resize(count);
+  _out.angular.resize(count);
+  _out.linear[0] = convert(this->getBaseVel());
+  _out.angular[0] = convert(this->getBaseOmega());
+  if (numLinks == 0)
+    return;
+
+  // Velocities of the center of mass of every link in the link frames.
+  this->localOmegaScratch.resize(count);
+  this->localVelScratch.resize(count);
+  this->compTreeLinkVelocities(this->localOmegaScratch.data(),
+      this->localVelScratch.data());
+
+  // Rotation from every link frame to the world. A parent precedes its
+  // children in the link array, so one pass accumulates the rotations
+  // instead of walking up the tree for every link.
+  this->localToWorldScratch.resize(count);
+  this->localToWorldScratch[0] = this->getWorldToBaseRot().inverse();
+  for (int i = 0; i < numLinks; ++i)
+  {
+    const std::size_t k = static_cast<std::size_t>(i) + 1;
+    const std::size_t parent = static_cast<std::size_t>(this->getParent(i)) + 1;
+    this->localToWorldScratch[k] = this->localToWorldScratch[parent] *
+        this->getParentToLocalRot(i).inverse();
+    _out.angular[k] = convert(
+        quatRotate(this->localToWorldScratch[k], this->localOmegaScratch[k]));
+    _out.linear[k] = convert(
+        quatRotate(this->localToWorldScratch[k], this->localVelScratch[k]));
+  }
+}
+
+void GzMultiBody::RecordVelocitiesBeforeStep()
+{
+  GZ_PROFILE("GzMultiBody::RecordVelocitiesBeforeStep");
+  this->ReadVelocities(this->velocitiesBeforeStep);
+}
+
+void GzMultiBody::UpdateAccelerations(double _dt)
+{
+  GZ_PROFILE("GzMultiBody::UpdateAccelerations");
+  if (!(_dt > 0.0))
+    return;
+
+  this->ReadVelocities(this->velocitiesAfterStep);
+  const std::size_t count = this->velocitiesAfterStep.linear.size();
+  if (this->velocitiesBeforeStep.linear.size() != count)
+    return;
+
+  this->accelerations.linear.resize(count);
+  this->accelerations.angular.resize(count);
+
+  // The velocities of a multibody read zero once it falls asleep. That is
+  // not an acceleration.
+  if (!this->isAwake())
+  {
+    std::fill(this->accelerations.linear.begin(),
+        this->accelerations.linear.end(), Eigen::Vector3d::Zero().eval());
+    std::fill(this->accelerations.angular.begin(),
+        this->accelerations.angular.end(), Eigen::Vector3d::Zero().eval());
+    return;
+  }
+
+  for (std::size_t i = 0; i < count; ++i)
+  {
+    this->accelerations.linear[i] =
+        (this->velocitiesAfterStep.linear[i] -
+         this->velocitiesBeforeStep.linear[i]) / _dt;
+    this->accelerations.angular[i] =
+        (this->velocitiesAfterStep.angular[i] -
+         this->velocitiesBeforeStep.angular[i]) / _dt;
+  }
+}
+
+const Eigen::Vector3d &GzMultiBody::GetLinkComLinearAcceleration(
+    int _linkIndex) const
+{
+  static const Eigen::Vector3d kZero = Eigen::Vector3d::Zero();
+  const std::size_t k = static_cast<std::size_t>(_linkIndex + 1);
+  return k < this->accelerations.linear.size() ?
+      this->accelerations.linear[k] : kZero;
+}
+
+const Eigen::Vector3d &GzMultiBody::GetLinkAngularAcceleration(
+    int _linkIndex) const
+{
+  static const Eigen::Vector3d kZero = Eigen::Vector3d::Zero();
+  const std::size_t k = static_cast<std::size_t>(_linkIndex + 1);
+  return k < this->accelerations.angular.size() ?
+      this->accelerations.angular[k] : kZero;
 }
 
 }  // namespace bullet_featherstone
