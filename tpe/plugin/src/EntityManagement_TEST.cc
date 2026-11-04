@@ -233,3 +233,48 @@ TEST(EntityManagement_TEST, RemoveModelDropsLinkAndCollisionRecords)
   ASSERT_NE(nullptr, model2);
   EXPECT_EQ(nullptr, model2->GetLink("l"));
 }
+
+/////////////////////////////////////////////////
+// Regression test for
+// https://github.com/gazebosim/gz-physics/issues/1080
+// GetWorld(index) must return an invalid identity for any index >=
+// GetWorldCount(). Previously the implementation advanced a std::map
+// iterator past end() (undefined behavior), which could yield a live
+// world identity for out-of-range indices.
+TEST(EntityManagement_TEST, GetWorldOutOfRangeIndex)
+{
+  plugin::Loader loader;
+  loader.LoadLib(tpe_plugin_LIB);
+  auto engine = physics::RequestEngine3d<TestFeatureList>::From(
+      loader.Instantiate("gz::physics::tpeplugin::Plugin"));
+  ASSERT_NE(nullptr, engine);
+
+  EXPECT_EQ(0u, engine->GetWorldCount());
+
+  // With no worlds, every index is out of range.
+  EXPECT_EQ(nullptr, engine->GetWorld(0));
+  EXPECT_EQ(nullptr, engine->GetWorld(1));
+  EXPECT_EQ(nullptr, engine->GetWorld(100));
+
+  auto world = engine->ConstructEmptyWorld("world");
+  ASSERT_NE(nullptr, world);
+  EXPECT_EQ(1u, engine->GetWorldCount());
+
+  // In-range index still resolves to the live world.
+  EXPECT_EQ(world, engine->GetWorld(0));
+
+  // Out-of-range indices must not return a live world.
+  EXPECT_EQ(nullptr, engine->GetWorld(1));
+  EXPECT_EQ(nullptr, engine->GetWorld(2));
+  EXPECT_EQ(nullptr, engine->GetWorld(100));
+
+  // Add a second world to exercise a non-trivial map.
+  auto world2 = engine->ConstructEmptyWorld("world2");
+  ASSERT_NE(nullptr, world2);
+  EXPECT_EQ(2u, engine->GetWorldCount());
+
+  EXPECT_EQ(world, engine->GetWorld(0));
+  EXPECT_EQ(world2, engine->GetWorld(1));
+  EXPECT_EQ(nullptr, engine->GetWorld(2));
+  EXPECT_EQ(nullptr, engine->GetWorld(100));
+}
