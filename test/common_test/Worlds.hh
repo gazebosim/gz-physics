@@ -38,6 +38,7 @@ const auto kEmptySdf = CommonTestWorld("empty.sdf");
 const auto kFallingWorld = CommonTestWorld("falling.world");
 const auto kFallingAddedMassWorld = CommonTestWorld("falling_added_mass.world");
 const auto kGroundSdf = CommonTestWorld("ground.sdf");
+const auto kHeightmapSdf = CommonTestWorld("heightmap.sdf");
 const auto kJointAcrossModelsSdf = CommonTestWorld("joint_across_models.sdf");
 const auto kJointAcrossModelsFixedSdf =
     CommonTestWorld("joint_across_models_fixed.sdf");
