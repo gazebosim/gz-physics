@@ -97,7 +97,20 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":gz-physics",
+        "@eigen",
         "@gz-common//geospatial:geospatial",
+        "@gz-math//:gz-math",
+        "@gz-math//eigen3",
+    ],
+)
+
+cc_test(
+    name = "heightmap_SampleHeightmap_TEST",
+    srcs = ["heightmap/src/SampleHeightmap_TEST.cc"],
+    deps = [
+        ":heightmap",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 

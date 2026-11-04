@@ -60,6 +60,10 @@ common_tests = glob(
     include = [
         "common_test/*.cc",
     ],
+    # Requires DEM support in gz-common's geospatial component
+    exclude = [
+        "common_test/heightmap_features.cc",
+    ],
 )
 
 [cc_test(
