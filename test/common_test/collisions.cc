@@ -706,10 +706,87 @@ TEST_F(CollisionMeshTestFeaturesList, ContactSurfaceBulletKpKd)
       world->ConstructModel(*root.Model());
     }
 
+    // 4. Compliant sphere (kp = 1000, kd = 100) resting on a static box with
+    // mesh-like stiffness/damping (kp = 1e15, kd = 1e14) raised above the
+    // ground plane (top surface at z = 2.0). Combined damping should use the
+    // harmonic mean (~100) rather than the sum (~1e14), allowing the sphere to
+    // compress to its spring equilibrium instead of locking up.
+    {
+      const std::string stiffBaseStr = R"(
+      <sdf version="1.11">
+        <model name="stiff_base">
+          <static>true</static>
+          <pose>6 0 1.5 0 0 0</pose>
+          <link name="body">
+            <collision name="collision">
+              <geometry>
+                <box><size>1 1 1</size></box>
+              </geometry>
+              <surface>
+                <contact>
+                  <bullet><kp>1e15</kp><kd>1e14</kd></bullet>
+                </contact>
+              </surface>
+            </collision>
+          </link>
+        </model>
+      </sdf>)";
+      sdf::Root root;
+      sdf::Errors errors = root.LoadSdfString(stiffBaseStr);
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+
+      errors = root.LoadSdfString(getSphereStr(
+          "sphere_soft_on_stiff_base",
+          gz::math::Pose3d(6, 0, 2.5, 0, 0, 0),
+          "<bullet><kp>1000</kp><kd>100</kd></bullet>"));
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+    }
+
+    // 5. Two colliding bodies with comparable damping (kd_1 = 200, kd_2 = 200 ->
+    // combined kd = 100, matching sphere_soft_bullet's relaxation rate).
+    {
+      const std::string dampedBaseStr = R"(
+      <sdf version="1.11">
+        <model name="damped_base">
+          <static>true</static>
+          <pose>8 0 1.5 0 0 0</pose>
+          <link name="body">
+            <collision name="collision">
+              <geometry>
+                <box><size>1 1 1</size></box>
+              </geometry>
+              <surface>
+                <contact>
+                  <bullet><kp>1e15</kp><kd>200</kd></bullet>
+                </contact>
+              </surface>
+            </collision>
+          </link>
+        </model>
+      </sdf>)";
+      sdf::Root root;
+      sdf::Errors errors = root.LoadSdfString(dampedBaseStr);
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+
+      errors = root.LoadSdfString(getSphereStr(
+          "sphere_series_damping",
+          gz::math::Pose3d(8, 0, 2.5, 0, 0, 0),
+          "<bullet><kp>1000</kp><kd>200</kd></bullet>"));
+      ASSERT_TRUE(errors.empty()) << errors.front();
+      ASSERT_NE(nullptr, root.Model());
+      world->ConstructModel(*root.Model());
+    }
+
     gz::physics::ForwardStep::Output output;
     gz::physics::ForwardStep::State state;
     gz::physics::ForwardStep::Input input;
-    for (std::size_t i = 0; i < 2000; ++i)
+    for (std::size_t i = 0; i < 100; ++i)
     {
       world->Step(output, state, input);
     }
@@ -717,6 +794,31 @@ TEST_F(CollisionMeshTestFeaturesList, ContactSurfaceBulletKpKd)
     auto softBody = world->GetModel("sphere_soft_bullet")->GetLink("body");
     auto stiffBody = world->GetModel("sphere_stiff_bullet")->GetLink("body");
     auto odeBody = world->GetModel("sphere_ode_only")->GetLink("body");
+    auto softOnStiffBaseBody =
+        world->GetModel("sphere_soft_on_stiff_base")->GetLink("body");
+    auto seriesDampingBody =
+        world->GetModel("sphere_series_damping")->GetLink("body");
+
+    // At t = 0.1 s (one time constant tau = kd / kp = 100 / 1000 = 0.1 s),
+    // sphere_soft_bullet (kd = 100 vs unset), sphere_soft_on_stiff_base
+    // (kd = 100 vs 1e14 -> harmonic mean ~100), and sphere_series_damping
+    // (kd = 200 vs 200 -> harmonic mean 100) should all have identical
+    // transient trajectories relative to their support surface.
+    const double zSoftTransient =
+        softBody->FrameDataRelativeToWorld().pose.translation().z();
+    const double zSoftOnStiffTransient =
+        softOnStiffBaseBody->FrameDataRelativeToWorld().pose.translation().z() -
+        2.0;
+    const double zSeriesDampingTransient =
+        seriesDampingBody->FrameDataRelativeToWorld().pose.translation().z() -
+        2.0;
+    EXPECT_NEAR(zSoftTransient, zSoftOnStiffTransient, 1e-4);
+    EXPECT_NEAR(zSoftTransient, zSeriesDampingTransient, 1e-4);
+
+    for (std::size_t i = 100; i < 2000; ++i)
+    {
+      world->Step(output, state, input);
+    }
 
     const double zSoft =
         softBody->FrameDataRelativeToWorld().pose.translation().z();
@@ -724,6 +826,12 @@ TEST_F(CollisionMeshTestFeaturesList, ContactSurfaceBulletKpKd)
         stiffBody->FrameDataRelativeToWorld().pose.translation().z();
     const double zOde =
         odeBody->FrameDataRelativeToWorld().pose.translation().z();
+    const double zSoftOnStiffBase =
+        softOnStiffBaseBody->FrameDataRelativeToWorld().pose.translation().z() -
+        2.0;
+    const double zSeriesDamping =
+        seriesDampingBody->FrameDataRelativeToWorld().pose.translation().z() -
+        2.0;
 
     // Steady-state penetration under mg = 10 * 9.8 = 98 N is mg / kp:
     // - soft (kp = 1000): penetration ~ 0.098 m -> z ~ 0.402 m
@@ -732,6 +840,8 @@ TEST_F(CollisionMeshTestFeaturesList, ContactSurfaceBulletKpKd)
     EXPECT_NEAR(0.402, zSoft, 1e-2);
     EXPECT_NEAR(0.499, zStiff, 5e-3);
     EXPECT_NEAR(0.500, zOde, 5e-3);
+    EXPECT_NEAR(0.402, zSoftOnStiffBase, 1e-2);
+    EXPECT_NEAR(0.402, zSeriesDamping, 1e-2);
     EXPECT_LT(zSoft + 0.08, zStiff);
   }
 }
