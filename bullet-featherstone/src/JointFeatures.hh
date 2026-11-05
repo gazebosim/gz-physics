@@ -184,6 +184,14 @@ class JointFeatures :
   // ----- SetFixedJointWeldChildToParentFeature -----
   public: void SetFixedJointWeldChildToParent(
     const Identity &_id, bool _weldChildToParent) override;
+
+  /// \brief Check that a dof index is valid for a joint, i.e. smaller than
+  /// GetJointDegreesOfFreedom. Logs an error otherwise.
+  /// \param[in] _id Joint identity.
+  /// \param[in] _dof Index of the degree of freedom.
+  /// \return True if the index is valid.
+  private: bool ValidateDofParam(
+      const Identity &_id, std::size_t _dof) const;
 };
 }  // namespace bullet_featherstone
 }  // namespace physics

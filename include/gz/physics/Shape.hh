@@ -230,7 +230,8 @@ namespace gz
       {
         /// \brief Set the collision filter bitmask of this shape
         /// \param[in] _mask
-        ///   A sixteen bit bitmask, if the bitwise AND of two objects
+        ///   A sixteen bit bitmask.
+        ///   If ((category1 & collision2) | (category2 & collision1))
         ///   evaluates to 0, their collision will be ignored
         public: void SetCollisionFilterMask(const uint16_t _mask);
 
@@ -252,6 +253,42 @@ namespace gz
             const Identity &_shapeID) const = 0;
 
         public: virtual void RemoveCollisionFilterMask(
+            const Identity &_shapeID) = 0;
+      };
+    };
+
+    /////////////////////////////////////////////////
+    class GZ_PHYSICS_VISIBLE CategoryFilterMaskFeature
+        : public virtual Feature
+    {
+      public: template <typename PolicyT, typename FeaturesT>
+      class Shape : public virtual Feature::Shape<PolicyT, FeaturesT>
+      {
+        /// \brief Set the category filter bitmask of this shape
+        /// \param[in] _mask
+        ///   A sixteen bit bitmask.
+        ///   If ((category1 & collision2) | (category2 & collision1))
+        ///   evaluates to 0, their collision will be ignored
+        public: void SetCategoryFilterMask(const uint16_t _mask);
+
+        /// \brief Get the category filter bitmask of this shape
+        /// \return The category filter bitmask of this shape
+        public: uint16_t GetCategoryFilterMask() const;
+
+        /// \brief Removes the category filter bitmask from this shape
+        public: void RemoveCategoryFilterMask();
+      };
+
+      public: template <typename PolicyT>
+      class Implementation : public virtual Feature::Implementation<PolicyT>
+      {
+        public: virtual void SetCategoryFilterMask(
+            const Identity &_shapeID, const uint16_t _mask) = 0;
+
+        public: virtual uint16_t GetCategoryFilterMask(
+            const Identity &_shapeID) const = 0;
+
+        public: virtual void RemoveCategoryFilterMask(
             const Identity &_shapeID) = 0;
       };
     };

@@ -105,6 +105,9 @@ class JointFeatures :
   public: std::size_t GetJointDegreesOfFreedom(
       const Identity &_id) const override;
 
+  private: bool ValidateDofParam(
+      const Identity &_id, std::size_t _dof) const;
+
   public: Pose3d GetJointTransformFromParent(
       const Identity &_id) const override;
 

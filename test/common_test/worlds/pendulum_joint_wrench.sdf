@@ -61,6 +61,10 @@
                 <mu>0.0</mu>
                 <mu2>0.0</mu2>
               </ode>
+              <bullet>
+                <friction>0.0</friction>
+                <friction2>0.0</friction2>
+              </bullet>
             </friction>
           </surface>
         </collision>

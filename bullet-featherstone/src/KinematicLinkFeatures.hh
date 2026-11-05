@@ -28,7 +28,8 @@ namespace bullet_featherstone {
 
 #if BT_BULLET_VERSION >= 307
 struct KinematicLinkFeatureList : FeatureList<
-  KinematicLink
+  KinematicLink,
+  KinematicContacts
 > { };
 
 class KinematicLinkFeatures :
@@ -41,6 +42,14 @@ class KinematicLinkFeatures :
       bool _kinematic) override;
 
   public: bool GetLinkKinematic(
+      const Identity &_id) const override;
+
+  // ----- Kinematic contacts -----
+  public: void SetWorldKinematicContactsEnabled(
+      const Identity &_id,
+      bool _enabled) override;
+
+  public: bool GetWorldKinematicContactsEnabled(
       const Identity &_id) const override;
 };
 #endif

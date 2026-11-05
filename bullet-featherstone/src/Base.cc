@@ -17,33 +17,154 @@
 
 #include "Base.hh"
 
+#include <BulletCollision/CollisionDispatch/btManifoldResult.h>
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
 
+#include <gz/common/Profiler.hh>
 #include <gz/math/Quaternion.hh>
 #include <gz/math/Vector3.hh>
 
 #include <utility>
+
+namespace
+{
+
+bool doCollide(uint32_t _categoryBitmask0, uint32_t _collideBitmask0,
+               uint32_t _categoryBitmask1, uint32_t _collideBitmask1)
+{
+  return (_categoryBitmask0 & _collideBitmask1) |
+         (_categoryBitmask1 & _collideBitmask0);
+}
+
+/////////////////////////////////////////////////
+// Bullet combines contact stiffness using the harmonic mean, but by default
+// sums contact damping (d0 + d1), causing the larger damping to dominate.
+// This callback uses the configured object's damping directly when only one
+// object specifies <kp>/<kd>, and combines damping via the harmonic mean
+// (1 / (1/d0 + 1/d1)) when both objects specify it. This allows compliant
+// objects to compress naturally when contacting stiff surfaces.
+btScalar calculateCombinedContactDamping(
+    const btCollisionObject *_body0, const btCollisionObject *_body1)
+{
+  const bool has0 = (_body0->getCollisionFlags() &
+      btCollisionObject::CF_HAS_CONTACT_STIFFNESS_DAMPING) != 0;
+  const bool has1 = (_body1->getCollisionFlags() &
+      btCollisionObject::CF_HAS_CONTACT_STIFFNESS_DAMPING) != 0;
+  if (has0 && !has1)
+    return _body0->getContactDamping();
+  if (has1 && !has0)
+    return _body1->getContactDamping();
+  const btScalar d0 = _body0->getContactDamping();
+  const btScalar d1 = _body1->getContactDamping();
+  if (d0 <= btScalar(0) || d1 <= btScalar(0))
+    return btScalar(0);
+  return btScalar(1) / (btScalar(1) / d0 + btScalar(1) / d1);
+}
+
+}  // namespace
 
 namespace gz {
 namespace physics {
 namespace bullet_featherstone {
 
 /////////////////////////////////////////////////
+bool GzCollisionFilterCallback::needBroadphaseCollision(
+    btBroadphaseProxy *_proxy0, btBroadphaseProxy *_proxy1) const
+{
+  GZ_PROFILE("GzCollisionFilterCallback::needBroadphaseCollision");
+  GzMultiBodyLinkCollider *col0 =
+          static_cast<GzMultiBodyLinkCollider *>(
+          _proxy0->m_clientObject);
+  GzMultiBodyLinkCollider *col1 =
+          static_cast<GzMultiBodyLinkCollider *>(
+          _proxy1->m_clientObject);
+
+  if (col0 && col1)
+  {
+    // For backward compatibility, if category bitmask is not set, it
+    // defaults to the same value as collide bitmask.
+    uint32_t col0CategoryBitmask = col0->categoryBitmask.has_value() ?
+        col0->categoryBitmask.value() : col0->collideBitmask;
+    uint32_t col1CategoryBitmask = col1->categoryBitmask.has_value() ?
+        col1->categoryBitmask.value() : col1->collideBitmask;
+    // Early out if collide bitmask test fails
+    if (!doCollide(col0CategoryBitmask, col0->collideBitmask,
+        col1CategoryBitmask, col1->collideBitmask))
+    {
+      return false;
+    }
+  }
+
+  // Continue filtering collision based on logic in
+  // btOverlappingPairCache::needsBroadphaseCollision
+  bool collides = (_proxy0->m_collisionFilterGroup &
+                   _proxy1->m_collisionFilterMask) != 0;
+  collides = collides && (_proxy1->m_collisionFilterGroup &
+                          _proxy0->m_collisionFilterMask);
+  return collides;
+}
+
+/////////////////////////////////////////////////
+GzCollisionDispatcher::GzCollisionDispatcher(
+    btCollisionConfiguration *_collisionConfiguration)
+    : btCollisionDispatcher(_collisionConfiguration)
+{
+}
+
+/////////////////////////////////////////////////
+bool GzCollisionDispatcher::needsCollision(const btCollisionObject *_body0,
+    const btCollisionObject *_body1)
+{
+  GZ_PROFILE("GzCollisionDispatcher::needsCollision");
+  const GzMultiBodyLinkCollider *col0 =
+          static_cast<const GzMultiBodyLinkCollider *>(_body0);
+  const GzMultiBodyLinkCollider *col1 =
+          static_cast<const GzMultiBodyLinkCollider *>(_body1);
+
+  // Collision filtering in narrow phase.
+  if (col0 && col1)
+  {
+    // For backward compatibility, if category bitmask is not set, it
+    // defaults to the same value as collide bitmask.
+    uint32_t col0CategoryBitmask = col0->categoryBitmask.has_value() ?
+        col0->categoryBitmask.value() : col0->collideBitmask;
+    uint32_t col1CategoryBitmask = col1->categoryBitmask.has_value() ?
+        col1->categoryBitmask.value() : col1->collideBitmask;
+    // Early out if collide bitmask test fails
+    if (!doCollide(col0CategoryBitmask, col0->collideBitmask,
+        col1CategoryBitmask, col1->collideBitmask))
+    {
+      return false;
+    }
+  }
+
+  return btCollisionDispatcher::needsCollision(_body0, _body1);
+}
+
+/////////////////////////////////////////////////
 WorldInfo::WorldInfo(std::string name_)
   : name(std::move(name_))
 {
+  GZ_PROFILE("WorldInfo::WorldInfo");
   this->collisionConfiguration =
     std::make_unique<btDefaultCollisionConfiguration>();
   this->dispatcher =
-    std::make_unique<btCollisionDispatcher>(collisionConfiguration.get());
+    std::make_unique<GzCollisionDispatcher>(collisionConfiguration.get());
   this->broadphase = std::make_unique<btDbvtBroadphase>();
   this->solver = std::make_unique<btMultiBodyConstraintSolver>();
   this->world = std::make_unique<btMultiBodyDynamicsWorld>(
     dispatcher.get(), broadphase.get(), solver.get(),
     collisionConfiguration.get());
 
+  // Set custom collision filter callback for filtering based on
+  // surface contact parameters
+  this->collisionFilterCallback = std::make_unique<GzCollisionFilterCallback>();
+  btOverlappingPairCache* pairCache = this->world->getPairCache();
+  pairCache->setOverlapFilterCallback(this->collisionFilterCallback.get());
+
   btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher.get());
+  gCalculateCombinedContactDampingCallback = &calculateCombinedContactDamping;
 
   // Needed for force-torque sensor
   this->world->getSolverInfo().m_jointFeedbackInJointFrame = true;
@@ -67,6 +188,7 @@ void GzMultiBody::SetJointPosForDof(
   std::size_t _dof,
   btScalar _value)
 {
+  GZ_PROFILE("GzMultiBody::SetJointPosForDof");
   btScalar *positions =
       this->getJointPosMultiDof(_jointIndex);
 
@@ -112,6 +234,7 @@ void GzMultiBody::SetJointPosForDof(
 btScalar GzMultiBody::GetJointPosForDof(int _jointIndex, std::size_t _dof)
     const
 {
+  GZ_PROFILE("GzMultiBody::GetJointPosForDof");
   if (this->getLink(_jointIndex).m_jointType == btMultibodyLink::eSpherical)
   {
     // Ball joints store joint pos as a quaternion (4 floats) instead of one
@@ -129,12 +252,14 @@ btScalar GzMultiBody::GetJointPosForDof(int _jointIndex, std::size_t _dof)
 
 void GzMultiBody::SetBaseWorldTransform(const btTransform &_pose)
 {
+  GZ_PROFILE("GzMultiBody::SetBaseWorldTransform");
   this->setBaseWorldTransform(_pose);
   this->needsCollisionTransformsUpdate = true;
 }
 
 void GzMultiBody::UpdateCollisionTransformsIfNeeded()
 {
+  GZ_PROFILE("GzMultiBody::UpdateCollisionTransformsIfNeeded");
   if (this->needsCollisionTransformsUpdate)
   {
     btAlignedObjectArray<btQuaternion> scratchWorldToLocal;
@@ -148,6 +273,7 @@ void GzMultiBody::UpdateCollisionTransformsIfNeeded()
 void GzMultiBody::AddJointDampingStiffnessTorque(int _jointIndex,
     double _damping, double _springStiffness, double _springReference)
 {
+  GZ_PROFILE("GzMultiBody::AddJointDampingStiffnessTorque");
   const btMultibodyLink& link = this->getLink(_jointIndex);
 
   for (int dof = 0; dof < link.m_dofCount; ++dof)
@@ -163,6 +289,23 @@ void GzMultiBody::AddJointDampingStiffnessTorque(int _jointIndex,
 
     this->addJointTorqueMultiDof(_jointIndex, dof, torque);
   }
+}
+
+void GzMultiBody::SetBaseLinkFrameVelocity(const Eigen::Vector3d &_linVel,
+    const Eigen::Vector3d &_angVel)
+{
+  this->baseLinkFrameLinVel = _linVel;
+  this->baseLinkFrameAngVel = _angVel;
+}
+
+const Eigen::Vector3d &GzMultiBody::GetBaseLinkFrameLinearVelocity() const
+{
+  return this->baseLinkFrameLinVel;
+}
+
+const Eigen::Vector3d &GzMultiBody::GetBaseLinkFrameAngularVelocity() const
+{
+  return this->baseLinkFrameAngVel;
 }
 
 }  // namespace bullet_featherstone
