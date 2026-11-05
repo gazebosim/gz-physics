@@ -23,12 +23,15 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <unordered_map>
@@ -57,6 +60,7 @@
 #include <sdf/Plane.hh>
 #include <sdf/Sphere.hh>
 #include <sdf/Surface.hh>
+#include <sdf/World.hh>
 
 #include "Base.hh"
 
@@ -174,6 +178,152 @@ void copyStandardJointAxisProperties(
 double convertScrewThreadPitch(const double _pitch)
 {
   return _pitch / (2.0 * GZ_PI);
+}
+
+/////////////////////////////////////////////////
+/// \brief Read the numbers held by the child element `_name` of a
+/// `<gz:mujoco>` element.
+/// \param[in] _elem The `<gz:mujoco>` element.
+/// \param[in] _name Name of the child element.
+/// \param[in] _minCount Minimum number of values the child must hold.
+/// \param[in] _maxCount Maximum number of values the child must hold.
+/// \return The values, or nullopt if the child is missing or doesn't hold
+/// between `_minCount` and `_maxCount` numbers, in which case an error is
+/// printed.
+std::optional<std::vector<double>> readMujocoNumbers(
+    const ::sdf::ElementPtr &_elem, const std::string &_name,
+    std::size_t _minCount, std::size_t _maxCount)
+{
+  if (!_elem->HasElement(_name))
+    return std::nullopt;
+
+  const std::string text = _elem->Get<std::string>(_name);
+  std::istringstream stream(text);
+  std::vector<double> values;
+  for (double value; stream >> value;)
+    values.push_back(value);
+
+  if (!stream.eof() || values.size() < _minCount ||
+      values.size() > _maxCount || !std::all_of(values.begin(), values.end(),
+          [](double _v) { return std::isfinite(_v); }))
+  {
+    gzerr << "<gz:mujoco><" << _name << "> must hold " << _minCount
+          << (_minCount == _maxCount ? "" : " to " + std::to_string(_maxCount))
+          << " finite numbers, got [" << text << "]. Ignoring it.\n";
+    return std::nullopt;
+  }
+  return values;
+}
+
+/////////////////////////////////////////////////
+/// \brief Apply the MuJoCo contact parameters of a collision's
+/// `<surface><gz:mujoco>` element, if present, to its geom.
+/// \param[in] _surfaceElem The `<surface>` element of the collision.
+/// \param[in,out] _geom The geom of the collision.
+void applyMujocoSurface(const ::sdf::ElementPtr &_surfaceElem, mjsGeom *_geom)
+{
+  const ::sdf::ElementPtr elem = _surfaceElem->FindElement("gz:mujoco");
+  if (!elem)
+    return;
+
+  if (auto solref = readMujocoNumbers(elem, "solref", 2, 2))
+    std::copy(solref->begin(), solref->end(), _geom->solref);
+
+  if (auto solimp = readMujocoNumbers(elem, "solimp", 3, 5))
+    std::copy(solimp->begin(), solimp->end(), _geom->solimp);
+
+  // Unless set explicitly, condim follows the number of friction
+  // coefficients: sliding (3), plus torsional (4), plus rolling (6).
+  if (auto friction = readMujocoNumbers(elem, "friction", 1, 3))
+  {
+    if (std::any_of(friction->begin(), friction->end(),
+                    [](double _v) { return _v < 0.0; }))
+    {
+      gzerr << "<gz:mujoco><friction> must not be negative. Ignoring it.\n";
+    }
+    else
+    {
+      std::copy(friction->begin(), friction->end(), _geom->friction);
+      _geom->condim = friction->size() == 1 ? 3 : 2 * friction->size();
+    }
+  }
+
+  if (auto condim = readMujocoNumbers(elem, "condim", 1, 1))
+  {
+    const int value = static_cast<int>(condim->front());
+    if (value == 1 || value == 3 || value == 4 || value == 6)
+    {
+      _geom->condim = value;
+    }
+    else
+    {
+      gzerr << "<gz:mujoco><condim> must be 1, 3, 4 or 6, got ["
+            << condim->front() << "]. Ignoring it.\n";
+    }
+  }
+
+  if (auto priority = readMujocoNumbers(elem, "priority", 1, 1))
+    _geom->priority = static_cast<int>(priority->front());
+}
+
+/////////////////////////////////////////////////
+/// \brief Apply the MuJoCo options of the world's `<physics><gz:mujoco>`
+/// element, if present, to the spec.
+/// \param[in] _sdfWorld The SDF world.
+/// \param[in,out] _spec The spec of the world.
+/// \return True if the element is present.
+bool applyMujocoPhysics(const ::sdf::World &_sdfWorld, mjSpec *_spec)
+{
+  const ::sdf::Physics *physics = _sdfWorld.PhysicsDefault();
+  if (!physics || !physics->Element())
+    return false;
+
+  const ::sdf::ElementPtr elem = physics->Element()->FindElement("gz:mujoco");
+  if (!elem)
+    return false;
+
+  if (elem->HasElement("cone"))
+  {
+    const std::string cone = elem->Get<std::string>("cone");
+    if (cone == "elliptic")
+    {
+      _spec->option.cone = mjCONE_ELLIPTIC;
+    }
+    else if (cone == "pyramidal")
+    {
+      _spec->option.cone = mjCONE_PYRAMIDAL;
+    }
+    else
+    {
+      gzerr << "<gz:mujoco><cone> must be elliptic or pyramidal, got ["
+            << cone << "]. Ignoring it.\n";
+    }
+  }
+
+  if (auto impratio = readMujocoNumbers(elem, "impratio", 1, 1))
+  {
+    if (impratio->front() > 0.0)
+    {
+      _spec->option.impratio = impratio->front();
+    }
+    else
+    {
+      gzerr << "<gz:mujoco><impratio> must be positive, got ["
+            << impratio->front() << "]. Ignoring it.\n";
+    }
+  }
+
+  // The default of every collision, which a collision can still override.
+  if (const ::sdf::ElementPtr contactElem = elem->FindElement("contact"))
+  {
+    mjsDefault *specDefault = mjs_getSpecDefault(_spec);
+    if (auto solref = readMujocoNumbers(contactElem, "solref", 2, 2);
+        solref && specDefault)
+    {
+      std::copy(solref->begin(), solref->end(), specDefault->geom->solref);
+    }
+  }
+  return true;
 }
 
 /////////////////////////////////////////////////
@@ -908,6 +1058,7 @@ struct ModelKinematicStructure
                   collideBitmaskElem->Get<uint32_t>());
             }
           }
+          applyMujocoSurface(surfaceElem, geom);
         }
 
         uint16_t contype = contypeOpt.value_or(conaffinity);
@@ -1111,6 +1262,11 @@ Identity SDFFeatures::ConstructSdfWorld(const Identity &_engine,
     worldInfo->mjSpecObj->option.gravity[0] = gravity[0];
     worldInfo->mjSpecObj->option.gravity[1] = gravity[1];
     worldInfo->mjSpecObj->option.gravity[2] = gravity[2];
+
+    // The options go through the spec and take effect with the next
+    // recompilation.
+    if (applyMujocoPhysics(_sdfWorld, worldInfo->mjSpecObj))
+      worldInfo->specDirty = true;
   }
 
   for (std::size_t i = 0; i < _sdfWorld.ModelCount(); ++i)
