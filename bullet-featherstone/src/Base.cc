@@ -38,6 +38,12 @@ bool doCollide(uint32_t _categoryBitmask0, uint32_t _collideBitmask0,
 }
 
 /////////////////////////////////////////////////
+// Bullet combines contact stiffness using the harmonic mean, but by default
+// sums contact damping (d0 + d1), causing the larger damping to dominate.
+// This callback uses the configured object's damping directly when only one
+// object specifies <kp>/<kd>, and combines damping via the harmonic mean
+// (1 / (1/d0 + 1/d1)) when both objects specify it. This allows compliant
+// objects to compress naturally when contacting stiff surfaces.
 btScalar calculateCombinedContactDamping(
     const btCollisionObject *_body0, const btCollisionObject *_body1)
 {
