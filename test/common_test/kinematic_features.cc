@@ -16,6 +16,7 @@
  */
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <sstream>
@@ -282,20 +283,210 @@ TYPED_TEST(KinematicFeaturesTest, LinkFrameSemanticsPose)
   }
 }
 
-using SetKinematicFeaturesList = gz::physics::FeatureList<
+using SdfKinematicFeaturesList = gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfModel,
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::FindFreeGroupFeature,
   gz::physics::ForwardStep,
   gz::physics::GetLinkFromModel,
   gz::physics::GetModelFromWorld,
-  gz::physics::KinematicLink,
   gz::physics::LinkFrameSemantics,
   gz::physics::SetFreeGroupWorldVelocity
 >;
 
+using SetKinematicFeaturesList = gz::physics::FeatureList<
+  SdfKinematicFeaturesList,
+  gz::physics::KinematicLink
+>;
+
 using SetKinematicTestFeaturesList =
   KinematicFeaturesTest<SetKinematicFeaturesList>;
+
+using SdfKinematicTestFeaturesList =
+  KinematicFeaturesTest<SdfKinematicFeaturesList>;
+
+TEST_F(SdfKinematicTestFeaturesList, SetFalseKinematic)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    SCOPED_TRACE(name);
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    auto engine = gz::physics::RequestEngine3d<SdfKinematicFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    const std::string modelStr = R"(
+    <sdf version="1.6">
+      <model name="box">
+        <pose>0 0 5 0 0 0</pose>
+        <link name="link">
+          <kinematic>false</kinematic>
+          <collision name="collision">
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.5</size>
+              </box>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+
+    errors = root.LoadSdfString(modelStr);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.Model());
+    ASSERT_NE(nullptr, world->ConstructModel(*root.Model()));
+    auto model = world->GetModel("box");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+
+    const gz::math::Pose3d initialPose(0, 0, 5, 0, 0, 0);
+    auto frameData = link->FrameDataRelativeToWorld();
+    EXPECT_EQ(initialPose, gz::math::eigen3::convert(frameData.pose));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.linearVelocity));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.angularVelocity));
+
+    const double time = 2.0;
+    const double stepSize = 0.001;
+    const std::size_t steps = static_cast<std::size_t>(time / stepSize);
+    gz::physics::ForwardStep::Input input;
+    input.Get<std::chrono::steady_clock::duration>() =
+        std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+            std::chrono::duration<double>(stepSize));
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+    for (std::size_t i = 0; i < steps; ++i)
+      world->Step(output, state, input);
+
+    // The empty world has no floor, so the dynamic link falls freely.
+    frameData = link->FrameDataRelativeToWorld();
+    EXPECT_NEAR(0.0, frameData.pose.translation().x(), 1e-3);
+    EXPECT_NEAR(0.0, frameData.pose.translation().y(), 1e-3);
+    EXPECT_NEAR(initialPose.Pos().Z() - 0.5 * 9.8 * time * time,
+                frameData.pose.translation().z(), 2e-2);
+    EXPECT_NEAR(0.0, frameData.linearVelocity.x(), 1e-3);
+    EXPECT_NEAR(0.0, frameData.linearVelocity.y(), 1e-3);
+    EXPECT_NEAR(-9.8 * time, frameData.linearVelocity.z(), 1e-2);
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.angularVelocity));
+  }
+}
+
+TEST_F(SdfKinematicTestFeaturesList, SetTrueKinematic)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    SCOPED_TRACE(name);
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    auto engine = gz::physics::RequestEngine3d<SdfKinematicFeaturesList>::
+        From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    const std::string modelStr = R"(
+    <sdf version="1.6">
+      <model name="box">
+        <pose>0 0 5 0 0 0</pose>
+        <link name="link">
+          <kinematic>true</kinematic>
+          <collision name="collision">
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.5</size>
+              </box>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+
+    errors = root.LoadSdfString(modelStr);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    ASSERT_NE(nullptr, root.Model());
+    ASSERT_NE(nullptr, world->ConstructModel(*root.Model()));
+    auto model = world->GetModel("box");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+
+    const gz::math::Pose3d initialPose(0, 0, 5, 0, 0, 0);
+    auto frameData = link->FrameDataRelativeToWorld();
+    EXPECT_EQ(initialPose, gz::math::eigen3::convert(frameData.pose));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.linearVelocity));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.angularVelocity));
+
+    const double time = 1.0;
+    const double stepSize = 0.001;
+    const std::size_t steps = static_cast<std::size_t>(time / stepSize);
+    gz::physics::ForwardStep::Input input;
+    input.Get<std::chrono::steady_clock::duration>() =
+        std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+            std::chrono::duration<double>(stepSize));
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+    for (std::size_t i = 0; i < steps; ++i)
+      world->Step(output, state, input);
+
+    frameData = link->FrameDataRelativeToWorld();
+    EXPECT_EQ(initialPose, gz::math::eigen3::convert(frameData.pose));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.linearVelocity));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.angularVelocity));
+
+    auto freeGroup = link->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+    const gz::math::Vector3d cmdLinVel(1.5, -2.0, 0.5);
+    const gz::math::Vector3d cmdAngVel(0.0, 0.0, 1.2);
+    freeGroup->SetWorldLinearVelocity(gz::math::eigen3::convert(cmdLinVel));
+    for (std::size_t i = 0; i < steps; ++i)
+      world->Step(output, state, input);
+
+    frameData = link->FrameDataRelativeToWorld();
+    const auto translatedPose = gz::math::eigen3::convert(frameData.pose);
+    EXPECT_NEAR(cmdLinVel.X() * time, translatedPose.Pos().X(), 1e-2);
+    EXPECT_NEAR(cmdLinVel.Y() * time, translatedPose.Pos().Y(), 1e-2);
+    EXPECT_NEAR(initialPose.Pos().Z() + cmdLinVel.Z() * time,
+                translatedPose.Pos().Z(), 1e-2);
+    EXPECT_EQ(initialPose.Rot(), translatedPose.Rot());
+    EXPECT_TRUE(gz::math::eigen3::convert(frameData.linearVelocity).
+        Equal(cmdLinVel, 1e-6));
+    EXPECT_EQ(gz::math::Vector3d::Zero,
+              gz::math::eigen3::convert(frameData.angularVelocity));
+
+    freeGroup->SetWorldLinearVelocity(Eigen::Vector3d::Zero());
+    freeGroup->SetWorldAngularVelocity(gz::math::eigen3::convert(cmdAngVel));
+    for (std::size_t i = 0; i < steps; ++i)
+      world->Step(output, state, input);
+
+    frameData = link->FrameDataRelativeToWorld();
+    const auto finalPose = gz::math::eigen3::convert(frameData.pose);
+    EXPECT_TRUE(finalPose.Pos().Equal(translatedPose.Pos(), 1e-2));
+    EXPECT_NEAR(0.0, finalPose.Rot().Roll(), 1e-2);
+    EXPECT_NEAR(0.0, finalPose.Rot().Pitch(), 1e-2);
+    EXPECT_NEAR(cmdAngVel.Z() * time, finalPose.Rot().Yaw(), 1e-2);
+    EXPECT_TRUE(gz::math::eigen3::convert(frameData.linearVelocity).
+        Equal(gz::math::Vector3d::Zero, 1e-6));
+    EXPECT_TRUE(gz::math::eigen3::convert(frameData.angularVelocity).
+        Equal(cmdAngVel, 1e-6));
+  }
+}
 
 TEST_F(SetKinematicTestFeaturesList, SetKinematic)
 {
