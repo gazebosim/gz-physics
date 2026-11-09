@@ -31,6 +31,7 @@
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/Joint.hh>
+#include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/sdf/ConstructModel.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
@@ -41,6 +42,7 @@ struct TestFeatures : public gz::physics::FeatureList<
     gz::physics::ForwardStep,
     gz::physics::GetBasicJointState,
     gz::physics::GetJointFromModel,
+    gz::physics::RemoveModelFromWorld,
     gz::physics::SetBasicJointState,
     gz::physics::sdf::ConstructSdfWorld,
     gz::physics::sdf::ConstructSdfModel>
@@ -145,6 +147,8 @@ TEST(RecompileSpec, NewActuatorsStartWithZeroControl)
   // that follows it with a huge value, which is what the recompilation reads
   // for an actuator that did not exist.
   mjData *oldData = worldInfo->mjDataObj;
+  ASSERT_LT(oldData->ctrl + worldInfo->mjModelObj->nu,
+            oldData->qfrc_applied + worldInfo->mjModelObj->nv);
   for (mjtNum *value = oldData->ctrl + worldInfo->mjModelObj->nu;
        value < oldData->qfrc_applied + worldInfo->mjModelObj->nv; ++value)
   {
@@ -174,6 +178,113 @@ TEST(RecompileSpec, NewActuatorsStartWithZeroControl)
   gz::physics::ForwardStep::Input input;
   gz::physics::ForwardStep::State state;
   gz::physics::ForwardStep::Output output;
+  world->Step(output, state, input);
+  EXPECT_EQ(0, worldInfo->mjDataObj->warning[mjWARN_BADCTRL].number);
+}
+
+// Same as above, with a model removed and another added in the same
+// recompilation. mjs_delete drops the actuator of the removed model from the
+// spec right away, so the two actuators of the new model take the positions
+// 1 and 2, and the last one is past the end of the old ctrl array.
+TEST(RecompileSpec, RemoveAndAddModelInOneRecompilation)
+{
+  gz::plugin::Loader loader;
+  loader.LoadLib(mujoco_plugin_LIB);
+  auto plugin = loader.Instantiate("gz::physics::mujoco::Plugin");
+  ASSERT_TRUE(plugin);
+  auto engine = gz::physics::RequestEngine3d<TestFeatures>::From(plugin);
+  ASSERT_TRUE(engine);
+
+  // Arms welded to the world: arm1 and arm2 with one revolute joint, arm3
+  // with two.
+  auto arm = [](const std::string &_name, double _y, int _joints)
+  {
+    std::string links;
+    for (int i = 1; i <= _joints; ++i)
+    {
+      const std::string link = "link" + std::to_string(i);
+      const std::string parent = "link" + std::to_string(i - 1);
+      links += R"(
+      <link name=")" + link + R"(">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia><ixx>1.0</ixx><iyy>1.0</iyy><izz>1.0</izz></inertia>
+        </inertial>
+      </link>
+      <joint name="joint)" + std::to_string(i) + R"(" type="revolute">
+        <parent>)" + parent + R"(</parent>
+        <child>)" + link + R"(</child>
+        <axis><xyz>1 0 0</xyz></axis>
+      </joint>)";
+    }
+    return R"(
+    <model name=")" + _name + R"(">
+      <pose>0 )" + std::to_string(_y) + R"( 0 0 0 0</pose>
+      <joint name="fix_to_world" type="fixed">
+        <parent>world</parent>
+        <child>link0</child>
+      </joint>
+      <link name="link0"/>)" + links + R"(
+    </model>)";
+  };
+  const std::string sdfString = R"(<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="default">)" + arm("arm1", 0, 1) + arm("arm2", 1, 1) +
+      arm("arm3", 2, 2) + R"(
+  </world>
+</sdf>)";
+
+  sdf::Root root;
+  ASSERT_TRUE(root.LoadSdfString(sdfString).empty());
+  const sdf::World *sdfWorld = root.WorldByIndex(0);
+  ASSERT_NE(nullptr, sdfWorld);
+
+  sdf::World emptyWorld;
+  emptyWorld.SetName(sdfWorld->Name());
+  emptyWorld.SetGravity(gz::math::Vector3d::Zero);
+  auto world = engine->ConstructWorld(emptyWorld);
+  ASSERT_TRUE(world);
+
+  auto *worldInfo = static_cast<gz::physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+
+  ASSERT_TRUE(world->ConstructModel(*sdfWorld->ModelByName("arm1")));
+  ASSERT_TRUE(world->ConstructModel(*sdfWorld->ModelByName("arm2")));
+
+  // A step compiles the world, which has two actuators now.
+  gz::physics::ForwardStep::Input input;
+  gz::physics::ForwardStep::State state;
+  gz::physics::ForwardStep::Output output;
+  world->Step(output, state, input);
+  ASSERT_NE(nullptr, worldInfo->mjModelObj);
+  ASSERT_NE(nullptr, worldInfo->mjDataObj);
+  ASSERT_EQ(2, worldInfo->mjModelObj->nu);
+
+  mjData *oldData = worldInfo->mjDataObj;
+  ASSERT_LT(oldData->ctrl + worldInfo->mjModelObj->nu,
+            oldData->qfrc_applied + worldInfo->mjModelObj->nv);
+  for (mjtNum *value = oldData->ctrl + worldInfo->mjModelObj->nu;
+       value < oldData->qfrc_applied + worldInfo->mjModelObj->nv; ++value)
+  {
+    *value = 1e30;
+  }
+
+  ASSERT_TRUE(world->RemoveModel("arm1"));
+  auto arm3 = world->ConstructModel(*sdfWorld->ModelByName("arm3"));
+  ASSERT_TRUE(arm3);
+  auto joint = arm3->GetJoint("joint2");
+  ASSERT_TRUE(joint);
+
+  // Reading a position recompiles the world, which has three actuators now.
+  joint->GetPosition(0);
+
+  const mjModel *m = worldInfo->mjModelObj;
+  const mjData *d = worldInfo->mjDataObj;
+  ASSERT_EQ(3, m->nu);
+  for (int i = 0; i < m->nu; ++i)
+    EXPECT_EQ(0.0, d->ctrl[i]) << i;
+  EXPECT_EQ(0, d->warning[mjWARN_BADCTRL].number);
+
   world->Step(output, state, input);
   EXPECT_EQ(0, worldInfo->mjDataObj->warning[mjWARN_BADCTRL].number);
 }

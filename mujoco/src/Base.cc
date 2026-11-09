@@ -177,11 +177,14 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
   // in mjData::userdata
   _worldInfo.mjSpecObj->nuserdata = kRequiredUserDataSlots;
 
-  // Before MuJoCo 3.14, mj_recompile saved ctrl[i] for every actuator of the
-  // spec, including the ones added since the last compilation. Their index is
-  // past the end of the old ctrl array, so the new actuators started with
-  // whatever memory followed it. Actuators are appended to the spec, so zero
-  // the controls of the new ones after the recompilation.
+  // Before MuJoCo 3.14, mj_recompile saved the control of the i-th actuator
+  // of the spec from ctrl[i] of the old data, including the actuators added
+  // since the last compilation. Positions past the old nu read whatever
+  // memory followed the old ctrl array, so zero them after the recompilation.
+  // A model removed since the last compilation (mjs_delete drops its
+  // actuators from the spec right away) shifts the actuators after it down,
+  // so they take the controls of other actuators. Those are in bounds, and
+  // zero unless a control was set since the last step, which clears them.
   const int oldNu = _worldInfo.mjModelObj ? _worldInfo.mjModelObj->nu : 0;
   int rc = mj_recompile(_worldInfo.mjSpecObj, nullptr, _worldInfo.mjModelObj,
                         _worldInfo.mjDataObj);
