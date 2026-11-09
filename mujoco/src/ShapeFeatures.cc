@@ -377,6 +377,21 @@ Identity ShapeFeatures::AttachHeightmapShape(
   copyPos(Eigen::Vector3d(_pose * Eigen::Vector3d(0, 0, minHeight)), geom->pos);
   copyQuat(Eigen::Quaterniond(_pose.linear()), geom->quat);
 
+  // Recompile right away, so that GetShape finds the new geom.
+  worldInfo->specDirty = true;
+  if (!this->RecompileSpec(*worldInfo))
+  {
+    gzerr << "Unable to attach heightmap [" << _name << "]: failed to "
+          << "recompile the world." << std::endl;
+    // Don't leave the geom and its height field in the spec, where nothing
+    // would remove them.
+    mjs_delete(spec, geom->element);
+    mjs_delete(spec, hfield->element);
+    return this->GenerateInvalidId();
+  }
+
+  // Register the shape only once it is compiled, so that a failure doesn't
+  // leave the link with a shape whose geom isn't in the model.
   auto shapeInfo = std::make_shared<ShapeInfo>(this->GetNextEntity(), linkInfo);
   shapeInfo->worldInfo = worldInfo;
   shapeInfo->geom = geom;
@@ -390,14 +405,13 @@ Identity ShapeFeatures::AttachHeightmapShape(
                              linkInfo->entityId);
   this->frames[shapeInfo->entityId] =
       std::make_shared<FrameInfo>(linkInfo->body, _pose, worldInfo);
-
-  // Recompile right away, so that GetShape finds the new geom.
-  worldInfo->specDirty = true;
-  if (!this->RecompileSpec(*worldInfo))
+  // RecompileSpec maps the geoms of the registered shapes to them.
+  const int geomId = mjs_getId(geom->element);
+  if (geomId >= 0 && static_cast<std::size_t>(geomId) <
+      worldInfo->geomIdToShapeInfo.size())
   {
-    gzerr << "Unable to attach heightmap [" << _name << "]: failed to "
-          << "recompile the world." << std::endl;
-    return this->GenerateInvalidId();
+    worldInfo->geomIdToShapeInfo[static_cast<std::size_t>(geomId)] =
+        shapeInfo;
   }
 
   return this->GenerateIdentity(shapeInfo->entityId, shapeInfo);
