@@ -21,6 +21,7 @@
 #include <iostream>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -29,6 +30,7 @@
 #include <gz/common/geospatial/Dem.hh>
 #include <gz/common/geospatial/HeightmapData.hh>
 #include <gz/common/geospatial/ImageHeightmap.hh>
+#include <gz/math/Helpers.hh>
 #include <gz/math/Pose3.hh>
 #include <gz/math/Vector3.hh>
 #include <gz/math/eigen3/Conversions.hh>
@@ -460,8 +462,11 @@ class QuadrantHeightmap : public gz::common::HeightmapData
 
   /// \param[in] _offset Added to the heights, which are negative if it is
   /// below -kMaxHeight.
-  public: explicit QuadrantHeightmap(double _offset = 0.0)
-      : offset(_offset)
+  /// \param[in] _width Width and height of the data in pixels, which is the
+  /// number of samples per side.
+  public: explicit QuadrantHeightmap(double _offset = 0.0,
+      unsigned int _width = 17)
+      : offset(_offset), width(_width)
   {
   }
 
@@ -491,8 +496,8 @@ class QuadrantHeightmap : public gz::common::HeightmapData
     }
   }
 
-  public: unsigned int Height() const override { return 17; }
-  public: unsigned int Width() const override { return 17; }
+  public: unsigned int Height() const override { return this->width; }
+  public: unsigned int Width() const override { return this->width; }
   public: float MaxElevation() const override
   {
     return static_cast<float>(kMaxHeight + this->offset);
@@ -504,6 +509,7 @@ class QuadrantHeightmap : public gz::common::HeightmapData
   public: std::string Filename() const override { return "quadrants"; }
 
   private: double offset;
+  private: unsigned int width;
 };
 
 /////////////////////////////////////////////////
@@ -541,25 +547,26 @@ class FlatHeightmap : public gz::common::HeightmapData
 /// \brief SDF of a model with a link of 1 kg that has one collision.
 /// \param[in] _geometry SDF of the geometry of the collision.
 /// \param[in] _inertia Diagonal of the inertia of the link.
-std::string ProbeModel(const std::string &_name, double _x, double _y,
-    double _z, const std::string &_geometry, double _inertia)
+std::string ProbeModel(const std::string &_name,
+    const gz::math::Pose3d &_pose, const std::string &_geometry,
+    const gz::math::Vector3d &_inertia)
 {
-  const std::string inertia = std::to_string(_inertia);
-  return R"(
-    <model name=")" + _name + R"(">
-      <pose>)" + std::to_string(_x) + " " + std::to_string(_y) + " " +
-      std::to_string(_z) + R"( 0 0 0</pose>
+  std::ostringstream sdf;
+  sdf << R"(
+    <model name=")" << _name << R"(">
+      <pose>)" << _pose << R"(</pose>
       <link name="link">
         <inertial>
           <mass>1.0</mass>
-          <inertia><ixx>)" + inertia + "</ixx><iyy>" + inertia +
-      "</iyy><izz>" + inertia + R"(</izz></inertia>
+          <inertia><ixx>)" << _inertia.X() << "</ixx><iyy>" << _inertia.Y()
+      << "</iyy><izz>" << _inertia.Z() << R"(</izz></inertia>
         </inertial>
         <collision name="collision">
-          <geometry>)" + _geometry + R"(</geometry>
+          <geometry>)" << _geometry << R"(</geometry>
         </collision>
       </link>
     </model>)";
+  return sdf.str();
 }
 
 /////////////////////////////////////////////////
@@ -567,43 +574,80 @@ std::string ProbeModel(const std::string &_name, double _x, double _y,
 std::string SphereModel(const std::string &_name, double _x, double _y,
     double _z = 1.0)
 {
-  return ProbeModel(_name, _x, _y, _z,
-      "<sphere><radius>0.1</radius></sphere>", 0.004);
+  return ProbeModel(_name, gz::math::Pose3d(_x, _y, _z, 0, 0, 0),
+      "<sphere><radius>0.1</radius></sphere>",
+      gz::math::Vector3d(0.004, 0.004, 0.004));
 }
 
 /////////////////////////////////////////////////
-/// \brief SDF of a box of 0.2 m.
-std::string BoxModel(const std::string &_name, double _x, double _y,
-    double _z)
+/// \brief SDF of a box.
+std::string BoxModel(const std::string &_name, const gz::math::Pose3d &_pose,
+    const gz::math::Vector3d &_size)
 {
-  return ProbeModel(_name, _x, _y, _z,
-      "<box><size>0.2 0.2 0.2</size></box>", 0.2 * 0.2 / 6);
+  std::ostringstream geometry;
+  geometry << "<box><size>" << _size << "</size></box>";
+  const gz::math::Vector3d squared = _size * _size;
+  return ProbeModel(_name, _pose, geometry.str(), gz::math::Vector3d(
+      squared.Y() + squared.Z(), squared.X() + squared.Z(),
+      squared.X() + squared.Y()) / 12);
 }
 
 /////////////////////////////////////////////////
-/// \brief Drop a sphere on each of the four corners of a heightmap and check
-/// that it rests on the height that the heightmap has there.
-/// \param[in] _plugin Physics engine plugin.
-/// \param[in] _data Heightmap, which has a HeightAt(x, y) function.
-/// \param[in] _size Size of the heightmap along x and y.
-/// \param[in] _xy The spheres are dropped at (+-_xy, +-_xy).
-template <class HeightmapT>
-void ExpectSpheresRestOnHeightmap(const gz::plugin::PluginPtr &_plugin,
-    const HeightmapT &_data, double _size = 4.0, double _xy = 1.0)
-{
-  const std::vector<std::pair<double, double>> xy{
-      {_xy, _xy}, {-_xy, _xy}, {_xy, -_xy}, {-_xy, -_xy}};
-  std::string worldSdf = R"(<?xml version="1.0" ?>
+/// \brief Beginning of the SDF of a world, up to its models.
+const char kWorldBegin[] = R"(<?xml version="1.0" ?>
 <sdf version="1.9">
-  <world name="default">
+  <world name="default">)";
+
+/////////////////////////////////////////////////
+/// \brief End of the SDF of a world, after its models.
+const char kWorldEnd[] = R"(
+  </world>
+</sdf>)";
+
+/////////////////////////////////////////////////
+/// \brief SDF of a static model "ground" whose link "link" has no
+/// collisions, for heightmaps to be attached to.
+const char kStaticGround[] = R"(
     <model name="ground">
       <static>true</static>
       <link name="link"/>
     </model>)";
-  for (std::size_t i = 0; i < xy.size(); ++i)
+
+/////////////////////////////////////////////////
+/// \brief Drop a sphere near each of the four corners of a heightmap and
+/// check that it rests on the height that the heightmap has there.
+/// \param[in] _plugin Physics engine plugin.
+/// \param[in] _data Heightmap, which has a HeightAt(x, y) function.
+/// \param[in] _size Size of the heightmap along x and y.
+/// \param[in] _xy The spheres are dropped at (+-_xy, +-_xy) in the frame of
+/// the heightmap. The default is off the vertices of the grids of these
+/// tests, where the cells around a sphere make it roll on some engines and
+/// platforms.
+/// \param[in] _pose Pose of the heightmap in its link frame. It may only
+/// rotate about z, for the spheres to rest.
+/// \param[in] _ground SDF of the model "ground", whose link "link" gets the
+/// heightmap and whose link frame is the world frame.
+template <class HeightmapT>
+void ExpectSpheresRestOnHeightmap(const gz::plugin::PluginPtr &_plugin,
+    const HeightmapT &_data, double _size = 4.0, double _xy = 1.1,
+    const Eigen::Isometry3d &_pose = Eigen::Isometry3d::Identity(),
+    const std::string &_ground = kStaticGround)
+{
+  const double radius = 0.1;
+  // Where the spheres come to rest
+  std::vector<Eigen::Vector3d> spheres;
+  for (const auto &[x, y] : std::vector<std::pair<double, double>>{
+           {_xy, _xy}, {-_xy, _xy}, {_xy, -_xy}, {-_xy, -_xy}})
   {
-    worldSdf += SphereModel(
-        "sphere" + std::to_string(i), xy[i].first, xy[i].second);
+    spheres.push_back(_pose * Eigen::Vector3d(x, y, _data.HeightAt(x, y)) +
+        Eigen::Vector3d(0, 0, radius));
+  }
+
+  std::string worldSdf = kWorldBegin + _ground;
+  for (std::size_t i = 0; i < spheres.size(); ++i)
+  {
+    worldSdf += SphereModel("sphere" + std::to_string(i), spheres[i].x(),
+        spheres[i].y(), spheres[i].z() + 0.05);
   }
   worldSdf += R"(
   </world>
@@ -622,17 +666,13 @@ void ExpectSpheresRestOnHeightmap(const gz::plugin::PluginPtr &_plugin,
   ASSERT_NE(nullptr, ground);
   // The fake heightmaps ignore the size along z.
   ASSERT_NE(nullptr, ground->AttachHeightmapShape("heightmap", _data,
-      Eigen::Isometry3d::Identity(), Eigen::Vector3d(_size, _size, 1.0)));
+      _pose, Eigen::Vector3d(_size, _size, 1.0)));
 
   StepWorld(world, 2000);
 
-  const double radius = 0.1;
-  for (std::size_t i = 0; i < xy.size(); ++i)
-  {
-    const auto [x, y] = xy[i];
-    ExpectRestingAt(world, "sphere" + std::to_string(i),
-        {x, y, _data.HeightAt(x, y) + radius}, 1e-3);
-  }
+  // The spheres may roll a little, which doesn't change their height.
+  for (std::size_t i = 0; i < spheres.size(); ++i)
+    ExpectRestingAt(world, "sphere" + std::to_string(i), spheres[i], 0.05);
 }
 
 /////////////////////////////////////////////////
@@ -678,6 +718,120 @@ TYPED_TEST(HeightmapFeaturesTest, SpheresRestOnFlatHeightmap)
 }
 
 /////////////////////////////////////////////////
+// A heightmap with an even number of samples per side, which has no sample
+// in the middle.
+TYPED_TEST(HeightmapFeaturesTest, SpheresRestOnEvenGrid)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    ExpectSpheresRestOnHeightmap(
+        this->loader.Instantiate(name), QuadrantHeightmap(0.0, 16));
+  }
+}
+
+/////////////////////////////////////////////////
+/// \brief Pose of a heightmap in its link frame, rotated about z by a
+/// quarter turn, which moves each quadrant of a QuadrantHeightmap to the next
+/// one, and offset.
+const Eigen::Isometry3d kRotatedPose = Eigen::Translation3d(0.5, -0.3, 0.2) *
+    Eigen::AngleAxisd(GZ_PI / 2, Eigen::Vector3d::UnitZ());
+
+/////////////////////////////////////////////////
+// A heightmap rotated and offset in its link frame, below z = 0, where the
+// engines offset it by its lowest sample.
+TYPED_TEST(HeightmapFeaturesTest, SpheresRestOnRotatedHeightmap)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    ExpectSpheresRestOnHeightmap(this->loader.Instantiate(name),
+        QuadrantHeightmap(-1.0), 4.0, 1.1, kRotatedPose);
+  }
+}
+
+/////////////////////////////////////////////////
+// The link of a heightmap has an inertial pose, which some engines use as
+// the frame of the link's body. The heightmap is in the link frame. The
+// link is static, or not static but fixed to the world.
+TYPED_TEST(HeightmapFeaturesTest, SpheresRestOnHeightmapOfLinkWithInertialPose)
+{
+  const std::string link = R"(
+      <link name="link">
+        <inertial>
+          <pose>0.4 -0.3 0.2 0.1 0.2 0.3</pose>
+          <mass>1.0</mass>
+          <inertia><ixx>1</ixx><iyy>1</iyy><izz>1</izz></inertia>
+        </inertial>
+      </link>)";
+  const std::string staticGround = R"(
+    <model name="ground">
+      <static>true</static>)" + link + R"(
+    </model>)";
+  const std::string fixedGround = R"(
+    <model name="ground">)" + link + R"(
+      <joint name="world_joint" type="fixed">
+        <parent>world</parent>
+        <child>link</child>
+      </joint>
+    </model>)";
+
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    for (const std::string &ground : {staticGround, fixedGround})
+    {
+      ExpectSpheresRestOnHeightmap(this->loader.Instantiate(name),
+          QuadrantHeightmap(-1.0), 4.0, 1.1, kRotatedPose, ground);
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+// A box rests on a flat heightmap that is tilted, whose surface is a plane.
+// The plane is in the wrong place if an engine offsets the heightmap by its
+// height along the z axis of the link instead of that of the heightmap.
+TYPED_TEST(HeightmapFeaturesTest, BoxRestsOnTiltedHeightmap)
+{
+  const double height = 1.5;
+  const Eigen::Isometry3d pose = Eigen::Translation3d(0.3, 0.2, 0.1) *
+      Eigen::AngleAxisd(0.2, Eigen::Vector3d::UnitX());
+  // The surface of the heightmap
+  const Eigen::Vector3d normal = pose.linear() * Eigen::Vector3d::UnitZ();
+  const Eigen::Vector3d surface = pose * Eigen::Vector3d(0, 0, height);
+
+  // The box spans a few cells and is dropped flat on the surface, away from
+  // the center of the heightmap.
+  const gz::math::Vector3d boxSize(1.0, 1.0, 0.2);
+  const Eigen::Isometry3d boxPose = pose *
+      Eigen::Translation3d(1.3, -0.9, height + boxSize.Z() / 2 + 0.05);
+  sdf::Root root;
+  ASSERT_TRUE(root.LoadSdfString(kWorldBegin + std::string(kStaticGround) +
+      BoxModel("box", gz::math::eigen3::convert(boxPose), boxSize) +
+      kWorldEnd).empty());
+
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    auto engine = gz::physics::RequestEngine3d<HeightmapFeaturesList>::From(
+        this->loader.Instantiate(name));
+    ASSERT_NE(nullptr, engine);
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+    ASSERT_NE(nullptr, world->GetModel("ground")->GetLink("link")
+        ->AttachHeightmapShape("heightmap", FlatHeightmap(height), pose,
+            Eigen::Vector3d(10, 10, 1)));
+
+    StepWorld(world, 2000);
+
+    // Distance from the surface to the center of the box
+    const Eigen::Vector3d pos = world->GetModel("box")->GetLink("link")
+        ->FrameDataRelativeToWorld().pose.translation();
+    EXPECT_NEAR(boxSize.Z() / 2, normal.dot(pos - surface), 5e-3) << name;
+  }
+}
+
+/////////////////////////////////////////////////
 // Objects dropped on a ramp that is longer along x than along y, away from
 // its center and near its edges. They rest at the wrong height or fall off
 // if the samples do not span the whole size, or if x and y are swapped.
@@ -686,7 +840,11 @@ TYPED_TEST(HeightmapFeaturesTest, ObjectsRestNearRampEdges)
   const double sizeY = 20.0;
   const double radius = 0.1;
   const double slope = 0.8 * kRampHeight / kRampSize;
-  const double halfBoxOnSlope = 0.1 / std::cos(std::atan(slope));
+  // The boxes span a few of the ramp's cells, which are 1 m x 0.59 m. On a
+  // single cell, MuJoCo can rest a box on one contact, tilted.
+  const gz::math::Vector3d boxSize(2.5, 1.5, 0.2);
+  const double halfBoxOnSlope =
+      boxSize.Z() / 2 / std::cos(std::atan(slope));
   // Height of the ramp, which is at +y
   auto rampZ = [](double _x)
   {
@@ -711,8 +869,12 @@ TYPED_TEST(HeightmapFeaturesTest, ObjectsRestNearRampEdges)
     </model>)";
   for (const auto &[model, pos] : spheres)
     worldSdf += SphereModel(model, pos.x(), pos.y(), pos.z() + 0.05);
+  // The boxes are dropped parallel to the ramp.
   for (const auto &[model, pos] : boxes)
-    worldSdf += BoxModel(model, pos.x(), pos.y(), pos.z() + 0.05);
+  {
+    worldSdf += BoxModel(model, gz::math::Pose3d(pos.x(), pos.y(),
+        pos.z() + 0.05, 0, -std::atan(slope), 0), boxSize);
+  }
   worldSdf += R"(
   </world>
 </sdf>)";
