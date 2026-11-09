@@ -37,7 +37,8 @@ TEST(CustomHeightmapShape, BoundingBoxIsSize)
   const CustomHeightmapShape shape(sampled, Eigen::Vector3d(8, 6, 2));
 
   // The 5 vertices are 4 cells apart.
-  EXPECT_TRUE(shape.getScale().isApprox(Eigen::Vector3f(2, 1.5, 1), 1e-6));
+  EXPECT_TRUE(shape.getScale().isApprox(
+      Eigen::Vector3f(2.0f, 1.5f, 1.0f), 1e-6f));
 
   const auto &box = shape.getBoundingBox();
   EXPECT_TRUE(box.getMin().isApprox(Eigen::Vector3d(-4, -3, 0), 1e-6));
