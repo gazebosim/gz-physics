@@ -216,6 +216,32 @@ std::optional<std::vector<double>> readMujocoNumbers(
 }
 
 /////////////////////////////////////////////////
+/// \brief Read the integer held by the child element `_name` of a
+/// `<gz:mujoco>` element.
+/// \param[in] _elem The `<gz:mujoco>` element.
+/// \param[in] _name Name of the child element.
+/// \return The value, or nullopt if the child is missing or doesn't hold one
+/// integer that fits an int, in which case an error is printed.
+std::optional<int> readMujocoInt(const ::sdf::ElementPtr &_elem,
+                                 const std::string &_name)
+{
+  const auto values = readMujocoNumbers(_elem, _name, 1, 1);
+  if (!values)
+    return std::nullopt;
+
+  const double value = values->front();
+  if (value < std::numeric_limits<int>::min() ||
+      value > std::numeric_limits<int>::max() ||
+      std::abs(value - std::trunc(value)) > 0.0)
+  {
+    gzerr << "<gz:mujoco><" << _name << "> must be an integer, got ["
+          << value << "]. Ignoring it.\n";
+    return std::nullopt;
+  }
+  return static_cast<int>(value);
+}
+
+/////////////////////////////////////////////////
 /// \brief Apply the MuJoCo contact parameters of a collision's
 /// `<surface><gz:mujoco>` element, if present, to its geom.
 /// \param[in] _surfaceElem The `<surface>` element of the collision.
@@ -248,22 +274,21 @@ void applyMujocoSurface(const ::sdf::ElementPtr &_surfaceElem, mjsGeom *_geom)
     }
   }
 
-  if (auto condim = readMujocoNumbers(elem, "condim", 1, 1))
+  if (auto condim = readMujocoInt(elem, "condim"))
   {
-    const int value = static_cast<int>(condim->front());
-    if (value == 1 || value == 3 || value == 4 || value == 6)
+    if (*condim == 1 || *condim == 3 || *condim == 4 || *condim == 6)
     {
-      _geom->condim = value;
+      _geom->condim = *condim;
     }
     else
     {
       gzerr << "<gz:mujoco><condim> must be 1, 3, 4 or 6, got ["
-            << condim->front() << "]. Ignoring it.\n";
+            << *condim << "]. Ignoring it.\n";
     }
   }
 
-  if (auto priority = readMujocoNumbers(elem, "priority", 1, 1))
-    _geom->priority = static_cast<int>(priority->front());
+  if (auto priority = readMujocoInt(elem, "priority"))
+    _geom->priority = *priority;
 }
 
 /////////////////////////////////////////////////

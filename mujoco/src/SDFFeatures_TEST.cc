@@ -1346,5 +1346,121 @@ TEST_P(SDFFeatures_TEST, MujocoPhysicsParamsIgnoredWhenInvalidOrMissing)
   EXPECT_DOUBLE_EQ(1.0, m->geom_solref[mjNREF * id + 1]);
 }
 
+/////////////////////////////////////////////////
+// condim and priority are integers: other numbers are ignored rather than
+// truncated.
+TEST_P(SDFFeatures_TEST, MujocoSurfaceIntegerParams)
+{
+  const std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="default">
+      <model name="m1">
+        <link name="l1">
+          <collision name="integer">
+            <geometry><box><size>1 1 1</size></box></geometry>
+            <surface>
+              <gz:mujoco>
+                <condim>4.0</condim>
+                <priority>-2</priority>
+              </gz:mujoco>
+            </surface>
+          </collision>
+          <collision name="fractional">
+            <geometry><box><size>1 1 1</size></box></geometry>
+            <surface>
+              <gz:mujoco>
+                <condim>4.5</condim>
+                <priority>2.5</priority>
+              </gz:mujoco>
+            </surface>
+          </collision>
+          <collision name="out_of_range">
+            <geometry><box><size>1 1 1</size></box></geometry>
+            <surface>
+              <gz:mujoco>
+                <condim>1e10</condim>
+                <priority>1e10</priority>
+              </gz:mujoco>
+            </surface>
+          </collision>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  const mjModel *m = worldInfo->mjModelObj;
+  ASSERT_NE(nullptr, m);
+
+  const int integer = mj_name2id(m, mjOBJ_GEOM, "m1::l1::integer");
+  ASSERT_NE(-1, integer);
+  EXPECT_EQ(4, m->geom_condim[integer]);
+  EXPECT_EQ(-2, m->geom_priority[integer]);
+
+  for (const std::string name : {"fractional", "out_of_range"})
+  {
+    const int id = mj_name2id(m, mjOBJ_GEOM, ("m1::l1::" + name).c_str());
+    ASSERT_NE(-1, id) << name;
+    EXPECT_EQ(3, m->geom_condim[id]) << name;
+    EXPECT_EQ(0, m->geom_priority[id]) << name;
+  }
+}
+
+/////////////////////////////////////////////////
+// gz-sim builds the world first and adds its models afterwards. The default
+// solref of the world's <physics> still reaches the collisions of these
+// models.
+TEST_P(SDFFeatures_TEST, MujocoPhysicsParamsReachModelsAddedLater)
+{
+  const std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="default">
+      <physics name="1ms" type="mujoco">
+        <gz:mujoco>
+          <contact>
+            <solref>0.0025 1</solref>
+          </contact>
+        </gz:mujoco>
+      </physics>
+    </world>
+  </sdf>)";
+  const std::string modelStr = R"(
+  <sdf version="1.9">
+    <model name="m1">
+      <link name="l1">
+        <collision name="c1">
+          <geometry><box><size>1 1 1</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  sdf::Root modelRoot;
+  ASSERT_TRUE(modelRoot.LoadSdfString(modelStr).empty());
+  ASSERT_NE(nullptr, modelRoot.Model());
+  ASSERT_NE(nullptr, world->ConstructModel(*modelRoot.Model()));
+
+  // A step recompiles the world with the new model.
+  physics::ForwardStep::Input input;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Output output;
+  world->Step(output, state, input);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  const mjModel *m = worldInfo->mjModelObj;
+  ASSERT_NE(nullptr, m);
+  const int id = mj_name2id(m, mjOBJ_GEOM, "m1::l1::c1");
+  ASSERT_NE(-1, id);
+  EXPECT_DOUBLE_EQ(0.0025, m->geom_solref[mjNREF * id]);
+  EXPECT_DOUBLE_EQ(1.0, m->geom_solref[mjNREF * id + 1]);
+}
+
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
                         ::testing::Values(LoaderType::Whole));
