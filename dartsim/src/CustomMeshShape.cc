@@ -22,6 +22,7 @@
 
 #include <gz/common/Console.hh>
 #include <gz/common/SubMesh.hh>
+#include <gz/utils/SuppressWarning.hh>
 
 namespace ignition {
 namespace physics {
@@ -95,6 +96,9 @@ unsigned int GetPrimitiveType(
 }
 }
 
+// DART 6.20 deprecates the aiScene based MeshShape API in favor of TriMesh.
+// It is only removed in DART 8, so keep using it on this branch.
+IGN_UTILS_WARN_IGNORE__DEPRECATED_DECLARATION
 /////////////////////////////////////////////////
 CustomMeshShape::CustomMeshShape(
     const common::Mesh &_input,
@@ -221,6 +225,7 @@ CustomMeshShape::CustomMeshShape(
   this->mIsBoundingBoxDirty = true;
   this->mIsVolumeDirty = true;
 }
+IGN_UTILS_WARN_RESUME__DEPRECATED_DECLARATION
 
 }
 }
