@@ -308,6 +308,97 @@ const Eigen::Vector3d &GzMultiBody::GetBaseLinkFrameAngularVelocity() const
   return this->baseLinkFrameAngVel;
 }
 
+void GzMultiBody::ReadVelocities(WorldVelocities &_out)
+{
+  const int numLinks = this->getNumLinks();
+  const std::size_t count = static_cast<std::size_t>(numLinks) + 1;
+  _out.linear.resize(count);
+  _out.angular.resize(count);
+  _out.linear[0] = convert(this->getBaseVel());
+  _out.angular[0] = convert(this->getBaseOmega());
+  if (numLinks == 0)
+    return;
+
+  // Velocities of the center of mass of every link in the link frames.
+  this->localOmegaScratch.resize(count);
+  this->localVelScratch.resize(count);
+  this->compTreeLinkVelocities(this->localOmegaScratch.data(),
+      this->localVelScratch.data());
+
+  // Rotation from every link frame to the world. A parent precedes its
+  // children in the link array, so one pass accumulates the rotations
+  // instead of walking up the tree for every link.
+  this->localToWorldScratch.resize(count);
+  this->localToWorldScratch[0] = this->getWorldToBaseRot().inverse();
+  for (int i = 0; i < numLinks; ++i)
+  {
+    const std::size_t k = static_cast<std::size_t>(i) + 1;
+    const std::size_t parent = static_cast<std::size_t>(this->getParent(i)) + 1;
+    this->localToWorldScratch[k] = this->localToWorldScratch[parent] *
+        this->getParentToLocalRot(i).inverse();
+    _out.angular[k] = convert(
+        quatRotate(this->localToWorldScratch[k], this->localOmegaScratch[k]));
+    _out.linear[k] = convert(
+        quatRotate(this->localToWorldScratch[k], this->localVelScratch[k]));
+  }
+}
+
+void GzMultiBody::RecordVelocitiesBeforeStep()
+{
+  GZ_PROFILE("GzMultiBody::RecordVelocitiesBeforeStep");
+  this->ReadVelocities(this->velocitiesBeforeStep);
+}
+
+void GzMultiBody::UpdateAccelerations(double _dt)
+{
+  GZ_PROFILE("GzMultiBody::UpdateAccelerations");
+  const std::size_t count = static_cast<std::size_t>(this->getNumLinks()) + 1;
+  if (!(_dt > 0.0) || this->velocitiesBeforeStep.linear.size() != count)
+    return;
+
+  // Read the velocities after the step into the accelerations, then turn
+  // them into the change over the step.
+  this->ReadVelocities(this->accelerations);
+
+  // The velocities of a multibody read zero once it falls asleep. That is
+  // not an acceleration.
+  const bool awake = this->isAwake();
+  for (std::size_t i = 0; i < count; ++i)
+  {
+    Eigen::Vector3d &linear = this->accelerations.linear[i];
+    Eigen::Vector3d &angular = this->accelerations.angular[i];
+    if (!awake)
+    {
+      linear.setZero();
+      angular.setZero();
+      continue;
+    }
+    linear = (linear - this->velocitiesBeforeStep.linear[i]) / _dt;
+    angular = (angular - this->velocitiesBeforeStep.angular[i]) / _dt;
+  }
+}
+
+/// \brief Entry of a link in _values, zero if there is none.
+static const Eigen::Vector3d &linkEntry(
+    const std::vector<Eigen::Vector3d> &_values, int _linkIndex)
+{
+  static const Eigen::Vector3d kZero = Eigen::Vector3d::Zero();
+  const std::size_t k = static_cast<std::size_t>(_linkIndex + 1);
+  return k < _values.size() ? _values[k] : kZero;
+}
+
+const Eigen::Vector3d &GzMultiBody::GetLinkComLinearAcceleration(
+    int _linkIndex) const
+{
+  return linkEntry(this->accelerations.linear, _linkIndex);
+}
+
+const Eigen::Vector3d &GzMultiBody::GetLinkAngularAcceleration(
+    int _linkIndex) const
+{
+  return linkEntry(this->accelerations.angular, _linkIndex);
+}
+
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz

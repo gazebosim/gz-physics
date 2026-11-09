@@ -172,14 +172,141 @@ TYPED_TEST(KinematicFeaturesTest, JointFrameSemantics)
           F_WCexpected.linearVelocity,
           childLinkFrameData.linearVelocity,
           1e-6));
-    // \todo(iche033) bullet-featherstone does not compute link accelerations
-    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+    // bullet-featherstone reports the acceleration of the last step as the
+    // change of velocity over the step, which differs from the instantaneous
+    // acceleration at the end of the step by a term of the order of the step
+    // size.
+    const double accelerationTolerance =
+        this->PhysicsEngineName(name) == "bullet-featherstone" ? 2e-3 : 1e-6;
+    EXPECT_TRUE(
+      gz::physics::test::Equal(
+          F_WCexpected.linearAcceleration,
+          childLinkFrameData.linearAcceleration,
+          accelerationTolerance));
+  }
+}
+
+namespace
+{
+/// \brief A 1 kg box 5 cm above a static ground plane.
+const char *const kBoxOnGroundSdf = R"(
+<sdf version="1.6">
+  <world name="box_on_ground">
+    <gravity>0 0 -10</gravity>
+    <model name="ground">
+      <static>true</static>
+      <link name="ground_link">
+        <collision name="ground_collision">
+          <geometry><plane><normal>0 0 1</normal></plane></geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="box">
+      <pose>0 0 0.55 0 0 0</pose>
+      <link name="box_link">
+        <inertial>
+          <mass>1</mass>
+          <inertia>
+            <ixx>0.1667</ixx><iyy>0.1667</iyy><izz>0.1667</izz>
+          </inertia>
+        </inertial>
+        <collision name="box_collision">
+          <geometry><box><size>1 1 1</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+  </world>
+</sdf>)";
+}  // namespace
+
+TYPED_TEST(KinematicFeaturesTest, LinkAccelerationFreeFall)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<KinematicFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors =
+        root.Load(common_test::worlds::kSphereGravitySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+    auto link = world->GetModel("sphere")->GetLink("sphere_link");
+    ASSERT_NE(nullptr, link);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    gz::physics::test::AssertVectorApprox approx(1e-2);
+
+    // A link in free fall accelerates with gravity and does not rotate
+    for (std::size_t i = 0; i < 10; ++i)
     {
-      EXPECT_TRUE(
-        gz::physics::test::Equal(
-            F_WCexpected.linearAcceleration,
-            childLinkFrameData.linearAcceleration,
-            1e-6));
+      world->Step(output, state, input);
+      const auto frameData = link->FrameDataRelativeToWorld();
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d(0, 0, -10),
+                          frameData.linearAcceleration);
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          frameData.angularAcceleration);
+    }
+  }
+}
+
+TYPED_TEST(KinematicFeaturesTest, LinkAccelerationOnGround)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<KinematicFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.LoadSdfString(kBoxOnGroundSdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+    auto link = world->GetModel("box")->GetLink("box_link");
+    ASSERT_NE(nullptr, link);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    // The tolerance is relative to the larger of 1 and the norm of the
+    // vectors.
+    gz::physics::test::AssertVectorApprox approx(1e-2);
+
+    // The box is released above the ground
+    world->Step(output, state, input);
+    EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d(0, 0, -10),
+                        link->FrameDataRelativeToWorld().linearAcceleration);
+
+    // Let the box settle on the ground, then it does not accelerate. The
+    // accelerations measured with bullet-featherstone are below 1e-5 m/s^2
+    // after 1000 steps. The check runs long enough for the box to fall
+    // asleep in that plugin.
+    for (std::size_t i = 0; i < 1000; ++i)
+      world->Step(output, state, input);
+
+    for (std::size_t i = 0; i < 1500; ++i)
+    {
+      world->Step(output, state, input);
+      const auto frameData = link->FrameDataRelativeToWorld();
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          frameData.linearAcceleration);
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          frameData.angularAcceleration);
     }
   }
 }
@@ -3602,6 +3729,423 @@ TEST_F(KinematicFreeGroupTestFeaturesList, KinematicChildWeldedToStatic)
     StepKinematicWorld(world, 1000);
     EXPECT_GT(-0.3, armJoint->GetPosition(0));
     EXPECT_LT(-0.5, armJoint->GetPosition(0));
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, KinematicBaseAcceleration)
+{
+  // A kinematic base turning at a constant angular velocity. A link fixed
+  // to it at a radius R accelerates towards the axis with w^2 R, and the
+  // origin of a link on the axis, whose center of mass is offset from it, has
+  // no acceleration.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="turntable">
+        <pose>0 0 5 0 0 0</pose>
+        <link name="base">
+          <kinematic>true</kinematic>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia><ixx>0.1</ixx><iyy>0.1</iyy><izz>0.1</izz></inertia>
+          </inertial>
+        </link>
+        <link name="arm">
+          <pose>1 0 0 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia><ixx>0.1</ixx><iyy>0.1</iyy><izz>0.1</izz></inertia>
+          </inertial>
+        </link>
+        <joint name="weld" type="fixed">
+          <parent>base</parent>
+          <child>arm</child>
+        </joint>
+      </model>
+    </sdf>)");
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="offset">
+        <pose>0 5 5 0 0 0</pose>
+        <link name="link">
+          <kinematic>true</kinematic>
+          <inertial>
+            <pose>0.5 0 0 0 0 0</pose>
+            <mass>1.0</mass>
+            <inertia><ixx>0.1</ixx><iyy>0.1</iyy><izz>0.1</izz></inertia>
+          </inertial>
+        </link>
+      </model>
+    </sdf>)");
+
+    auto turntable = world->GetModel("turntable");
+    ASSERT_NE(nullptr, turntable);
+    auto base = turntable->GetLink("base");
+    auto arm = turntable->GetLink("arm");
+    ASSERT_NE(nullptr, base);
+    ASSERT_NE(nullptr, arm);
+    auto turntableGroup = turntable->FindFreeGroup();
+    ASSERT_NE(nullptr, turntableGroup);
+
+    auto offset = world->GetModel("offset");
+    ASSERT_NE(nullptr, offset);
+    auto offsetLink = offset->GetLink("link");
+    ASSERT_NE(nullptr, offsetLink);
+    auto offsetGroup = offset->FindFreeGroup();
+    ASSERT_NE(nullptr, offsetGroup);
+
+    const double w = 2.0;
+    const Eigen::Vector3d angVel(0, 0, w);
+    turntableGroup->SetWorldAngularVelocity(angVel);
+    offsetGroup->SetWorldAngularVelocity(angVel);
+
+    gz::physics::test::AssertVectorApprox approx(1e-2);
+    for (std::size_t i = 0; i < 300; ++i)
+    {
+      StepKinematicWorld(world, 1);
+
+      // The arm moves on a circle of radius 1 around the axis of the base
+      const auto armData = arm->FrameDataRelativeToWorld();
+      const auto baseData = base->FrameDataRelativeToWorld();
+      Eigen::Vector3d radial = armData.pose.translation() -
+          baseData.pose.translation();
+      radial.z() = 0.0;
+      EXPECT_NEAR(1.0, radial.norm(), 1e-3);
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d(-w * w * radial),
+                          armData.linearAcceleration);
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          armData.angularAcceleration);
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          baseData.linearAcceleration);
+
+      // The origin of the link with the offset center of mass stays on the
+      // axis and does not accelerate
+      const auto offsetData = offsetLink->FrameDataRelativeToWorld();
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          offsetData.linearAcceleration);
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList,
+       FloatingLinkAccelerationWithOffsetCenterOfMass)
+{
+  // A link spinning freely without gravity, with its center of mass offset
+  // from the link frame. The center of mass moves in a straight line, so the
+  // origin of the link frame, which is a point of the rotating body, has the
+  // centripetal acceleration w x (w x r) towards the center of mass.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.LoadSdfString(R"(
+    <sdf version="1.6">
+      <world name="no_gravity">
+        <gravity>0 0 0</gravity>
+      </world>
+    </sdf>)");
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="spinner">
+        <pose>0 0 5 0 0 0</pose>
+        <link name="link">
+          <inertial>
+            <pose>0.5 0 0 0 0 0</pose>
+            <mass>1.0</mass>
+            <inertia><ixx>0.1</ixx><iyy>0.1</iyy><izz>0.1</izz></inertia>
+          </inertial>
+        </link>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("spinner");
+    ASSERT_NE(nullptr, model);
+    auto link = model->GetLink("link");
+    ASSERT_NE(nullptr, link);
+    auto freeGroup = model->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+
+    const double w = 2.0;
+    freeGroup->SetWorldLinearVelocity(Eigen::Vector3d::Zero());
+    freeGroup->SetWorldAngularVelocity(Eigen::Vector3d(0, 0, w));
+
+    gz::physics::test::AssertVectorApprox approx(1e-2);
+    for (std::size_t i = 0; i < 300; ++i)
+    {
+      StepKinematicWorld(world, 1);
+
+      const auto data = link->FrameDataRelativeToWorld();
+      // World position of the center of mass
+      const Eigen::Vector3d com = data.pose * Eigen::Vector3d(0.5, 0, 0);
+      const Eigen::Vector3d originToCom = com - data.pose.translation();
+      EXPECT_NEAR(0.5, originToCom.norm(), 1e-3);
+
+      // Towards the center of mass (a positive scalar product with it) with
+      // the magnitude w^2 * 0.5
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d(w * w * originToCom),
+                          data.linearAcceleration);
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          data.angularAcceleration);
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList, FixedBaseChainAcceleration)
+{
+  // A chain of two links welded to the world through a support link, released
+  // horizontal under gravity. The support and the pivot of the first link do
+  // not accelerate, and the accelerations of the links match the change of
+  // their velocities over the step.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="chain">
+        <pose>0 0 5 0 0 0</pose>
+        <joint name="fix" type="fixed">
+          <parent>world</parent>
+          <child>support</child>
+        </joint>
+        <link name="support">
+          <inertial>
+            <mass>1.0</mass>
+            <inertia><ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz></inertia>
+          </inertial>
+        </link>
+        <link name="l1">
+          <pose>0.5 0 0 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia><ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz></inertia>
+          </inertial>
+        </link>
+        <joint name="j1" type="revolute">
+          <pose>-0.5 0 0 0 0 0</pose>
+          <parent>support</parent>
+          <child>l1</child>
+          <axis><xyz>0 1 0</xyz></axis>
+        </joint>
+        <link name="l2">
+          <pose>1.5 0 0 0 0 0</pose>
+          <inertial>
+            <mass>1.0</mass>
+            <inertia><ixx>0.01</ixx><iyy>0.01</iyy><izz>0.01</izz></inertia>
+          </inertial>
+        </link>
+        <joint name="j2" type="revolute">
+          <pose>-0.5 0 0 0 0 0</pose>
+          <parent>l1</parent>
+          <child>l2</child>
+          <axis><xyz>0 1 0</xyz></axis>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto model = world->GetModel("chain");
+    ASSERT_NE(nullptr, model);
+    auto support = model->GetLink("support");
+    auto l1 = model->GetLink("l1");
+    auto l2 = model->GetLink("l2");
+    auto j1 = model->GetJoint("j1");
+    ASSERT_NE(nullptr, support);
+    ASSERT_NE(nullptr, l1);
+    ASSERT_NE(nullptr, l2);
+    ASSERT_NE(nullptr, j1);
+
+    gz::physics::test::AssertVectorApprox approx(1e-2);
+    gz::physics::test::AssertVectorApprox pivotApprox(5e-2);
+    auto before1 = l1->FrameDataRelativeToWorld();
+    auto before2 = l2->FrameDataRelativeToWorld();
+    for (std::size_t i = 0; i < 300; ++i)
+    {
+      StepKinematicWorld(world, 1);
+      const auto after1 = l1->FrameDataRelativeToWorld();
+      const auto after2 = l2->FrameDataRelativeToWorld();
+
+      const auto supportData = support->FrameDataRelativeToWorld();
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          supportData.linearAcceleration);
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          supportData.angularAcceleration);
+      // The pivot acceleration combines a finite difference of the center of
+      // mass velocity with the velocities at the end of the step, so it is
+      // zero up to a term of the order of the step size (1e-2 here, with link
+      // accelerations of 10 to 40 m/s^2).
+      EXPECT_PRED_FORMAT2(pivotApprox, Eigen::Vector3d::Zero(),
+                          j1->FrameDataRelativeToWorld().linearAcceleration);
+
+      for (const auto &[before, after] :
+           {std::make_pair(before1, after1), std::make_pair(before2, after2)})
+      {
+        EXPECT_PRED_FORMAT2(approx,
+            Eigen::Vector3d(
+                (after.linearVelocity - before.linearVelocity) / kStepSize),
+            after.linearAcceleration);
+        EXPECT_PRED_FORMAT2(approx,
+            Eigen::Vector3d(
+                (after.angularVelocity - before.angularVelocity) / kStepSize),
+            after.angularAcceleration);
+      }
+      before1 = after1;
+      before2 = after2;
+    }
+
+    // The chain has swung down, so the check above saw large accelerations.
+    EXPECT_GT(before2.angularVelocity.norm(), 1.0);
+  }
+}
+
+/////////////////////////////////////////////////
+TEST_F(KinematicFreeGroupTestFeaturesList,
+       VelocitySetBetweenStepsIsNotAnAcceleration)
+{
+  // Without gravity, a free body and a link on a fixed-base revolute joint,
+  // both with their center of mass at the link origin, get velocities set
+  // between two steps. They move at constant velocity afterwards, so the step
+  // that follows reports no acceleration, not the velocity change over the
+  // step size.
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine = gz::physics::RequestEngine3d<
+        KinematicFreeGroupFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    sdf::Errors errors = root.LoadSdfString(R"(
+    <sdf version="1.6">
+      <world name="no_gravity">
+        <gravity>0 0 0</gravity>
+      </world>
+    </sdf>)");
+    ASSERT_TRUE(errors.empty()) << errors.front();
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="box">
+        <pose>0 0 5 0 0 0</pose>
+        <link name="link">
+          <inertial>
+            <mass>1.0</mass>
+            <inertia><ixx>0.1</ixx><iyy>0.1</iyy><izz>0.1</izz></inertia>
+          </inertial>
+        </link>
+      </model>
+    </sdf>)");
+    ConstructModelFromString(world, R"(
+    <sdf version="1.6">
+      <model name="arm">
+        <pose>0 5 5 0 0 0</pose>
+        <joint name="fix" type="fixed">
+          <parent>world</parent>
+          <child>support</child>
+        </joint>
+        <link name="support">
+          <inertial>
+            <mass>1.0</mass>
+            <inertia><ixx>0.1</ixx><iyy>0.1</iyy><izz>0.1</izz></inertia>
+          </inertial>
+        </link>
+        <link name="link">
+          <inertial>
+            <mass>1.0</mass>
+            <inertia><ixx>0.1</ixx><iyy>0.1</iyy><izz>0.1</izz></inertia>
+          </inertial>
+        </link>
+        <joint name="joint" type="revolute">
+          <parent>support</parent>
+          <child>link</child>
+          <axis><xyz>0 0 1</xyz></axis>
+        </joint>
+      </model>
+    </sdf>)");
+
+    auto box = world->GetModel("box");
+    ASSERT_NE(nullptr, box);
+    auto boxLink = box->GetLink("link");
+    ASSERT_NE(nullptr, boxLink);
+    auto boxGroup = box->FindFreeGroup();
+    ASSERT_NE(nullptr, boxGroup);
+    auto arm = world->GetModel("arm");
+    ASSERT_NE(nullptr, arm);
+    auto armLink = arm->GetLink("link");
+    ASSERT_NE(nullptr, armLink);
+    auto joint = arm->GetJoint("joint");
+    ASSERT_NE(nullptr, joint);
+
+    StepKinematicWorld(world, 10);
+
+    boxGroup->SetWorldLinearVelocity(Eigen::Vector3d(1, 0, 0));
+    boxGroup->SetWorldAngularVelocity(Eigen::Vector3d(0, 0, 1));
+    joint->SetVelocity(0, 2.0);
+
+    // Bullet may store velocities in single precision, whose rounding over
+    // the step size is about 1e-4. A spike would be about 1000.
+    gz::physics::test::AssertVectorApprox approx(1e-3);
+    for (std::size_t i = 0; i < 2; ++i)
+    {
+      StepKinematicWorld(world, 1);
+
+      const auto boxData = boxLink->FrameDataRelativeToWorld();
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d(1, 0, 0),
+                          boxData.linearVelocity);
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          boxData.linearAcceleration);
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          boxData.angularAcceleration);
+
+      const auto armData = armLink->FrameDataRelativeToWorld();
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d(0, 0, 2),
+                          armData.angularVelocity);
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          armData.linearAcceleration);
+      EXPECT_PRED_FORMAT2(approx, Eigen::Vector3d::Zero(),
+                          armData.angularAcceleration);
+    }
   }
 }
 
