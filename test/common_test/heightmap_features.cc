@@ -49,6 +49,7 @@
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/GetEntities.hh>
 #include <gz/physics/Joint.hh>
+#include <gz/physics/Model.hh>
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/heightmap/HeightmapShape.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
@@ -1081,6 +1082,48 @@ TYPED_TEST(HeightmapFeaturesTest, DetachLinkWithHeightmapIsRefused)
     StepWorld(world, 2000);
 
     ExpectRestingAt(world, "terrain", Eigen::Vector3d::Zero(), 1e-3);
+    ExpectRestingAt(world, "sphere", {1.1, 1.1, height + 0.1}, 0.05);
+  }
+}
+
+/////////////////////////////////////////////////
+/// \brief Features to make a model with a heightmap dynamic.
+using HeightmapModelStaticFeatures = gz::physics::FeatureList<
+  HeightmapFeaturesList,
+  gz::physics::ModelStaticState
+>;
+
+/////////////////////////////////////////////////
+// For the same reason, bullet-featherstone refuses to make a static model
+// with a heightmap dynamic: the model stays static and a sphere keeps
+// resting on the heightmap.
+TYPED_TEST(HeightmapFeaturesTest, SetModelWithHeightmapDynamicIsRefused)
+{
+  const double height = 0.3;
+  const std::string worldSdf = kWorldBegin + std::string(kStaticGround) +
+      SphereModel("sphere", 1.1, 1.1, height + 0.15) + kWorldEnd;
+
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_SUPPORTED_ENGINE(name, "bullet-featherstone")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    auto world = ConstructWorld<HeightmapModelStaticFeatures>(
+        this->loader.Instantiate(name), worldSdf);
+    ASSERT_NE(nullptr, world);
+    auto ground = world->GetModel("ground");
+    ASSERT_NE(nullptr, ground);
+    ASSERT_NE(nullptr, ground->GetLink("link")->AttachHeightmapShape(
+        "heightmap", FlatHeightmap(height), Eigen::Isometry3d::Identity(),
+        Eigen::Vector3d(4, 4, 1)));
+
+    StepWorld(world, 10);
+    ASSERT_TRUE(ground->GetStatic());
+    ground->SetStatic(false);
+    EXPECT_TRUE(ground->GetStatic());
+    StepWorld(world, 2000);
+
+    ExpectRestingAt(world, "ground", Eigen::Vector3d::Zero(), 1e-3);
     ExpectRestingAt(world, "sphere", {1.1, 1.1, height + 0.1}, 0.05);
   }
 }
