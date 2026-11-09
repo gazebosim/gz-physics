@@ -348,6 +348,12 @@ struct WorldInfo
   mjModel *mjModelObj{nullptr};
   mjData *mjDataObj{nullptr};
   bool specDirty{true};
+
+  /// \brief Joint velocities before the last step, then the change in them
+  /// over the step divided by the step size. Kept here so that the buffer is
+  /// not allocated every step.
+  std::vector<mjtNum> qaccStep{};
+
   std::string name{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
   // Key2 is the scoped name of the model, including the world name
