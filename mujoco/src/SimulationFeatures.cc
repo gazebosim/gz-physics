@@ -20,6 +20,7 @@
 
 #include <mujoco/mjdata.h>
 
+#include <algorithm>
 #include <memory>
 
 #include <gz/common/Profiler.hh>
@@ -62,6 +63,11 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
 
   this->UpdateVelocityServoGains(*worldInfo);
 
+  // The link accelerations are the change in velocity over the step, see
+  // below, so keep the velocities from before the step.
+  auto &qaccStep = worldInfo->qaccStep;
+  qaccStep.assign(d->qvel, d->qvel + m->nv);
+
   mj_step(m, d);
 
   // Synchronize Cartesian position and velocity kinematics for the new state.
@@ -93,6 +99,20 @@ void SimulationFeatures::WorldForwardStep(const Identity &_worldID,
   mj_kinematics(m, d);  // xpos, xquat, xipos, ximat, geom_xpos, site_xpos/xmat
   mj_comPos(m, d);      // subtree_com, cdof, cinert
   mj_comVel(m, d);      // cvel, needed by mj_objectVelocity
+
+  // Body accelerations (cacc), reported by FrameDataRelativeToWorld. mj_step
+  // computes them only when a sensor needs them, and before the kinematics
+  // above were refreshed, so compute them here. They are computed from the
+  // change in joint velocity over the step rather than from qacc: the
+  // implicit integrators (implicitfast is the default) and Euler with damping
+  // advance qvel with an acceleration they keep to themselves, while qacc
+  // keeps the explicit one, which for a velocity servo is many times larger.
+  // qacc is swapped back afterwards, so GetJointAcceleration is unchanged.
+  for (int i = 0; i < m->nv; ++i)
+    qaccStep[i] = (d->qvel[i] - qaccStep[i]) / stepSize;
+  std::swap_ranges(qaccStep.begin(), qaccStep.end(), d->qacc);
+  mj_rnePostConstraint(m, d);
+  std::swap_ranges(qaccStep.begin(), qaccStep.end(), d->qacc);
 
   // Clear joint control forces so that they are not applied in the next
   // timestep, which is the expected behavior in Gazebo.
