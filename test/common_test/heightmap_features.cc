@@ -48,6 +48,7 @@
 #include <gz/physics/GetBoundingBox.hh>
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/GetEntities.hh>
+#include <gz/physics/Joint.hh>
 #include <gz/physics/RequestEngine.hh>
 #include <gz/physics/heightmap/HeightmapShape.hh>
 #include <gz/physics/sdf/ConstructWorld.hh>
@@ -1031,6 +1032,56 @@ TYPED_TEST(HeightmapFeaturesTest, ContactsWithBoxAndHeightmapOfOneLink)
     }
     EXPECT_EQ(std::set<std::string>{"box"}, touched["on_box"]);
     EXPECT_EQ(std::set<std::string>{"heightmap"}, touched["on_heightmap"]);
+  }
+}
+
+/////////////////////////////////////////////////
+/// \brief Features to detach a link with a heightmap from a static link.
+using HeightmapDetachFeatures = gz::physics::FeatureList<
+  HeightmapFeaturesList,
+  gz::physics::DetachJointFeature
+>;
+
+/////////////////////////////////////////////////
+// bullet-featherstone supports heightmaps on a link fixed to a static link,
+// but not once the link is detached and dynamic, so it refuses to detach it:
+// the heightmap stays in place and a sphere keeps resting on it.
+TYPED_TEST(HeightmapFeaturesTest, DetachLinkWithHeightmapIsRefused)
+{
+  const double height = 0.3;
+  const std::string worldSdf = kWorldBegin + std::string(kStaticGround) + R"(
+    <model name="terrain">
+      <link name="link">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia><ixx>1</ixx><iyy>1</iyy><izz>1</izz></inertia>
+        </inertial>
+      </link>
+    </model>)" + SphereModel("sphere", 1.1, 1.1, height + 0.15) + kWorldEnd;
+
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_SUPPORTED_ENGINE(name, "bullet-featherstone")
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    auto world = ConstructWorld<HeightmapDetachFeatures>(
+        this->loader.Instantiate(name), worldSdf);
+    ASSERT_NE(nullptr, world);
+    auto link = world->GetModel("terrain")->GetLink("link");
+    ASSERT_NE(nullptr, link);
+    auto joint = link->AttachFixedJoint(
+        world->GetModel("ground")->GetLink("link"), "weld");
+    ASSERT_NE(nullptr, joint);
+    ASSERT_NE(nullptr, link->AttachHeightmapShape("heightmap",
+        FlatHeightmap(height), Eigen::Isometry3d::Identity(),
+        Eigen::Vector3d(4, 4, 1)));
+
+    StepWorld(world, 10);
+    joint->Detach();
+    StepWorld(world, 2000);
+
+    ExpectRestingAt(world, "terrain", Eigen::Vector3d::Zero(), 1e-3);
+    ExpectRestingAt(world, "sphere", {1.1, 1.1, height + 0.1}, 0.05);
   }
 }
 
