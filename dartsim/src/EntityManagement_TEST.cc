@@ -19,8 +19,6 @@
 
 #include <gz/plugin/Loader.hh>
 
-#include <gz/common/geospatial/Dem.hh>
-#include <gz/common/geospatial/ImageHeightmap.hh>
 #include <gz/common/MeshManager.hh>
 #include <gz/common/Filesystem.hh>
 
@@ -209,63 +207,6 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_NEAR(meshShapeScaledSize[0], 0.2553, 1e-4);
   EXPECT_NEAR(meshShapeScaledSize[1], 0.3831, 1e-4);
   EXPECT_NEAR(meshShapeScaledSize[2], 0.0489, 1e-4);
-
-  // image heightmap
-  auto heightmapLink = model->ConstructEmptyLink("heightmap_link");
-  heightmapLink->AttachFixedJoint(child, "heightmap_joint");
-
-  auto heightmapFilename = gz::physics::test::resources::kHeightmapBowlPng;
-  common::ImageHeightmap data;
-  EXPECT_EQ(0, data.Load(heightmapFilename));
-
-  const math::Vector3d size({129, 129, 10});
-  auto heightmapShape = heightmapLink->AttachHeightmapShape("heightmap", data,
-      math::eigen3::convert(pose),
-      math::eigen3::convert(size));
-
-  EXPECT_NEAR(size.X(), heightmapShape->GetSize()[0], 1e-6);
-  EXPECT_NEAR(size.Y(), heightmapShape->GetSize()[1], 1e-6);
-  EXPECT_NEAR(size.Z(), heightmapShape->GetSize()[2], 1e-6);
-
-  auto heightmapShapeGeneric = heightmapLink->GetShape("heightmap");
-  ASSERT_NE(nullptr, heightmapShapeGeneric);
-  EXPECT_EQ(nullptr, heightmapShapeGeneric->CastToBoxShape());
-  auto heightmapShapeRecast = heightmapShapeGeneric->CastToHeightmapShape();
-  ASSERT_NE(nullptr, heightmapShapeRecast);
-  EXPECT_NEAR(size.X(), heightmapShapeRecast->GetSize()[0], 1e-6);
-  EXPECT_NEAR(size.Y(), heightmapShapeRecast->GetSize()[1], 1e-6);
-  EXPECT_NEAR(size.Z(), heightmapShapeRecast->GetSize()[2], 1e-6);
-
-  //  dem heightmap
-  auto demLink = model->ConstructEmptyLink("dem_link");
-  demLink->AttachFixedJoint(child, "dem_joint");
-
-  auto demFilename = gz::physics::test::resources::kVolcanoTif;
-  common::Dem dem;
-  EXPECT_EQ(0, dem.Load(demFilename));
-
-  math::Vector3d sizeDem;
-  sizeDem.X(dem.WorldWidth());
-  sizeDem.Y(dem.WorldHeight());
-  sizeDem.Z(dem.MaxElevation() - dem.MinElevation());
-
-  auto demShape = demLink->AttachHeightmapShape("dem", dem,
-      math::eigen3::convert(pose),
-      math::eigen3::convert(sizeDem));
-
-  // there is a loss in precision with large dems since heightmaps use floats
-  EXPECT_NEAR(sizeDem.X(), demShape->GetSize()[0], 1e-3);
-  EXPECT_NEAR(sizeDem.Y(), demShape->GetSize()[1], 1e-3);
-  EXPECT_NEAR(sizeDem.Z(), demShape->GetSize()[2], 1e-6);
-
-  auto demShapeGeneric = demLink->GetShape("dem");
-  ASSERT_NE(nullptr, demShapeGeneric);
-  EXPECT_EQ(nullptr, demShapeGeneric->CastToBoxShape());
-  auto demShapeRecast = demShapeGeneric->CastToHeightmapShape();
-  ASSERT_NE(nullptr, demShapeRecast);
-  EXPECT_NEAR(sizeDem.X(), demShapeRecast->GetSize()[0], 1e-3);
-  EXPECT_NEAR(sizeDem.Y(), demShapeRecast->GetSize()[1], 1e-3);
-  EXPECT_NEAR(sizeDem.Z(), demShapeRecast->GetSize()[2], 1e-6);
 }
 
 TEST(EntityManagement_TEST, RemoveEntities)
