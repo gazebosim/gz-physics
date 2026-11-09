@@ -25,7 +25,6 @@
 #include <gz/math/Quaternion.hh>
 #include <gz/math/Vector3.hh>
 
-#include <algorithm>
 #include <utility>
 
 namespace
@@ -353,55 +352,51 @@ void GzMultiBody::RecordVelocitiesBeforeStep()
 void GzMultiBody::UpdateAccelerations(double _dt)
 {
   GZ_PROFILE("GzMultiBody::UpdateAccelerations");
-  if (!(_dt > 0.0))
+  const std::size_t count = static_cast<std::size_t>(this->getNumLinks()) + 1;
+  if (!(_dt > 0.0) || this->velocitiesBeforeStep.linear.size() != count)
     return;
 
-  this->ReadVelocities(this->velocitiesAfterStep);
-  const std::size_t count = this->velocitiesAfterStep.linear.size();
-  if (this->velocitiesBeforeStep.linear.size() != count)
-    return;
-
-  this->accelerations.linear.resize(count);
-  this->accelerations.angular.resize(count);
+  // Read the velocities after the step into the accelerations, then turn
+  // them into the change over the step.
+  this->ReadVelocities(this->accelerations);
 
   // The velocities of a multibody read zero once it falls asleep. That is
   // not an acceleration.
-  if (!this->isAwake())
-  {
-    std::fill(this->accelerations.linear.begin(),
-        this->accelerations.linear.end(), Eigen::Vector3d::Zero().eval());
-    std::fill(this->accelerations.angular.begin(),
-        this->accelerations.angular.end(), Eigen::Vector3d::Zero().eval());
-    return;
-  }
-
+  const bool awake = this->isAwake();
   for (std::size_t i = 0; i < count; ++i)
   {
-    this->accelerations.linear[i] =
-        (this->velocitiesAfterStep.linear[i] -
-         this->velocitiesBeforeStep.linear[i]) / _dt;
-    this->accelerations.angular[i] =
-        (this->velocitiesAfterStep.angular[i] -
-         this->velocitiesBeforeStep.angular[i]) / _dt;
+    Eigen::Vector3d &linear = this->accelerations.linear[i];
+    Eigen::Vector3d &angular = this->accelerations.angular[i];
+    if (!awake)
+    {
+      linear.setZero();
+      angular.setZero();
+      continue;
+    }
+    linear = (linear - this->velocitiesBeforeStep.linear[i]) / _dt;
+    angular = (angular - this->velocitiesBeforeStep.angular[i]) / _dt;
   }
+}
+
+/// \brief Entry of a link in _values, zero if there is none.
+static const Eigen::Vector3d &linkEntry(
+    const std::vector<Eigen::Vector3d> &_values, int _linkIndex)
+{
+  static const Eigen::Vector3d kZero = Eigen::Vector3d::Zero();
+  const std::size_t k = static_cast<std::size_t>(_linkIndex + 1);
+  return k < _values.size() ? _values[k] : kZero;
 }
 
 const Eigen::Vector3d &GzMultiBody::GetLinkComLinearAcceleration(
     int _linkIndex) const
 {
-  static const Eigen::Vector3d kZero = Eigen::Vector3d::Zero();
-  const std::size_t k = static_cast<std::size_t>(_linkIndex + 1);
-  return k < this->accelerations.linear.size() ?
-      this->accelerations.linear[k] : kZero;
+  return linkEntry(this->accelerations.linear, _linkIndex);
 }
 
 const Eigen::Vector3d &GzMultiBody::GetLinkAngularAcceleration(
     int _linkIndex) const
 {
-  static const Eigen::Vector3d kZero = Eigen::Vector3d::Zero();
-  const std::size_t k = static_cast<std::size_t>(_linkIndex + 1);
-  return k < this->accelerations.angular.size() ?
-      this->accelerations.angular[k] : kZero;
+  return linkEntry(this->accelerations.angular, _linkIndex);
 }
 
 }  // namespace bullet_featherstone

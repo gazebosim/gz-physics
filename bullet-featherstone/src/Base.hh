@@ -227,9 +227,6 @@ class GzMultiBody: public btMultiBody
   /// \brief Velocities recorded by RecordVelocitiesBeforeStep.
   private: WorldVelocities velocitiesBeforeStep;
 
-  /// \brief Velocities read by UpdateAccelerations.
-  private: WorldVelocities velocitiesAfterStep;
-
   /// \brief Accelerations of the center of mass of the base and of every
   /// link, same indexing as WorldVelocities. The angular entries are the
   /// angular accelerations.

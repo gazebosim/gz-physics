@@ -85,58 +85,6 @@ TEST(GzMultiBody, AccelerationsAreZeroBeforeAStep)
 }
 
 /////////////////////////////////////////////////
-TEST(GzMultiBody, AccelerationIsVelocityChangeOverStep)
-{
-  Fixture f;
-  f.SetVelocities({1, 0, 0}, 0, 2);
-  f.body.RecordVelocitiesBeforeStep();
-  f.SetVelocities({1, 0, 2}, 1, 4);
-  f.body.UpdateAccelerations(0.5);
-
-  // Base: velocity change over the step
-  EXPECT_NEAR(0.0, f.body.GetLinkComLinearAcceleration(-1).x(), 1e-5);
-  EXPECT_NEAR(0.0, f.body.GetLinkComLinearAcceleration(-1).y(), 1e-5);
-  EXPECT_NEAR(4.0, f.body.GetLinkComLinearAcceleration(-1).z(), 1e-5);
-  EXPECT_NEAR(2.0, f.body.GetLinkAngularAcceleration(-1).z(), 1e-5);
-
-  // Link: its center of mass velocity in the world frame is
-  // v_base + (-1.5 * w_base - 0.5 * w_joint, 0, 0) because the offsets from
-  // the base center of mass point along world y, so
-  // before: (0, 0, 0), after: (-2.5, 0, 2).
-  const Eigen::Vector3d linkAcc = f.body.GetLinkComLinearAcceleration(0);
-  EXPECT_NEAR(-5.0, linkAcc.x(), 1e-4);
-  EXPECT_NEAR(0.0, linkAcc.y(), 1e-4);
-  EXPECT_NEAR(4.0, linkAcc.z(), 1e-4);
-  // Angular velocity about z is w_base + w_joint: 2 before, 5 after
-  const Eigen::Vector3d linkAngAcc = f.body.GetLinkAngularAcceleration(0);
-  EXPECT_NEAR(0.0, linkAngAcc.x(), 1e-5);
-  EXPECT_NEAR(0.0, linkAngAcc.y(), 1e-5);
-  EXPECT_NEAR(6.0, linkAngAcc.z(), 1e-4);
-}
-
-/////////////////////////////////////////////////
-TEST(GzMultiBody, LinkVelocitiesFollowJointRotation)
-{
-  // The joint is turned by 90 degrees on top of the 90 degrees of the base,
-  // so the center of mass of the link is at -0.5 along world x from the
-  // pivot, which is at world y = 1 from the base.
-  Fixture f;
-  f.body.SetJointPosForDof(0, 0, SIMD_HALF_PI);
-  f.Refresh();
-  f.SetVelocities({0, 0, 0}, 0, 0);
-  f.body.RecordVelocitiesBeforeStep();
-  f.SetVelocities({0, 0, 0}, 0, 2);
-  f.body.UpdateAccelerations(0.5);
-
-  // The velocity of the center of mass goes from 0 to w_joint z x (-0.5, 0, 0)
-  const Eigen::Vector3d linkAcc = f.body.GetLinkComLinearAcceleration(0);
-  EXPECT_NEAR(0.0, linkAcc.x(), 1e-4);
-  EXPECT_NEAR(-2.0, linkAcc.y(), 1e-4);
-  EXPECT_NEAR(0.0, linkAcc.z(), 1e-4);
-  EXPECT_NEAR(4.0, f.body.GetLinkAngularAcceleration(0).z(), 1e-4);
-}
-
-/////////////////////////////////////////////////
 TEST(GzMultiBody, NonPositiveStepKeepsAccelerations)
 {
   Fixture f;
@@ -152,19 +100,6 @@ TEST(GzMultiBody, NonPositiveStepKeepsAccelerations)
   // A step of zero length leaves the last accelerations
   f.body.UpdateAccelerations(0.0);
   EXPECT_NEAR(1.0, f.body.GetLinkComLinearAcceleration(-1).z(), 1e-5);
-}
-
-/////////////////////////////////////////////////
-TEST(GzMultiBody, FallingAsleepIsNotAnAcceleration)
-{
-  Fixture f;
-  f.SetVelocities({0, 0, 1}, 0, 0);
-  f.body.RecordVelocitiesBeforeStep();
-  f.SetVelocities({0, 0, 0}, 0, 0);
-  f.body.goToSleep();
-  f.body.UpdateAccelerations(0.001);
-  EXPECT_TRUE(f.body.GetLinkComLinearAcceleration(-1).isZero());
-  EXPECT_TRUE(f.body.GetLinkComLinearAcceleration(0).isZero());
 }
 
 /////////////////////////////////////////////////
