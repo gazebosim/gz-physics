@@ -26,6 +26,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -350,6 +351,11 @@ struct WorldInfo
   bool specDirty{true};
   std::string name{};
   std::vector<std::shared_ptr<JointInfo>> joints{};
+
+  /// \brief Names of the mesh assets in the spec, one per mesh file and
+  /// scale (or cone size), shared by the geoms that use them.
+  std::unordered_set<std::string> meshAssets{};
+
   // Key2 is the scoped name of the model, including the world name
   detail::EntityStorage<std::shared_ptr<ModelInfo>, std::string> models;
 
