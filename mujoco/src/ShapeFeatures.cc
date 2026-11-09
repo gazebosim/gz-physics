@@ -235,14 +235,15 @@ AlignedBox3d ShapeFeatures::GetShapeAxisAlignedBoundingBox(
               << geomId << std::endl;
         break;
       }
-      // (radius_x, radius_y, elevation_z, base_z). The base box extends
-      // below the lowest point, which is at heightmapMinHeight in the shape
-      // frame.
+      // (radius_x, radius_y, elevation_z, base_z). Like the other engines,
+      // the box is the extent of the heightmap, from its lowest point, which
+      // is at heightmapMinHeight in the shape frame, to its highest point.
+      // It leaves out the solid base that MuJoCo adds below the lowest point.
       const mjtNum *hsize = m->hfield_size +
                             static_cast<ptrdiff_t>(4) * hfieldId;
       const double z0 = shapeInfo->heightmapMinHeight;
-      min = Vector3d(-hsize[0], -hsize[1], z0 - hsize[3]);
-      max = Vector3d(hsize[0], hsize[1], z0 + hsize[2]);
+      min = Vector3d(-hsize[0], -hsize[1], z0);
+      max = Vector3d(hsize[0], hsize[1], z0 + shapeInfo->heightmapHeight);
       break;
     }
     default:

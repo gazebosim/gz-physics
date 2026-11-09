@@ -101,14 +101,16 @@ TEST_F(Heightmap_TEST, BoundingBox)
   ASSERT_NE(nullptr, this->terrain->AttachHeightmapShape("heightmap", data,
       Eigen::Isometry3d::Identity(), math::eigen3::convert(size)));
 
-  // The bowl's rim is at the full height. The box also contains the solid
-  // base that MuJoCo adds below the lowest point.
-  const auto box =
-      this->terrain->GetShape("heightmap")->GetAxisAlignedBoundingBox();
+  // The bowl's rim is at the full height. Like with the other engines, the
+  // box is the extent of the heightmap: it leaves out the solid base that
+  // MuJoCo adds below the lowest point.
+  const auto shape = this->terrain->GetShape("heightmap");
+  const auto box = shape->GetAxisAlignedBoundingBox();
   EXPECT_NEAR(-size.X() / 2, box.min().x(), 1e-6);
   EXPECT_NEAR(size.Y() / 2, box.max().y(), 1e-6);
   EXPECT_NEAR(size.Z(), box.max().z(), 1e-3);
-  EXPECT_GT(0.0, box.min().z());
+  EXPECT_NEAR(shape->CastToHeightmapShape()->GetSize()[2],
+              box.max().z() - box.min().z(), 1e-6);
 }
 
 /////////////////////////////////////////////////
@@ -186,6 +188,20 @@ class TwoLevelHeightmap : public common::HeightmapData
   private: float low;
   private: float high;
 };
+
+/////////////////////////////////////////////////
+// The bounding box of a heightmap below z = 0 is where its heights are, not
+// where MuJoCo puts the origin of its height field.
+TEST_F(Heightmap_TEST, BoundingBoxOfNegativeHeights)
+{
+  const TwoLevelHeightmap data(3, -3.0f, -1.0f);
+  ASSERT_NE(nullptr, this->terrain->AttachHeightmapShape("heightmap", data,
+      Eigen::Isometry3d::Identity(), Eigen::Vector3d(4, 6, 2)));
+  const auto box =
+      this->terrain->GetShape("heightmap")->GetAxisAlignedBoundingBox();
+  EXPECT_TRUE(box.min().isApprox(Eigen::Vector3d(-2, -3, -3), 1e-6));
+  EXPECT_TRUE(box.max().isApprox(Eigen::Vector3d(2, 3, -1), 1e-6));
+}
 
 /////////////////////////////////////////////////
 // MuJoCo computes nrow * ncol with ints, so it can't index more than 46340
