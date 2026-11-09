@@ -31,7 +31,8 @@ using gz::physics::heightmap::detail::SampleHeightmap;
 /// along z.
 class IndexHeightmap : public gz::common::HeightmapData
 {
-  public: explicit IndexHeightmap(unsigned int _width) : width(_width) {}
+  public: explicit IndexHeightmap(unsigned int _width)
+      : width(_width), height(_width) {}
 
   public: void FillHeightMap(int, unsigned int _vertSize,
       const gz::math::Vector3d &_size, const gz::math::Vector3d &_scale,
@@ -52,13 +53,14 @@ class IndexHeightmap : public gz::common::HeightmapData
     }
   }
 
-  public: unsigned int Height() const override { return this->width; }
+  public: unsigned int Height() const override { return this->height; }
   public: unsigned int Width() const override { return this->width; }
   public: float MaxElevation() const override { return this->maxElevation; }
   public: float MinElevation() const override { return this->minElevation; }
   public: std::string Filename() const override { return "index"; }
 
   public: unsigned int width;
+  public: unsigned int height;
   public: float minElevation = 0;
   public: float maxElevation = 10;
   public: bool flat = false;
@@ -162,6 +164,16 @@ TEST(SampleHeightmap, Invalid)
 
   data.badSize = true;
   EXPECT_FALSE(SampleHeightmap(data, {4, 4, 5}, 1, false).has_value());
+
+  // The grid is square, so data that isn't would be read out of bounds.
+  for (const unsigned int height : {2u, 5u})
+  {
+    IndexHeightmap notSquare(3);
+    notSquare.height = height;
+    EXPECT_FALSE(
+        SampleHeightmap(notSquare, {4, 4, 5}, 1, false).has_value());
+    EXPECT_FALSE(notSquare.filled);
+  }
 }
 
 /////////////////////////////////////////////////

@@ -82,10 +82,11 @@ namespace detail
   /// heightmap, which is the top of an image, as DART expects. If true, row 0
   /// is the -y edge, as MuJoCo and Bullet expect.
   /// \return The sampled heights, or std::nullopt if the heightmap is less
-  /// than 2 pixels wide, _subSampling is below 1, the grid has more than
-  /// kMaxSamplesPerSide samples per side, the size is not positive along x
-  /// or y, or _data fails to write a finite height to every sample. Grids
-  /// that are too large are rejected before they are allocated.
+  /// than 2 pixels wide or not square, _subSampling is below 1, the grid
+  /// has more than kMaxSamplesPerSide samples per side, the size is not
+  /// positive along x or y, or _data fails to write a finite height to every
+  /// sample. Grids that are too large are rejected before they are
+  /// allocated.
   inline std::optional<SampledHeightmap> SampleHeightmap(
       const common::HeightmapData &_data,
       const Eigen::Vector3d &_size,
@@ -95,8 +96,12 @@ namespace detail
     if (!(_size.x() > 0 && _size.y() > 0))
       return std::nullopt;
 
-    if (_data.Width() < 2 || _subSampling < 1)
+    // The grid is square, so non-square data would be read past its end.
+    if (_data.Width() < 2 || _data.Width() != _data.Height() ||
+        _subSampling < 1)
+    {
       return std::nullopt;
+    }
 
     // 64 bits cannot overflow here.
     const std::int64_t vertSize =
