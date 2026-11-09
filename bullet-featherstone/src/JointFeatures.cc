@@ -680,6 +680,39 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
     // This is done by reverting any collision flag changes
     // made in AttachJoint
     auto *linkInfo = this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID);
+
+    // Heightmaps are only supported on links that don't move: Bullet can't
+    // collide a dynamic heightfield with other shapes, which would go
+    // through it. Keep the joint of a link that would be made dynamic if it
+    // or a link welded to it has a heightmap.
+    if (jointInfo->parentLinkID.has_value() && !linkInfo->isStaticOrFixed &&
+        isColliderStatic(linkInfo))
+    {
+      auto hasHeightmap = [this](const LinkInfo *_link)
+      {
+        return std::any_of(_link->collisionEntityIds.begin(),
+            _link->collisionEntityIds.end(), [this](std::size_t _id)
+            {
+              const auto it = this->collisions.find(_id);
+              return it != this->collisions.end() && it->second->heightmap;
+            });
+      };
+      bool heightmap = hasHeightmap(linkInfo);
+      updateColliderFlagsRecursive(std::size_t(jointInfo->childLinkID),
+          this->joints, this->links, [&](LinkInfo *_link)
+          {
+            heightmap = heightmap || hasHeightmap(_link);
+          });
+      if (heightmap)
+      {
+        gzerr << "Unable to detach joint [" << jointInfo->name << "]: link ["
+              << linkInfo->name << "] or a link fixed to it has a heightmap, "
+              << "and heightmaps are only supported on links that are "
+              << "static or fixed to the world." << std::endl;
+        return;
+      }
+    }
+
     if (jointInfo->parentLinkID.has_value())
     {
       auto parentLinkInfo = this->links.at(jointInfo->parentLinkID.value());
