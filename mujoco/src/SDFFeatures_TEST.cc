@@ -1321,5 +1321,52 @@ TEST_P(SDFFeatures_TEST, ConesInSeveralLinks)
   EXPECT_NE(m->geom_dataid[m1l1], m->geom_dataid[m2l1]);
 }
 
+/////////////////////////////////////////////////
+// A collision whose mesh file can't be loaded is left out, without leaving a
+// mesh asset behind, and the rest of the model still compiles.
+TEST_P(SDFFeatures_TEST, MissingMeshFile)
+{
+  const std::string worldStr = R"(
+  <sdf version="1.9">
+    <world name="default">
+      <model name="m1">
+        <static>true</static>
+        <link name="link">
+          <collision name="missing">
+            <geometry>
+              <mesh><uri>file:///nonexistent/missing_mesh.obj</uri></mesh>
+            </geometry>
+          </collision>
+          <collision name="valid">
+            <geometry><mesh><uri>)" +
+      gz::physics::test::resources::kRotatedBoxObj + R"(</uri></mesh></geometry>
+          </collision>
+        </link>
+      </model>
+    </world>
+  </sdf>)";
+
+  WorldPtr world = this->LoadWorldString(worldStr);
+  ASSERT_NE(nullptr, world);
+
+  auto *worldInfo = static_cast<physics::mujoco::WorldInfo *>(
+      world->FullIdentity().ref.get());
+  const mjModel *m = worldInfo->mjModelObj;
+  ASSERT_NE(nullptr, m);
+
+  EXPECT_EQ(1, m->ngeom);
+  EXPECT_EQ(1, m->nmesh);
+  EXPECT_EQ(1u, worldInfo->meshAssets.size());
+  EXPECT_EQ(-1, mj_name2id(m, mjOBJ_GEOM, "m1::link::missing"));
+  const int valid = mj_name2id(m, mjOBJ_GEOM, "m1::link::valid");
+  ASSERT_GE(valid, 0);
+  EXPECT_EQ(mjGEOM_MESH, m->geom_type[valid]);
+
+  physics::ForwardStep::Output output;
+  physics::ForwardStep::State state;
+  physics::ForwardStep::Input input;
+  world->Step(output, state, input);
+}
+
 INSTANTIATE_TEST_SUITE_P(LoadWorld, SDFFeatures_TEST,
                         ::testing::Values(LoaderType::Whole));
