@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -176,6 +177,17 @@ void copyStandardJointAxisProperties(
 double convertScrewThreadPitch(const double _pitch)
 {
   return _pitch / (2.0 * GZ_PI);
+}
+
+/////////////////////////////////////////////////
+/// \brief _value printed with all its digits, whatever the locale.
+std::string exactString(double _value)
+{
+  std::ostringstream stream;
+  stream.imbue(std::locale::classic());
+  stream.precision(17);
+  stream << _value;
+  return stream.str();
 }
 
 /////////////////////////////////////////////////
@@ -395,14 +407,9 @@ struct ModelKinematicStructure
     std::cout << "}\n";
   }
 
-  /// \brief Add a mesh geom to _body. The MuJoCo mesh asset is shared by all
-  /// geoms using the same mesh file and scale; another scale gets its own
-  /// asset, as MuJoCo requires unique asset names.
-  /// \param[in] _worldInfo World that owns the spec and the asset names.
-  /// \param[in] _body Body that receives the geom.
-  /// \param[in] _meshSdf SDF mesh to add.
-  /// \return The geom, or nullptr (after a message) when the mesh could not
-  /// be added.
+  /// \brief Add a mesh geom to _body. Geoms with the same mesh file and
+  /// scale share one MuJoCo mesh asset.
+  /// \return The geom, or nullptr (after a message) on failure.
   mjsGeom * AddMesh(WorldInfo &_worldInfo, mjsBody *_body,
                     const ::sdf::Mesh *_meshSdf)
   {
@@ -415,58 +422,38 @@ struct ModelKinematicStructure
       return nullptr;
     }
 
+    // The submesh and its centering are not part of the name because this
+    // plugin does not read them.
     const auto &scale = _meshSdf->Scale();
-    // The key is the file and the scale. The submesh and its centering are
-    // not part of it because this plugin does not read them; the key must
-    // include them when it does.
-    std::ostringstream nameStream;
-    nameStream.imbue(std::locale::classic());
-    nameStream.precision(17);
-    nameStream << mesh->Name() << "@scale=" << scale.X() << "," << scale.Y()
-               << "," << scale.Z();
-    const std::string meshName = nameStream.str();
+    const std::string meshName = mesh->Name() + "@scale=" +
+        exactString(scale.X()) + "," + exactString(scale.Y()) + "," +
+        exactString(scale.Z());
 
-    // The asset names are tracked in the world and not looked up with
-    // mjs_findElement: after a compile or delete that saw at least one mesh,
-    // it looks names up in an id map that misses the meshes added later.
-    if (_worldInfo.meshAssets.count(meshName) == 0)
+    return this->AddSharedMesh(_worldInfo, _body, meshName, [&]()
     {
-      if (!this->AddMeshAsset(_worldInfo.mjSpecObj, meshName, scale, *mesh,
-                              _meshSdf->Uri()))
-      {
-        return nullptr;
-      }
-      _worldInfo.meshAssets.insert(meshName);
-    }
-
-    return this->AddMeshGeom(_body, meshName);
+      return this->AddMeshAsset(_worldInfo.mjSpecObj, meshName, scale, *mesh,
+                                _meshSdf->Uri());
+    });
   }
 
-  /// \brief Add a cone geom to _body. Cones with the same radius and length
-  /// share one MuJoCo mesh asset.
-  /// \param[in] _worldInfo World that owns the spec and the asset names.
-  /// \param[in] _body Body that receives the geom.
-  /// \param[in] _coneSdf SDF cone to add.
-  /// \return The geom, or nullptr (after a message) when the cone could not
-  /// be added.
+  /// \brief Add a cone geom to _body. Cones of the same size share one
+  /// MuJoCo mesh asset.
+  /// \return The geom, or nullptr (after a message) on failure.
   mjsGeom * AddCone(WorldInfo &_worldInfo, mjsBody *_body,
                     const ::sdf::Cone *_coneSdf)
   {
-    std::ostringstream nameStream;
-    nameStream.imbue(std::locale::classic());
-    nameStream.precision(17);
-    nameStream << "cone@radius=" << _coneSdf->Radius()
-               << ",length=" << _coneSdf->Length();
-    const std::string meshName = nameStream.str();
+    const std::string meshName = "cone@radius=" +
+        exactString(_coneSdf->Radius()) + ",length=" +
+        exactString(_coneSdf->Length());
 
-    if (_worldInfo.meshAssets.count(meshName) == 0)
+    return this->AddSharedMesh(_worldInfo, _body, meshName, [&]()
     {
       auto *spec = _worldInfo.mjSpecObj;
       auto *muMesh = mjs_addMesh(spec, nullptr);
       if (!muMesh)
       {
         gzerr << "Failed to add mesh spec for " << meshName << std::endl;
-        return nullptr;
+        return false;
       }
       muMesh->scale[0] = _coneSdf->Radius();
       muMesh->scale[1] = _coneSdf->Radius();
@@ -479,18 +466,28 @@ struct ModelKinematicStructure
         gzerr << "Failed to add mesh spec [" << meshName
               << "]: " << mjs_getError(spec) << std::endl;
         mjs_delete(spec, muMesh->element);
-        return nullptr;
+        return false;
       }
-      _worldInfo.meshAssets.insert(meshName);
-    }
-
-    return this->AddMeshGeom(_body, meshName);
+      return true;
+    });
   }
 
-  /// \brief Add a geom to _body that refers to the mesh asset _meshName.
-  /// \return The geom, or nullptr (after an error message) on failure.
-  mjsGeom * AddMeshGeom(mjsBody *_body, const std::string &_meshName)
+  /// \brief Add a geom to _body that uses the mesh asset _meshName, adding
+  /// the asset with _addAsset first if the world doesn't have it yet.
+  /// \return The geom, or nullptr (after a message) on failure.
+  mjsGeom * AddSharedMesh(WorldInfo &_worldInfo, mjsBody *_body,
+                          const std::string &_meshName,
+                          const std::function<bool()> &_addAsset)
   {
+    // Not looked up with mjs_findElement: after a compile or delete that saw
+    // a mesh, it misses the meshes added later.
+    if (_worldInfo.meshAssets.count(_meshName) == 0)
+    {
+      if (!_addAsset())
+        return nullptr;
+      _worldInfo.meshAssets.insert(_meshName);
+    }
+
     auto geom = mjs_addGeom(_body, nullptr);
     if (!geom)
     {
