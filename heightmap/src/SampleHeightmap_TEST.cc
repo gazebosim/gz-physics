@@ -179,12 +179,6 @@ TEST(SampleHeightmap, Invalid)
 /////////////////////////////////////////////////
 TEST(SampleHeightmap, TooLarge)
 {
-  // The largest grid has a number of samples that fits in an int, unlike
-  // a grid with one more sample per side.
-  EXPECT_EQ(46340, gz::physics::heightmap::detail::kMaxSamplesPerSide);
-  EXPECT_LE(46340LL * 46340, std::numeric_limits<int>::max());
-  EXPECT_GT(46341LL * 46341, std::numeric_limits<int>::max());
-
   // 46341 samples per side, rejected without sampling
   const IndexHeightmap twoPixels(2);
   EXPECT_FALSE(

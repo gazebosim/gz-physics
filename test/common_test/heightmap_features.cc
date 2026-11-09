@@ -105,6 +105,35 @@ TYPED_TEST_SUITE(HeightmapFeaturesTest,
                  HeightmapFeaturesTestTypes);
 
 /////////////////////////////////////////////////
+/// \brief Construct a world from SDF with an engine of a plugin.
+/// \param[in] _plugin Physics engine plugin.
+/// \param[in] _worldSdf SDF of the world, or empty for
+/// common_test::worlds::kHeightmapSdf.
+/// \return The world, or nullptr if the engine doesn't have the features of
+/// FeatureListT, or, which fails the test, if the world can't be constructed.
+template <class FeatureListT = HeightmapFeaturesList>
+gz::physics::World3dPtr<FeatureListT> ConstructWorld(
+    const gz::plugin::PluginPtr &_plugin, const std::string &_worldSdf = "")
+{
+  auto engine = gz::physics::RequestEngine3d<FeatureListT>::From(_plugin);
+  if (nullptr == engine)
+    return nullptr;
+
+  sdf::Root root;
+  const sdf::Errors errors = _worldSdf.empty() ?
+      root.Load(common_test::worlds::kHeightmapSdf) :
+      root.LoadSdfString(_worldSdf);
+  if (!errors.empty())
+  {
+    ADD_FAILURE() << errors.front();
+    return nullptr;
+  }
+  auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+  EXPECT_NE(nullptr, world);
+  return world;
+}
+
+/////////////////////////////////////////////////
 /// \brief Step a world.
 template <class WorldPtrT>
 void StepWorld(const WorldPtrT &_world, std::size_t _steps)
@@ -197,17 +226,7 @@ TYPED_TEST(HeightmapFeaturesTest, AttachHeightmap)
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
-
-    auto engine =
-        gz::physics::RequestEngine3d<HeightmapFeaturesList>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    sdf::Root root;
-    const sdf::Errors errors = root.Load(common_test::worlds::kHeightmapSdf);
-    ASSERT_TRUE(errors.empty()) << errors.front();
-
-    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    auto world = ConstructWorld(this->loader.Instantiate(name));
     ASSERT_NE(nullptr, world);
     auto link = world->GetModel("terrain")->GetLink("link");
     ASSERT_NE(nullptr, link);
@@ -230,21 +249,12 @@ TYPED_TEST(HeightmapFeaturesTest, HeightmapIsNotBoxShape)
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
-
-    auto engine =
-        gz::physics::RequestEngine3d<HeightmapBoxCastFeatures>::From(plugin);
-    if (nullptr == engine)
+    auto world = ConstructWorld<HeightmapBoxCastFeatures>(
+        this->loader.Instantiate(name));
+    if (nullptr == world)
     {
       GTEST_SKIP() << name << " does not support BoxShapeCast";
     }
-
-    sdf::Root root;
-    const sdf::Errors errors = root.Load(common_test::worlds::kHeightmapSdf);
-    ASSERT_TRUE(errors.empty()) << errors.front();
-
-    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
-    ASSERT_NE(nullptr, world);
     auto link = world->GetModel("terrain")->GetLink("link");
     ASSERT_NE(nullptr, link);
 
@@ -288,17 +298,7 @@ TYPED_TEST(HeightmapFeaturesTest, ObjectsRestOnHeightmap)
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
-
-    auto engine =
-        gz::physics::RequestEngine3d<HeightmapFeaturesList>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    sdf::Root root;
-    const sdf::Errors errors = root.Load(common_test::worlds::kHeightmapSdf);
-    ASSERT_TRUE(errors.empty()) << errors.front();
-
-    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    auto world = ConstructWorld(this->loader.Instantiate(name));
     ASSERT_NE(nullptr, world);
     auto terrainLink = world->GetModel("terrain")->GetLink("link");
     ASSERT_NE(nullptr, terrainLink);
@@ -343,14 +343,7 @@ void AttachToLinkOfSdfWorld(const gz::plugin::PluginPtr &_plugin,
     const std::string &_worldSdf, const std::string &_link,
     const std::string &_parent = "")
 {
-  auto engine =
-      gz::physics::RequestEngine3d<HeightmapFeaturesList>::From(_plugin);
-  ASSERT_NE(nullptr, engine);
-
-  sdf::Root root;
-  const sdf::Errors errors = root.LoadSdfString(_worldSdf);
-  ASSERT_TRUE(errors.empty()) << errors.front();
-  auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+  auto world = ConstructWorld(_plugin, _worldSdf);
   ASSERT_NE(nullptr, world);
   auto model = world->GetModel("model");
   ASSERT_NE(nullptr, model);
@@ -653,13 +646,7 @@ void ExpectSpheresRestOnHeightmap(const gz::plugin::PluginPtr &_plugin,
   </world>
 </sdf>)";
 
-  auto engine =
-      gz::physics::RequestEngine3d<HeightmapFeaturesList>::From(_plugin);
-  ASSERT_NE(nullptr, engine);
-
-  sdf::Root root;
-  ASSERT_TRUE(root.LoadSdfString(worldSdf).empty());
-  auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+  auto world = ConstructWorld(_plugin, worldSdf);
   ASSERT_NE(nullptr, world);
 
   auto ground = world->GetModel("ground")->GetLink("link");
@@ -805,18 +792,14 @@ TYPED_TEST(HeightmapFeaturesTest, BoxRestsOnTiltedHeightmap)
   const gz::math::Vector3d boxSize(1.0, 1.0, 0.2);
   const Eigen::Isometry3d boxPose = pose *
       Eigen::Translation3d(1.3, -0.9, height + boxSize.Z() / 2 + 0.05);
-  sdf::Root root;
-  ASSERT_TRUE(root.LoadSdfString(kWorldBegin + std::string(kStaticGround) +
+  const std::string worldSdf = kWorldBegin + std::string(kStaticGround) +
       BoxModel("box", gz::math::eigen3::convert(boxPose), boxSize) +
-      kWorldEnd).empty());
+      kWorldEnd;
 
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
-    auto engine = gz::physics::RequestEngine3d<HeightmapFeaturesList>::From(
-        this->loader.Instantiate(name));
-    ASSERT_NE(nullptr, engine);
-    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    auto world = ConstructWorld(this->loader.Instantiate(name), worldSdf);
     ASSERT_NE(nullptr, world);
     ASSERT_NE(nullptr, world->GetModel("ground")->GetLink("link")
         ->AttachHeightmapShape("heightmap", FlatHeightmap(height), pose,
@@ -886,14 +869,7 @@ TYPED_TEST(HeightmapFeaturesTest, ObjectsRestNearRampEdges)
     CHECK_UNSUPPORTED_ENGINE(name, "dartsim")
 
     std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
-    auto engine =
-        gz::physics::RequestEngine3d<HeightmapFeaturesList>::From(plugin);
-    ASSERT_NE(nullptr, engine);
-
-    sdf::Root root;
-    ASSERT_TRUE(root.LoadSdfString(worldSdf).empty());
-    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    auto world = ConstructWorld(this->loader.Instantiate(name), worldSdf);
     ASSERT_NE(nullptr, world);
     ASSERT_NE(nullptr,
         AttachRamp(world->GetModel("terrain")->GetLink("link"), sizeY));
@@ -940,18 +916,12 @@ TYPED_TEST(HeightmapFeaturesTest, ContactsWithBoxAndHeightmapOfOneLink)
   for (const std::string &name : this->pluginNames)
   {
     std::cout << "Testing plugin: " << name << std::endl;
-    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
-    auto engine =
-        gz::physics::RequestEngine3d<HeightmapContactFeatures>::From(plugin);
-    if (nullptr == engine)
+    auto world = ConstructWorld<HeightmapContactFeatures>(
+        this->loader.Instantiate(name), worldSdf);
+    if (nullptr == world)
     {
       GTEST_SKIP() << name << " does not support GetContactsFromLastStep";
     }
-
-    sdf::Root root;
-    ASSERT_TRUE(root.LoadSdfString(worldSdf).empty());
-    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
-    ASSERT_NE(nullptr, world);
 
     // The heightmap is attached after the box, and the sphere on it is over
     // the middle of its grid, away from its first rows.
