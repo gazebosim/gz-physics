@@ -85,7 +85,6 @@ struct HeightmapFeaturesList : gz::physics::FeatureList<
   gz::physics::GetModelFromWorld,
   gz::physics::GetLinkFromModel,
   gz::physics::GetShapeFromLink,
-  gz::physics::GetShapeBoundingBox,
   gz::physics::LinkFrameSemantics,
   gz::physics::ForwardStep,
   gz::physics::AttachFixedJointFeature,
@@ -210,7 +209,6 @@ void AttachImageAndDem(const LinkPtrT &link)
   EXPECT_NEAR(size.X(), heightmapShapeRecast->GetSize()[0], 1e-6);
   EXPECT_NEAR(size.Y(), heightmapShapeRecast->GetSize()[1], 1e-6);
   EXPECT_NEAR(size.Z(), heightmapShapeRecast->GetSize()[2], 1e-6);
-  ExpectBoundingBoxExtent(heightmapShapeGeneric, heightmapShapeRecast, 1e-6);
 
   gz::common::Dem dem;
   EXPECT_EQ(0, dem.Load(gz::physics::test::resources::kVolcanoTif));
@@ -237,7 +235,6 @@ void AttachImageAndDem(const LinkPtrT &link)
   EXPECT_NEAR(sizeDem.X(), demShapeRecast->GetSize()[0], 1e-3);
   EXPECT_NEAR(sizeDem.Y(), demShapeRecast->GetSize()[1], 1e-3);
   EXPECT_NEAR(sizeDem.Z(), demShapeRecast->GetSize()[2], 1e-6);
-  ExpectBoundingBoxExtent(demShapeGeneric, demShapeRecast, 1e-3);
 }
 
 /////////////////////////////////////////////////
@@ -282,6 +279,42 @@ TYPED_TEST(HeightmapFeaturesTest, HeightmapIsNotBoxShape)
     AttachImageAndDem(link);
     EXPECT_EQ(nullptr, link->GetShape("heightmap")->CastToBoxShape());
     EXPECT_EQ(nullptr, link->GetShape("dem")->CastToBoxShape());
+  }
+}
+
+/////////////////////////////////////////////////
+/// \brief Bounding boxes are optional for engines with heightmaps, like
+/// HeightmapBoxCastFeatures.
+using HeightmapBoundingBoxFeatures = gz::physics::FeatureList<
+  HeightmapFeaturesList,
+  gz::physics::GetShapeBoundingBox
+>;
+
+/////////////////////////////////////////////////
+// The bounding box of a heightmap is its extent. Skipped for engines without
+// bounding boxes.
+TYPED_TEST(HeightmapFeaturesTest, HeightmapBoundingBox)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    std::cout << "Testing plugin: " << name << std::endl;
+    auto world = ConstructWorld<HeightmapBoundingBoxFeatures>(
+        this->loader.Instantiate(name));
+    if (nullptr == world)
+    {
+      GTEST_SKIP() << name << " does not support GetShapeBoundingBox";
+    }
+    auto link = world->GetModel("terrain")->GetLink("link");
+    ASSERT_NE(nullptr, link);
+
+    // Attaches the shapes "heightmap" and "dem"
+    AttachImageAndDem(link);
+    auto heightmap = link->GetShape("heightmap");
+    auto dem = link->GetShape("dem");
+    ExpectBoundingBoxExtent(heightmap, heightmap->CastToHeightmapShape(),
+        1e-6);
+    // there is a loss in precision with large dems since heightmaps use floats
+    ExpectBoundingBoxExtent(dem, dem->CastToHeightmapShape(), 1e-3);
   }
 }
 
