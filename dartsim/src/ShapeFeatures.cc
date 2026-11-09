@@ -31,9 +31,11 @@
 #include <dart/dynamics/Shape.hpp>
 #include <dart/dynamics/SphereShape.hpp>
 
+#include <gz/common/Console.hh>
 #include <gz/common/Mesh.hh>
 #include <gz/common/MeshManager.hh>
 #include <gz/common/Profiler.hh>
+#include <gz/physics/heightmap/detail/SampleHeightmap.hh>
 
 #include "CustomConeMeshShape.hh"
 #include "CustomHeightmapShape.hh"
@@ -443,8 +445,17 @@ Identity ShapeFeatures::AttachHeightmapShape(
     int _subSampling)
 {
   GZ_PROFILE("ShapeFeatures::AttachHeightmapShape");
-  auto heightmap = std::make_shared<CustomHeightmapShape>(_heightmapData,
-      _size, _subSampling);
+  // DART's row 0 is the +y edge.
+  const auto sampled = heightmap::detail::SampleHeightmap(
+      _heightmapData, _size, _subSampling, false);
+  if (!sampled)
+  {
+    gzerr << "Unable to sample heightmap [" << _heightmapData.Filename()
+          << "]" << std::endl;
+    return this->GenerateInvalidId();
+  }
+
+  auto heightmap = std::make_shared<CustomHeightmapShape>(*sampled, _size);
 
   DartBodyNode *bn = this->ReferenceInterface<LinkInfo>(_linkID)->link.get();
   dart::dynamics::ShapeNode *sn =

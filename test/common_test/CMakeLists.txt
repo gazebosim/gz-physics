@@ -9,6 +9,7 @@ set(tests
   construct_empty_world
   detachable_joint
   free_joint_features
+  heightmap_features
   joint_features
   joint_basic_features
   joint_mimic_features
@@ -61,6 +62,7 @@ foreach(test ${tests})
       gz-physics-test
       ${PROJECT_LIBRARY_TARGET_NAME}
       ${PROJECT_LIBRARY_TARGET_NAME}-sdf
+      ${PROJECT_LIBRARY_TARGET_NAME}-heightmap
       ${PROJECT_LIBRARY_TARGET_NAME}-mesh
       gtest
       gtest_main
