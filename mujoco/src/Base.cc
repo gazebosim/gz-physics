@@ -17,6 +17,9 @@
 
 #include "Base.hh"
 
+#include <atomic>
+#include <mutex>
+
 #include <gz/common/Console.hh>
 #include <gz/physics/Implements.hh>
 #include <sdf/Types.hh>
@@ -53,6 +56,47 @@ WorldInfo *GetWorldInfoFromUserData(const mjModel *m, const mjData *d)
   return nullptr;
 }
 
+int ContactFilterCallback(const mjModel *m, mjData *d, int g1, int g2);
+
+/// \brief mjcb_contactfilter is process-global, so instead of overwriting a
+/// filter that an embedding application installed, we remember it, chain to
+/// it, and put it back when this library is unloaded.
+struct ContactFilterChain
+{
+  ~ContactFilterChain()
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
+    if (mjcb_contactfilter == ContactFilterCallback)
+      mjcb_contactfilter = this->previous.load();
+  }
+
+  /// \brief Install ContactFilterCallback, remembering the filter it replaces.
+  /// Installing again while ours is in place is a no-op, so we never chain to
+  /// ourselves.
+  void Install()
+  {
+    std::lock_guard<std::mutex> lock(this->mutex);
+    if (mjcb_contactfilter != ContactFilterCallback)
+    {
+      this->previous = mjcb_contactfilter;
+      mjcb_contactfilter = ContactFilterCallback;
+    }
+  }
+
+  /// \brief Serializes Install between engines built on different threads.
+  std::mutex mutex;
+
+  /// \brief Filter that was installed before ours. Atomic because other
+  /// threads may be stepping while a new world installs the filter.
+  std::atomic<mjfConFilt> previous{nullptr};
+};
+
+ContactFilterChain contactFilterChain;
+
+/// \brief Set while the previous filter runs, so a previous filter that
+/// itself chains back to ours cannot recurse forever.
+thread_local bool inPreviousContactFilter = false;
+
 int ContactFilterCallback(const mjModel *m, mjData *d, int g1, int g2)
 {
   int b1 = m->geom_bodyid[g1];
@@ -68,6 +112,18 @@ int ContactFilterCallback(const mjModel *m, mjData *d, int g1, int g2)
     {
       return 1;  // Exclude collision
     }
+  }
+
+  // A nonzero result rejects the contact. We only add rejections, so any
+  // contact we keep is left to the previous filter, exactly as if we were not
+  // installed.
+  mjfConFilt previous = contactFilterChain.previous.load();
+  if (previous && !inPreviousContactFilter)
+  {
+    inPreviousContactFilter = true;
+    const int result = previous(m, d, g1, g2);
+    inPreviousContactFilter = false;
+    return result;
   }
 
   // Fallback to default contype/conaffinity mask filtering.
@@ -216,7 +272,7 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
     std::memcpy(_worldInfo.mjDataObj->userdata, &header, sizeof(header));
   }
 
-  mjcb_contactfilter = ContactFilterCallback;
+  contactFilterChain.Install();
 
   // Ensure prevBodyPoses is sized correctly for the new model
   _worldInfo.prevBodyPoses.clear();
