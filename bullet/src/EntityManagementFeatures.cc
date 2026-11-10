@@ -212,10 +212,9 @@ Identity EntityManagementFeatures::GetModel(
 }
 
 const std::string &EntityManagementFeatures::GetModelName(
-    const Identity &) const
+    const Identity &_modelID) const
 {
-  static const std::string modelName = "bulletModel";
-  return modelName;
+  return this->ReferenceInterface<ModelInfo>(_modelID)->name;
 }
 
 std::size_t EntityManagementFeatures::GetModelIndex(

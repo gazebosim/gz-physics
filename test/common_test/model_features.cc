@@ -48,6 +48,13 @@ using ModelBaseFeaturesList = gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld
 >;
 
+using ModelNameFeaturesList = gz::physics::FeatureList<
+  gz::physics::GetEngineInfo,
+  gz::physics::GetWorldFromEngine,
+  gz::physics::GetModelFromWorld,
+  gz::physics::sdf::ConstructSdfWorld
+>;
+
 using ModelStaticFeaturesList = gz::physics::FeatureList<
   ModelBaseFeaturesList,
   gz::physics::ModelStaticState
@@ -98,6 +105,7 @@ class ModelFeaturesTest :
 };
 
 template <typename T> class ModelStaticTest : public ModelFeaturesTest<T> {};
+template <typename T> class ModelNameTest : public ModelFeaturesTest<T> {};
 template <typename T> class ModelGravityTest : public ModelFeaturesTest<T> {};
 template <typename T> class ModelGravityStaticTest
     : public ModelFeaturesTest<T> {};
@@ -151,6 +159,9 @@ Eigen::Vector3d StepAndGetPosition(
 using ModelStaticTestTypes = ::testing::Types<ModelStaticFeaturesList>;
 TYPED_TEST_SUITE(ModelStaticTest, ModelStaticTestTypes);
 
+using ModelNameTestTypes = ::testing::Types<ModelNameFeaturesList>;
+TYPED_TEST_SUITE(ModelNameTest, ModelNameTestTypes);
+
 using ModelGravityTestTypes = ::testing::Types<ModelGravityFeaturesList>;
 TYPED_TEST_SUITE(ModelGravityTest, ModelGravityTestTypes);
 
@@ -164,6 +175,27 @@ TYPED_TEST_SUITE(ModelCollisionTest, ModelCollisionTestTypes);
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
+
+//////////////////////////////////////////////////
+TYPED_TEST(ModelNameTest, ModelNameFromSdf)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<ModelNameFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = LoadWorld<ModelNameFeaturesList>(
+        engine, common_test::worlds::kSphereGravitySdf);
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
+    EXPECT_EQ("sphere", model->GetName());
+  }
+}
 
 //////////////////////////////////////////////////
 TYPED_TEST(ModelStaticTest, ModelStaticStateDefault)
