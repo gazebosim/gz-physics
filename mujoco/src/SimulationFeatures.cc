@@ -20,6 +20,7 @@
 
 #include <mujoco/mjdata.h>
 
+#include <cmath>
 #include <memory>
 
 #include <gz/common/Profiler.hh>
@@ -128,7 +129,7 @@ void SimulationFeatures::UpdateVelocityServoGains(WorldInfo &_worldInfo)
       {
         for (int axis = 1; axis < 3; ++axis)
         {
-          if (m->actuator_gear[i * 6 + axis] != 0.0)
+          if (std::abs(m->actuator_gear[i * 6 + axis]) > 0.0)
             dofIndex += axis;
         }
       }
