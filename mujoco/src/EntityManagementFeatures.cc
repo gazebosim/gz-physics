@@ -547,18 +547,33 @@ bool EntityManagementFeatures::RemoveModelByName(
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveNestedModelByIndex(
-    const Identity &/* _modelID */, std::size_t /* _nestedModelIndex */)
+    const Identity &_modelID, std::size_t _nestedModelIndex)
 {
-  // TODO(azeey) Implement RemoveNestedModelByIndex
-  return false;
+  const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  const auto *worldInfo = modelInfo->worldInfo;
+  auto it = worldInfo->models.indexInContainerToID.find(_modelID);
+  if (it == worldInfo->models.indexInContainerToID.end() ||
+      _nestedModelIndex >= it->second.size())
+  {
+    return false;
+  }
+
+  const std::size_t nestedModelId = it->second[_nestedModelIndex];
+  return this->RemoveModelImpl(worldInfo->entityId, nestedModelId);
 }
 
 /////////////////////////////////////////////////
 bool EntityManagementFeatures::RemoveNestedModelByName(
-    const Identity & /* _modelID */, const std::string & /* _modelName */)
+    const Identity &_modelID, const std::string &_modelName)
 {
-  // TODO(azeey) Implement RemoveNestedModelByName
-  return false;
+  const auto *modelInfo = this->ReferenceInterface<ModelInfo>(_modelID);
+  auto it = modelInfo->nestedModelNameToEntityId.find(_modelName);
+  if (it == modelInfo->nestedModelNameToEntityId.end())
+  {
+    return false;
+  }
+
+  return this->RemoveModelImpl(modelInfo->worldInfo->entityId, it->second);
 }
 
 /////////////////////////////////////////////////
