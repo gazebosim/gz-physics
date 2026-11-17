@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include <dart/collision/CollisionFilter.hpp>
 #include <dart/collision/CollisionObject.hpp>
 #include <dart/collision/bullet/BulletCollisionGroup.hpp>
 #include <dart/collision/ode/OdeCollisionGroup.hpp>
@@ -160,6 +161,41 @@ public:
   using OdeCollisionGroup::getOdeSpaceId;
 };
 
+/////////////////////////////////////////////////
+/// \brief Disable the ODE geoms of the objects that _option's filter ignores
+/// against everything (and re-enable the others).  ODE's spaces skip
+/// disabled geoms when pairing, so such objects cost nothing in the
+/// broadphase instead of one pair + filter callback per overlapping
+/// neighbour (e.g. the hidden cups of a nested stack, whose bounding boxes
+/// all overlap).  The geoms stay disabled after the step, so ray casts skip
+/// them too.
+static void DisableIgnoredGeoms(GzOdeCollisionGroup *_group,
+    const CollisionOption &_option)
+{
+  const auto *filter = dynamic_cast<const GzBroadphaseFilter *>(
+      _option.collisionFilter.get());
+  if (nullptr == filter)
+    return;
+  // CollisionGroup::collide() has already synced the group with its
+  // skeletons (geoms exist for every shape); OdeCollisionDetector::collide()
+  // updates their transforms next, so only the enabled flags are set here.
+  const dSpaceID space = _group->getOdeSpaceId();
+  const int numGeoms = dSpaceGetNumGeoms(space);
+  for (int i = 0; i < numGeoms; ++i)
+  {
+    const dGeomID geom = dSpaceGetGeom(space, i);
+    if (dGeomIsSpace(geom))
+      continue;
+    const auto *object = static_cast<CollisionObject *>(dGeomGetData(geom));
+    if (nullptr == object)
+      continue;
+    if (filter->IgnoresAllCollisions(object))
+      dGeomDisable(geom);
+    else
+      dGeomEnable(geom);
+  }
+}
+
 std::unique_ptr<CollisionGroup> GzOdeCollisionDetector::createCollisionGroup()
 {
   return std::make_unique<GzOdeCollisionGroup>(shared_from_this());
@@ -171,6 +207,7 @@ bool GzOdeCollisionDetector::collide(
     const CollisionOption &_option,
     CollisionResult *_result)
 {
+  DisableIgnoredGeoms(static_cast<GzOdeCollisionGroup *>(_group), _option);
   bool ret = OdeCollisionDetector::collide(_group, _option, _result);
   this->LimitCollisionPairMaxContacts(_result);
   return ret;
@@ -183,6 +220,8 @@ bool GzOdeCollisionDetector::collide(
     const CollisionOption &_option,
     CollisionResult *_result)
 {
+  DisableIgnoredGeoms(static_cast<GzOdeCollisionGroup *>(_group1), _option);
+  DisableIgnoredGeoms(static_cast<GzOdeCollisionGroup *>(_group2), _option);
   bool ret = OdeCollisionDetector::collide(_group1, _group2, _option, _result);
   this->LimitCollisionPairMaxContacts(_result);
   return ret;
