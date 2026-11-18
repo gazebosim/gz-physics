@@ -1,5 +1,5 @@
 gz_get_libsources_and_unittests(sources gtest_sources)
-gz_create_core_library(SOURCES ${sources} CXX_STANDARD 17)
+gz_create_core_library(SOURCES ${sources} CXX_STANDARD ${CMAKE_CXX_STANDARD})
 gz_add_get_install_prefix_impl(GET_INSTALL_PREFIX_FUNCTION gz::physics::getInstallPrefix
                                GET_INSTALL_PREFIX_HEADER gz/physics/InstallationDirectories.hh
                                OVERRIDE_INSTALL_PREFIX_ENV_VARIABLE GZ_PHYSICS_INSTALL_PREFIX)
