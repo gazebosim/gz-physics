@@ -213,6 +213,7 @@ CustomMeshShape::CustomMeshShape(
     const Eigen::Vector3d &_scale)
   : dart::dynamics::MeshShape(_scale, nullptr)
 {
+  GZ_PROFILE("CustomMeshShape::CustomMeshShape");
   // Create the root
   aiNode* node = new aiNode;
 
