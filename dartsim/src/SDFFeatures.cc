@@ -18,6 +18,7 @@
 #include "SDFFeatures.hh"
 
 #include <cmath>
+#include <cstddef>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -253,8 +254,6 @@ static dart::dynamics::UniversalJoint *ConstructUniversalJoint(
 }
 
 /////////////////////////////////////////////////
-<<<<<<< HEAD
-=======
 template <typename JointType>
 static JointType *ConstructBallJoint(
     const ModelInfo &/*_modelInfo*/,
@@ -286,7 +285,6 @@ static JointType *ConstructBallJoint(
 }
 
 /////////////////////////////////////////////////
->>>>>>> bda246c (GZ-PROFILE for dartsim (#997))
 struct ShapeAndTransform
 {
   dart::dynamics::ShapePtr shape;
@@ -1202,11 +1200,8 @@ Identity SDFFeatures::ConstructSdfJoint(
 
   if (::sdf::JointType::BALL == type)
   {
-    // SDF does not support any of the properties for ball joint, besides the
-    // name and relative transforms to its parent and child, which will be taken
-    // care of below. All other properties like joint limits, stiffness, etc,
-    // will be the default values of +/- infinity or 0.0.
-    joint = _child->moveTo<dart::dynamics::BallJoint>(_parent);
+    joint = ConstructBallJoint<dart::dynamics::BallJoint>(
+          _modelInfo, _sdfJoint, _parent, _child, T_joint);
   }
   // TODO(MXG): Consider adding dartsim support for a CONTINUOUS joint type.
   // Alternatively, support the CONTINUOUS joint type by wrapping the

@@ -189,6 +189,32 @@ TYPED_TEST(ModelStaticTest, ModelStaticStateDefault)
 }
 
 //////////////////////////////////////////////////
+TYPED_TEST(ModelStaticTest, ModelIndexRoundtrip)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    auto engine =
+        gz::physics::RequestEngine3d<ModelStaticFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = LoadWorld<ModelStaticFeaturesList>(
+        engine, common_test::worlds::kSphereGravitySdf);
+    ASSERT_NE(nullptr, world);
+
+    auto model = world->GetModel("sphere");
+    ASSERT_NE(nullptr, model);
+
+    EXPECT_EQ(0u, model->GetIndex());
+    EXPECT_EQ(model, world->GetModel(model->GetIndex()));
+    EXPECT_EQ(model, world->GetModel(0u));
+    EXPECT_EQ(1u, world->GetModelCount());
+    EXPECT_EQ(nullptr, world->GetModel(1u));
+  }
+}
+
+//////////////////////////////////////////////////
 TYPED_TEST(ModelStaticTest, ModelStaticStateSetGet)
 {
   for (const std::string &name : this->pluginNames)

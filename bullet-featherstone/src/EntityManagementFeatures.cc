@@ -518,11 +518,14 @@ const std::string &EntityManagementFeatures::GetModelName(
 std::size_t EntityManagementFeatures::GetModelIndex(
     const Identity &_modelID) const
 {
-  // The root link does not have an index, so we give it an index of 0 and bump
-  // the rest up by one when providing an index to gazebo
   const auto index = this->ReferenceInterface<ModelInfo>(
     _modelID)->indexInWorld;
-  return static_cast<std::size_t>(index + 1);
+  if (index < 0)
+  {
+    // Model proxy of a world (indexInWorld == -1) returns 0.
+    return 0;
+  }
+  return static_cast<std::size_t>(index);
 }
 
 /////////////////////////////////////////////////

@@ -18,22 +18,39 @@
 #ifndef GZ_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
 #define GZ_PHYSICS_DARTSIM_SRC_CUSTOMMESHSHAPE_HH_
 
+#include <dart/config.hpp>
 #include <dart/dynamics/MeshShape.hpp>
 #include <gz/common/Mesh.hh>
+#include <gz/physics/dartsim-plugin/Export.hh>
+
+// DART >= 6.20.0 deprecates the Assimp-based MeshShape APIs in favor of
+// dart::math::TriMesh. When this is defined, CustomMeshShape is built from a
+// TriMesh instead of an aiScene.
+#if DART_VERSION_AT_LEAST(6, 20, 0)
+#define DART_USES_TRIMESH
+#endif
 
 namespace gz {
 namespace physics {
 namespace dartsim {
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4275)  // non dll-interface class used as base
+#endif
 /// \brief This class creates a custom derivative of dartsim's MeshShape class
 /// which allows a common::Mesh to be converted into a MeshShape that
 /// can be used by dartsim.
-class CustomMeshShape : public dart::dynamics::MeshShape
+class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE CustomMeshShape
+  : public dart::dynamics::MeshShape
 {
   public: CustomMeshShape(
       const common::Mesh &_input,
       const Eigen::Vector3d &_scale);
 };
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 }
 }

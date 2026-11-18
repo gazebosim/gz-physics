@@ -15,6 +15,8 @@
  *
 */
 
+#include <cmath>
+#include <cstddef>
 #include <dart/dynamics/BodyNode.hpp>
 #include <dart/dynamics/Joint.hpp>
 #include <dart/dynamics/FreeJoint.hpp>
@@ -338,8 +340,6 @@ void JointFeatures::SetJointMaxEffort(
 }
 
 /////////////////////////////////////////////////
-<<<<<<< HEAD
-=======
 void JointFeatures::SetJointFriction(
        const Identity &_id, std::size_t _dof, double _value)
 {
@@ -427,7 +427,6 @@ void JointFeatures::SetJointSpringReference(
 }
 
 /////////////////////////////////////////////////
->>>>>>> bda246c (GZ-PROFILE for dartsim (#997))
 std::size_t JointFeatures::GetJointDegreesOfFreedom(const Identity &_id) const
 {
   return this->ReferenceInterface<JointInfo>(_id)->joint->getNumDofs();

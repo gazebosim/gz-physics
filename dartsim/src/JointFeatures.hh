@@ -56,6 +56,10 @@ struct JointFeatureList : FeatureList<
   SetJointPositionLimitsFeature,
   SetJointVelocityLimitsFeature,
   SetJointEffortLimitsFeature,
+  SetJointFrictionFeature,
+  SetJointDampingCoefficientFeature,
+  SetJointSpringStiffnessFeature,
+  SetJointSpringReferenceFeature,
   GetJointTransmittedWrench
 > { };
 
@@ -199,6 +203,24 @@ class JointFeatures :
   public: void SetJointMaxEffort(
       const Identity &_id, std::size_t _dof,
       double _value) override;
+
+  // ----- Joint passive force -----
+
+  public: void SetJointFriction(
+       const Identity &_id, std::size_t _dof,
+       double _value) override;
+
+public: void SetJointDampingCoefficient(
+       const Identity &_id, std::size_t _dof,
+       double _value) override;
+
+  public: void SetJointSpringStiffness(
+       const Identity &_id, std::size_t _dof,
+       double _value) override;
+
+  public: void SetJointSpringReference(
+       const Identity &_id, std::size_t _dof,
+       double _value) override;
 
   // ----- Transmitted wrench -----
   public: Wrench3d GetJointTransmittedWrenchInJointFrame(
