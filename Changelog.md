@@ -1,5 +1,10 @@
 ## Gazebo Physics 8.x
 
+### Gazebo Physics 8.5.1 (2026-11-18)
+
+1. Fix TPE RemoveModel return values
+    * [Pull request #1172](https://github.com/gazebosim/gz-physics/pull/1172)
+
 ### Gazebo Physics 8.5.0 (2026-10-29)
 
 1. Fix dartsim ray intersection test by updating supported collision detector list
