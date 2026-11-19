@@ -45,6 +45,20 @@ using GzRayResult =
     gz::physics::GetBatchRayIntersectionFromLastStepFeature
     ::RayIntersectionT<gz::physics::FeaturePolicy3d>;
 
+/// \brief Implemented by a CollisionFilter (CollisionOption::collisionFilter)
+/// that can tell, per collision object, that the object can never collide
+/// with anything.  GzOdeCollisionDetector disables such objects' ODE geoms
+/// before each collide() so they never reach the broadphase.
+class GzBroadphaseFilter
+{
+  /// \brief True if every pair \p _object could be in is ignored.
+  public: virtual bool IgnoresAllCollisions(
+      const CollisionObject *_object) const = 0;
+
+  /// Destructor
+  public: virtual ~GzBroadphaseFilter() = default;
+};
+
 class GzCollisionDetector
 {
   /// \brief Set the maximum number of contacts between a pair of collision

@@ -1640,6 +1640,138 @@ TEST_F(SimulationFeaturesCategoryFilter, RemoveCategoryMask)
   }
 }
 
+using FeaturesFullyMaskedShapes = gz::physics::FeatureList<
+  FeaturesCategoryFilter,
+  gz::physics::CollisionDetector,
+  gz::physics::GetRayIntersectionFromLastStepFeature
+>;
+
+using SimulationFeaturesFullyMaskedShapes =
+    SimulationFeaturesTest<FeaturesFullyMaskedShapes>;
+
+/////////////////////////////////////////////////
+// A shape whose collide and category bitmasks are both 0 can never collide
+// with anything. Check that setting both bitmasks to 0 suppresses contacts,
+// that restoring a non-zero bitmask re-enables contacts, that ray casts still
+// hit the shape, and that the results match across collision detectors.
+TEST_F(SimulationFeaturesFullyMaskedShapes, FullyMaskedShapes)
+{
+  using WorldType = gz::physics::World3d<FeaturesFullyMaskedShapes>;
+
+  // Count the contacts that involve a shape of model _modelName.
+  auto countContacts = [](
+      const std::vector<WorldType::ContactPoint> &_contacts,
+      const std::string &_modelName)
+  {
+    std::size_t count = 0;
+    for (const auto &contactPoint : _contacts)
+    {
+      EXPECT_TRUE(contactPoint.collision1);
+      EXPECT_TRUE(contactPoint.collision2);
+      if (!contactPoint.collision1 || !contactPoint.collision2)
+        continue;
+      const auto m1 = contactPoint.collision1->GetLink()->GetModel()->GetName();
+      const auto m2 = contactPoint.collision2->GetLink()->GetModel()->GetName();
+      if (m1 == _modelName || m2 == _modelName)
+        ++count;
+    }
+    return count;
+  };
+
+  auto stepAndGetContacts = [](const gz::physics::World3dPtr<
+      FeaturesFullyMaskedShapes> &_world, bool _firstTime)
+  {
+    const auto checkedOutput =
+        StepWorld<FeaturesFullyMaskedShapes>(_world, _firstTime).first;
+    EXPECT_EQ(_firstTime, checkedOutput);
+    std::vector<WorldType::ContactPoint> contactPoints;
+    for (const auto &contact : _world->GetContactsFromLastStep())
+      contactPoints.push_back(contact.template Get<WorldType::ContactPoint>());
+    return contactPoints;
+  };
+
+  for (const std::string &name : this->pluginNames)
+  {
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
+
+    for (const std::string collisionDetector : {"ode", "bullet"})
+    {
+      gzdbg << " -- Collision detector: " << collisionDetector << std::endl;
+      auto world = LoadPluginAndWorld<FeaturesFullyMaskedShapes>(
+        this->loader,
+        name,
+        common_test::worlds::kShapesBitmaskWorld);
+      ASSERT_NE(nullptr, world);
+      world->SetCollisionDetector(collisionDetector);
+      EXPECT_EQ(collisionDetector, world->GetCollisionDetector());
+
+      // box_base (collide_bitmask 0x01) overlaps box_colliding
+      // (collide_bitmask 0x03) and box_filtered (collide_bitmask 0x02).
+      auto collidingBox = world->GetModel("box_colliding");
+      ASSERT_NE(nullptr, collidingBox);
+      auto collidingShape = collidingBox->GetLink(0)->GetShape(0);
+      ASSERT_NE(nullptr, collidingShape);
+
+      // Only box_base and box_colliding are in contact.
+      auto contacts = stepAndGetContacts(world, true);
+      EXPECT_NE(0u, contacts.size());
+      EXPECT_EQ(contacts.size(), countContacts(contacts, "box_colliding"));
+      EXPECT_EQ(contacts.size(), countContacts(contacts, "box_base"));
+
+      // Fully mask box_colliding: no contacts at all.
+      collidingShape->SetCollisionFilterMask(0);
+      collidingShape->SetCategoryFilterMask(0);
+      EXPECT_EQ(0, collidingShape->GetCollisionFilterMask());
+      EXPECT_EQ(0, collidingShape->GetCategoryFilterMask());
+      contacts = stepAndGetContacts(world, false);
+      EXPECT_EQ(0u, contacts.size());
+
+      // Ray casts are not affected by collision bitmasks: a ray along +Y
+      // still hits the -Y face of box_colliding (y = -0.75 - 0.5).
+      {
+        auto result = world->GetRayIntersectionFromLastStep(
+            Eigen::Vector3d(0, -3, 10), Eigen::Vector3d(0, 3, 10));
+        auto rayIntersection =
+            result.template Get<WorldType::RayIntersection>();
+        const double epsilon = 1e-3;
+        EXPECT_TRUE(rayIntersection.point.isApprox(
+            Eigen::Vector3d(0, -1.25, 10), epsilon))
+            << rayIntersection.point.transpose();
+        EXPECT_TRUE(rayIntersection.normal.isApprox(
+            Eigen::Vector3d(0, -1, 0), epsilon))
+            << rayIntersection.normal.transpose();
+        EXPECT_NEAR(1.75 / 6.0, rayIntersection.fraction, epsilon);
+      }
+
+      // Restore the bitmasks of box_colliding: it collides with box_base
+      // again.
+      collidingShape->SetCollisionFilterMask(0x03);
+      collidingShape->RemoveCategoryFilterMask();
+      EXPECT_EQ(0x03, collidingShape->GetCollisionFilterMask());
+      EXPECT_EQ(0x03, collidingShape->GetCategoryFilterMask());
+      contacts = stepAndGetContacts(world, false);
+      EXPECT_NE(0u, contacts.size());
+      EXPECT_EQ(contacts.size(), countContacts(contacts, "box_colliding"));
+      EXPECT_EQ(contacts.size(), countContacts(contacts, "box_base"));
+
+      // Fully mask it once more to check that toggling works repeatedly.
+      // The category bitmask tracks the collide bitmask once removed.
+      collidingShape->SetCollisionFilterMask(0);
+      EXPECT_EQ(0, collidingShape->GetCategoryFilterMask());
+      contacts = stepAndGetContacts(world, false);
+      EXPECT_EQ(0u, contacts.size());
+
+      // A zero collide bitmask alone is not enough: with a non-zero
+      // category bitmask the shape still collides with box_base
+      // (0x01 & 0x01 != 0).
+      collidingShape->SetCategoryFilterMask(0x01);
+      contacts = stepAndGetContacts(world, false);
+      EXPECT_NE(0u, contacts.size());
+      EXPECT_EQ(contacts.size(), countContacts(contacts, "box_colliding"));
+    }
+  }
+}
+
 TYPED_TEST(SimulationFeaturesTestBasic, RetrieveContacts)
 {
   for (const std::string &name : this->pluginNames)

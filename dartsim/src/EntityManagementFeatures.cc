@@ -40,7 +40,8 @@ namespace dartsim {
 /// This class filters collision based on a bitmask:
 /// Each objects has a bitmask. If the bitwise-and of two objects' bitmasks
 /// evaluates to 0, then collisions between them are ignored.
-class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
+class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter,
+    public dart::collision::GzBroadphaseFilter
 {
   public: using DartCollisionConstPtr = const dart::collision::CollisionObject*;
   public: using DartShapeConstPtr = const dart::dynamics::ShapeNode*;
@@ -78,6 +79,24 @@ class BitmaskContactFilter : public dart::collision::BodyNodeCollisionFilter
     }
 
     return false;
+  }
+
+  /// \brief A shape whose collide and category bitmasks are both 0 is
+  /// ignored against every other shape (every SDF collision has a bitmask).
+  public: bool IgnoresAllCollisions(
+      const dart::collision::CollisionObject *_object) const override
+  {
+    const auto *frame = _object->getShapeFrame();
+    const auto *shapeNode = frame ? frame->asShapeNode() : nullptr;
+    if (nullptr == shapeNode)
+      return false;
+    const auto collideIter = bitmaskMap.find(shapeNode);
+    if (collideIter == bitmaskMap.end() || collideIter->second != 0)
+      return false;
+    // The category bitmask defaults to the collide bitmask.
+    const auto categoryIter = categoryBitmaskMap.find(shapeNode);
+    return categoryIter == categoryBitmaskMap.end() ||
+        categoryIter->second == 0;
   }
 
   public: void SetIgnoredCollision(DartShapeConstPtr _shapePtr, uint16_t _mask)
