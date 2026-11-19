@@ -624,6 +624,61 @@ TYPED_TEST(NestedModelRemovalTest, RemoveNestedModelCollisions)
   }
 }
 
+/////////////////////////////////////////////////
+TYPED_TEST(NestedModelRemovalTest, RemoveNestedModelByNameAndIndex)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // tpe and bullet-featherstone do not resolve "::"-scoped nested model
+    // names in world->GetModel().
+    CHECK_UNSUPPORTED_ENGINE(name, "tpe", "bullet-featherstone")
+
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    auto engine =
+      gz::physics::RequestEngine3d<TypeParam>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root root;
+    ASSERT_TRUE(
+        root.Load(common_test::worlds::kWorldWithNestedModelSdf).empty());
+    auto world = engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    auto parentModel = world->GetModel("parent_model");
+    auto nestedModel2 = world->GetModel("parent_model::nested_model2");
+    auto nestedModel3 = world->GetModel("parent_model::nested_model3");
+    auto parentModel2 = world->GetModel("parent_model2");
+    auto childModel = world->GetModel("parent_model2::child_model");
+    auto grandChildModel =
+        world->GetModel("parent_model2::child_model::grand_child_model");
+    ASSERT_NE(nullptr, parentModel);
+    ASSERT_NE(nullptr, nestedModel2);
+    ASSERT_NE(nullptr, nestedModel3);
+    ASSERT_NE(nullptr, parentModel2);
+    ASSERT_NE(nullptr, childModel);
+    ASSERT_NE(nullptr, grandChildModel);
+
+    EXPECT_FALSE(parentModel->RemoveNestedModel(3));
+    EXPECT_FALSE(parentModel->RemoveNestedModel("does_not_exist"));
+
+    EXPECT_TRUE(parentModel->RemoveNestedModel("nested_model2"));
+    EXPECT_TRUE(nestedModel2->Removed());
+    EXPECT_FALSE(nestedModel3->Removed());
+    EXPECT_EQ(nullptr, world->GetModel("parent_model::nested_model2"));
+    EXPECT_FALSE(parentModel->RemoveNestedModel("nested_model2"));
+
+    EXPECT_TRUE(parentModel2->RemoveNestedModel(0));
+    EXPECT_TRUE(childModel->Removed());
+    EXPECT_TRUE(grandChildModel->Removed());
+    EXPECT_FALSE(parentModel2->RemoveNestedModel(0));
+
+    gz::physics::ForwardStep::Input input;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Output output;
+    world->Step(output, state, input);
+  }
+}
+
 template <class T>
 class NestedModelResetTest : public WorldFeaturesTest<T> { };
 
