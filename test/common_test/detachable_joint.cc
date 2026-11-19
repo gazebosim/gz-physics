@@ -290,6 +290,48 @@ TYPED_TEST(DetachableJointTest, DetachableJointHeavyPayloadWeld)
   }
 }
 
+TYPED_TEST(DetachableJointTest, RejectCrossWorldFixedJoint)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // dartsim and bullet-featherstone do not validate that both links belong
+    // to the same world in AttachFixedJoint.
+    CHECK_UNSUPPORTED_ENGINE(name, "dartsim", "bullet-featherstone")
+
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    auto engine =
+      gz::physics::RequestEngine3d<TypeParam>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root rootA;
+    ASSERT_TRUE(rootA.Load(common_test::worlds::kDetachableJointWorld).empty());
+    sdf::Root rootB;
+    ASSERT_TRUE(rootB.Load(common_test::worlds::kFallingWorld).empty());
+    sdf::World sdfWorldB = *rootB.WorldByIndex(0);
+    sdfWorldB.SetName("world_b");
+
+    auto worldA = engine->ConstructWorld(*rootA.WorldByIndex(0));
+    auto worldB = engine->ConstructWorld(sdfWorldB);
+    ASSERT_NE(nullptr, worldA);
+    ASSERT_NE(nullptr, worldB);
+
+    auto linkA = worldA->GetModel("cylinder2")->GetLink("link2");
+    auto linkB = worldB->GetModel("sphere")->GetLink("sphere_link");
+    ASSERT_NE(nullptr, linkA);
+    ASSERT_NE(nullptr, linkB);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    worldA->Step(output, state, input);
+    worldB->Step(output, state, input);
+
+    EXPECT_EQ(nullptr, linkA->AttachFixedJoint(linkB, "cross_world_fixed"));
+
+    worldA->Step(output, state, input);
+    worldB->Step(output, state, input);
+  }
+}
 
 struct DetachableJointResetFeatureList: gz::physics::FeatureList<
     DetachableJointFeatureList,

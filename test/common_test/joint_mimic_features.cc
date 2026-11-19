@@ -748,6 +748,51 @@ TEST_F(JointMimicFeatureTest, SetMimicConstraintOnSpawnedModel)
   }
 }
 
+TEST_F(JointMimicFeatureTest, RejectCrossWorldMimicConstraint)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // bullet-featherstone does not validate that the follower and leader
+    // joints belong to the same world in SetJointMimicConstraint.
+    CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone")
+
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+    auto engine =
+        gz::physics::RequestEngine3d<JointMimicFeatureList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    sdf::Root rootA;
+    ASSERT_TRUE(rootA.Load(common_test::worlds::kMimicPendulumWorld).empty());
+    sdf::Root rootB;
+    ASSERT_TRUE(rootB.Load(common_test::worlds::kMimicPrismaticWorld).empty());
+    sdf::World sdfWorldB = *rootB.WorldByIndex(0);
+    sdfWorldB.SetName("world_b");
+
+    auto worldA = engine->ConstructWorld(*rootA.WorldByIndex(0));
+    auto worldB = engine->ConstructWorld(sdfWorldB);
+    ASSERT_NE(nullptr, worldA);
+    ASSERT_NE(nullptr, worldB);
+
+    auto jointA = worldA->GetModel("pendulum_with_base")
+                      ->GetJoint("upper_joint_1");
+    auto jointB = worldB->GetModel("prismatic_model")
+                      ->GetJoint("revolute_joint_1");
+    ASSERT_NE(nullptr, jointA);
+    ASSERT_NE(nullptr, jointB);
+
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    worldA->Step(output, state, input);
+    worldB->Step(output, state, input);
+
+    EXPECT_FALSE(jointA->SetMimicConstraint(0, jointB, 0, 1.0, 0.0, 0.0));
+
+    worldA->Step(output, state, input);
+    worldB->Step(output, state, input);
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);

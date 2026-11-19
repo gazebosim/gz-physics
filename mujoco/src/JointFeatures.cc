@@ -731,6 +731,14 @@ bool JointFeatures::SetJointMimicConstraint(
   auto leaderJointShared =
       std::static_pointer_cast<JointInfo>(this->Reference(leaderJointId));
   auto leaderJointInfo = leaderJointShared.get();
+  if (followerJointInfo->worldInfo != leaderJointInfo->worldInfo)
+  {
+    gzerr << "Cannot set mimic constraint between joints ["
+          << followerJointInfo->name << "] and [" << leaderJointInfo->name
+          << "] because they belong to different worlds.\n";
+    return false;
+  }
+
   if (!leaderJointInfo->joint)
   {
     gzerr << "Cannot mimic joint [" << leaderJointInfo->name
@@ -997,6 +1005,15 @@ Identity JointFeatures::AttachFixedJoint(
     gzerr << "Invalid worldInfo or modelInfo when attaching fixed joint.\n";
     return this->GenerateInvalidId();
   }
+
+  if (parentLinkInfo && parentLinkInfo->worldInfo != worldInfo)
+  {
+    gzerr << "Cannot attach fixed joint between links ["
+          << childLinkInfo->name << "] and [" << parentLinkInfo->name
+          << "] because they belong to different worlds.\n";
+    return this->GenerateInvalidId();
+  }
+
   std::string uniqueName = _name;
   std::size_t counter = 1;
   while (modelInfo->joints.HasEntity(uniqueName))
