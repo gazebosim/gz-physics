@@ -622,6 +622,21 @@ struct ModelKinematicStructure
 
         mjs_setString(actuator->target, mjJointName.c_str());
 
+        // A joint actuator on a ball joint only drives the axis given by its
+        // gear vector (X by default). Add one actuator per axis, in order, so
+        // that commands can address DOF n as `actuator + n`.
+        if (joint->type == mjJNT_BALL)
+        {
+          for (int axis = 1; axis < 3; ++axis)
+          {
+            mjsActuator *ballActuator = mjs_addActuator(_spec, nullptr);
+            ballActuator->trntype = mjtTrn::mjTRN_JOINT;
+            mjs_setString(ballActuator->target, mjJointName.c_str());
+            ballActuator->gear[0] = 0.0;
+            ballActuator->gear[axis] = 1.0;
+          }
+        }
+
         copyPos(jointPose.Pos(), joint->pos);
 
         if (joint2)
