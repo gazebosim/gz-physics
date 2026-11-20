@@ -31,6 +31,7 @@ namespace gz::physics::test::resources
 {
 const auto kChassisDae = TestResource("chassis.dae");
 const auto kHeightmapBowlPng = TestResource("heightmap_bowl.png");
+const auto kHeightmapRampPng = TestResource("heightmap_ramp.png");
 const auto kRotatedBoxObj = TestResource("rotated_box.obj");
 const auto kRrbotXml = TestResource("rrbot.xml");
 const auto kVolcanoTif = TestResource("volcano.tif");
