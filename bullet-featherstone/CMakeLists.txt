@@ -35,3 +35,28 @@ if (WIN32)
   # disable MSVC inherit via dominance warning
   target_compile_options(${bullet_plugin} PUBLIC "/wd4250")
 endif()
+
+# Testing
+gz_build_tests(
+  TYPE UNIT_bullet_featherstone
+  SOURCES ${test_sources}
+  LIB_DEPS
+    ${features}
+    ${bullet_plugin}
+    gz-physics-test
+    ${PROJECT_LIBRARY_TARGET_NAME}-sdf
+    ${PROJECT_LIBRARY_TARGET_NAME}-mesh
+  TEST_LIST tests
+  ENVIRONMENT
+    GZ_PHYSICS_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+  INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+foreach(test ${tests})
+  target_compile_definitions(${test} PRIVATE
+    "bullet_featherstone_plugin_LIB=\"$<TARGET_FILE:${bullet_plugin}>\"")
+
+  # Helps when we want to build a single test after making changes to bullet_plugin
+  add_dependencies(${test} ${bullet_plugin})
+endforeach()
