@@ -27,6 +27,7 @@
 #include <gz/common/Console.hh>
 #include <gz/plugin/Loader.hh>
 
+#include <gz/math/SemanticVersion.hh>
 #include <gz/math/eigen3/Conversions.hh>
 
 #include "test/TestLibLoader.hh"
@@ -2237,6 +2238,7 @@ TYPED_TEST(SimulationFeaturesTestBasic, MultipleCollisions)
 // The features that an engine must have to be loaded by this loader.
 struct FeaturesRayIntersections : gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfWorld,
+  gz::physics::GetEngineInfo,
   gz::physics::GetRayIntersectionFromLastStepFeature,
   gz::physics::CollisionDetector,
   gz::physics::ForwardStep
@@ -2257,30 +2259,47 @@ TYPED_TEST_SUITE(SimulationFeaturesRayIntersectionTest,
 // so its classification depends on the DART version.
 namespace
 {
-const std::vector<std::string> kRaySupportedCollisionDetectors = {
-  "ode",
-  "bullet",
-#ifdef DART_HAS_DART_COLLISION_DETECTOR
-  "dart",
-#endif
-};
+bool HasDartCollisionDetectorRaycast(
+    const gz::plugin::Loader &_loader,
+    const std::string &_pluginName)
+{
+  auto plugin = _loader.Instantiate(_pluginName);
+  auto engine =
+      gz::physics::RequestEngine3d<FeaturesRayIntersections>::From(plugin);
+  return engine &&
+      engine->GetName().find("dartsim") != std::string::npos &&
+      engine->GetVersion() >= gz::math::SemanticVersion(6, 20, 0);
+}
 
-const std::vector<std::string> kRayUnsupportedCollisionDetectors = {
-#ifndef DART_HAS_DART_COLLISION_DETECTOR
-  "dart",
-#endif
-  "fcl",
-};
+std::vector<std::string> RaySupportedCollisionDetectors(
+    const gz::plugin::Loader &_loader,
+    const std::string &_pluginName)
+{
+  std::vector<std::string> detectors = {"ode", "bullet"};
+  if (HasDartCollisionDetectorRaycast(_loader, _pluginName))
+    detectors.push_back("dart");
+  return detectors;
+}
+
+std::vector<std::string> RayUnsupportedCollisionDetectors(
+    const gz::plugin::Loader &_loader,
+    const std::string &_pluginName)
+{
+  std::vector<std::string> detectors = {"fcl"};
+  if (!HasDartCollisionDetectorRaycast(_loader, _pluginName))
+    detectors.push_back("dart");
+  return detectors;
+}
 }  // namespace
 
 TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
 {
-  const auto &supportedCollisionDetectors = kRaySupportedCollisionDetectors;
-
   for (const std::string &name : this->pluginNames)
   {
     CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
 
+    const auto supportedCollisionDetectors =
+        RaySupportedCollisionDetectors(this->loader, name);
     for (const std::string &collisionDetector : supportedCollisionDetectors) {
       auto world = LoadPluginAndWorld<FeaturesRayIntersections>(
           this->loader,
@@ -2334,12 +2353,12 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, SupportedRayIntersections)
 
 TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
 {
-  const auto &unsupportedCollisionDetectors = kRayUnsupportedCollisionDetectors;
-
   for (const std::string &name : this->pluginNames)
   {
     CHECK_UNSUPPORTED_ENGINE(name, "bullet", "bullet-featherstone", "tpe")
 
+    const auto unsupportedCollisionDetectors =
+        RayUnsupportedCollisionDetectors(this->loader, name);
     for (const std::string &collisionDetector : unsupportedCollisionDetectors) {
       auto world = LoadPluginAndWorld<FeaturesRayIntersections>(
           this->loader,
@@ -2373,12 +2392,12 @@ TYPED_TEST(SimulationFeaturesRayIntersectionTest, UnsupportedRayIntersections)
 /////////////////////////////////////////////////
 TYPED_TEST(SimulationFeaturesRayIntersectionTest, ClosestRayIntersection)
 {
-  const auto &supportedCollisionDetectors = kRaySupportedCollisionDetectors;
-
   for (const std::string &name : this->pluginNames)
   {
     CHECK_UNSUPPORTED_ENGINE(name, "bullet-featherstone", "tpe")
 
+    const auto supportedCollisionDetectors =
+        RaySupportedCollisionDetectors(this->loader, name);
     for (const std::string &collisionDetector : supportedCollisionDetectors) {
       auto world = LoadPluginAndWorld<FeaturesRayIntersections>(
           this->loader,
