@@ -60,7 +60,9 @@ struct JointFeatureList : FeatureList<
   SetJointDampingCoefficientFeature,
   SetJointSpringStiffnessFeature,
   SetJointSpringReferenceFeature,
-  GetJointTransmittedWrench
+  GetJointTransmittedWrench,
+
+  SetDynamicJointConstraintPropertiesFeature
 > { };
 
 class JointFeatures :
@@ -225,6 +227,13 @@ public: void SetJointDampingCoefficient(
   // ----- Transmitted wrench -----
   public: Wrench3d GetJointTransmittedWrenchInJointFrame(
       const Identity &_id) const override;
+
+  // ----- Dynamic Joint Constraints -----
+  public: void SetConstraintForceMixing(
+      const Identity &_childID, double _value) override;
+
+  public: void SetErrorReductionParameter(
+      const Identity &_childID, double _value) override;
 };
 
 }
