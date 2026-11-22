@@ -35,8 +35,15 @@
 #include <vector>
 
 #include <gz/common/Console.hh>
+<<<<<<< HEAD
 #include <ignition/math/eigen3/Conversions.hh>
 #include <ignition/math/Inertial.hh>
+=======
+#include <gz/math/eigen3/Conversions.hh>
+#include <gz/math/Inertial.hh>
+#include <gz/math/SemanticVersion.hh>
+#include <gz/physics/detail/EntityStorage.hh>
+>>>>>>> a9ea56c (Extract EntityStorage to a shared location so it can be used by other physics engines (#894))
 #include <gz/physics/Implements.hh>
 
 #include <sdf/Types.hh>
@@ -115,6 +122,7 @@ struct ShapeInfo
   Eigen::Isometry3d tf_offset = Eigen::Isometry3d::Identity();
 };
 
+<<<<<<< HEAD
 template <typename Value1, typename Key2 = Value1>
 struct EntityStorage
 {
@@ -232,6 +240,8 @@ struct EntityStorage
     return false;
   }
 };
+=======
+>>>>>>> a9ea56c (Extract EntityStorage to a shared location so it can be used by other physics engines (#894))
 
 class Base : public Implements3d<FeatureList<Feature>>
 {
@@ -591,12 +601,80 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateInvalidId();
   }
 
+<<<<<<< HEAD
   public: EntityStorage<DartWorldPtr, std::string> worlds;
   public: EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
   public: EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
   public: EntityStorage<JointInfoPtr, const DartJoint*> joints;
   public: EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
   public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
+=======
+  public: inline Identity GetModelOfLinkImpl(const Identity &_linkID) const
+  {
+    const std::size_t modelID = this->links.idToContainerID.at(_linkID);
+    if (this->models.HasEntity(modelID))
+    {
+      return this->GenerateIdentity(modelID, this->models.at(modelID));
+    }
+    else
+    {
+      return this->GenerateInvalidId();
+    }
+  };
+
+
+  /// \brief Create a fully (world) scoped joint name.
+  /// \param _modelID Identity of the parent model of the joint's child link.
+  /// \param _name The unscoped joint name.
+  /// \return The fully (world) scoped joint name, or an empty string
+  /// if a world cannot be resolved.
+  public: inline std::string FullyScopedJointName(
+    const std::size_t &_modelID,
+    const std::string &_name) const
+  {
+    if (this->modelProxiesToWorld.HasEntity(_modelID))
+    {
+      auto world = this->worlds.at(_modelID);
+      return ::sdf::JoinName(world->getName(), _name);
+    }
+    else
+    {
+      const auto modelInfo = this->models.at(_modelID);
+
+      auto worldID = this->GetWorldOfModelImpl(_modelID);
+      if (worldID == INVALID_ENTITY_ID)
+      {
+        gzerr << "World of model [" << modelInfo->model->getName()
+              << "] could not be found when creating the fully scoped name of "
+                 "joint ["
+              << _name << "]\n";
+        return "";
+      }
+      auto world = this->worlds.at(worldID);
+      return ::sdf::JoinName(
+          world->getName(),
+          ::sdf::JoinName(modelInfo->model->getName(), _name));
+    }
+  }
+
+  public: ModelInfoPtr GetModelInfo(std::size_t _modelID) const
+  {
+    auto modelProxy = this->modelProxiesToWorld.MaybeAt(_modelID);
+    if (modelProxy)
+    {
+      return *modelProxy;
+    }
+    return this->models.at(_modelID);
+  }
+
+  public: detail::EntityStorage<DartWorldPtr, std::string> worlds;
+  public: detail::EntityStorage<ModelInfoPtr, DartConstSkeletonPtr> models;
+  public: detail::EntityStorage<LinkInfoPtr, const DartBodyNode*> links;
+  public: detail::EntityStorage<JointInfoPtr, const DartJoint*> joints;
+  public: detail::EntityStorage<ShapeInfoPtr, const DartShapeNode*> shapes;
+  public: std::unordered_map<std::size_t, dart::dynamics::Frame*> frames;
+  public: detail::EntityStorage<ModelInfoPtr, DartWorldPtr> modelProxiesToWorld;
+>>>>>>> a9ea56c (Extract EntityStorage to a shared location so it can be used by other physics engines (#894))
 
   /// \brief Map from the fully qualified link name (including the world name)
   /// to the BodyNode object. This is useful for keeping track of BodyNodes even
