@@ -57,6 +57,13 @@ std::size_t EntityManagementFeatures::GetWorldCount(
 Identity EntityManagementFeatures::GetWorld(
   const Identity &, std::size_t _worldIndex) const
 {
+  if (_worldIndex >= this->worlds.size())
+  {
+    // Out-of-range index. Advancing a std::map iterator past end() is
+    // undefined behavior, so bail out before doing so.
+    return this->GenerateInvalidId();
+  }
+
   auto it = this->worlds.begin();
   std::advance(it, _worldIndex);
   if (it != this->worlds.end() && it->second != nullptr)
