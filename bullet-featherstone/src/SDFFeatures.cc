@@ -854,11 +854,23 @@ Identity SDFFeatures::ConstructSdfModelImpl(
           jointInfo->maxEffort = joint->Axis()->Effort();
           jointInfo->minVelocity = -joint->Axis()->MaxVelocity();
           jointInfo->maxVelocity = joint->Axis()->MaxVelocity();
+          jointInfo->minEffortMap[0] = jointInfo->minEffort;
+          jointInfo->maxEffortMap[0] = jointInfo->maxEffort;
+          jointInfo->minVelocityMap[0] = jointInfo->minVelocity;
+          jointInfo->maxVelocityMap[0] = jointInfo->maxVelocity;
           jointInfo->axisLower = joint->Axis()->Lower();
           jointInfo->axisUpper = joint->Axis()->Upper();
           jointInfo->damping = joint->Axis()->Damping();
           jointInfo->springStiffness = joint->Axis()->SpringStiffness();
           jointInfo->springReference = joint->Axis()->SpringReference();
+        }
+
+        if (joint->Axis(1))
+        {
+          jointInfo->minEffortMap[1] = -joint->Axis(1)->Effort();
+          jointInfo->maxEffortMap[1] = joint->Axis(1)->Effort();
+          jointInfo->minVelocityMap[1] = -joint->Axis(1)->MaxVelocity();
+          jointInfo->maxVelocityMap[1] = joint->Axis(1)->MaxVelocity();
         }
 
         if (::sdf::JointType::BALL != joint->Type())
