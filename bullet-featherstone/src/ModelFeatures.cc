@@ -17,6 +17,8 @@
 
 #include "ModelFeatures.hh"
 
+#include <vector>
+
 #include <gz/common/Profiler.hh>
 
 namespace gz {
@@ -35,6 +37,43 @@ void ModelFeatures::SetModelStatic(const Identity &_id, bool _static)
   {
     gzerr << "Error setting model static state. Model is missing a btMultiBody."
           << std::endl;
+  }
+
+  // Heightmaps are only supported on links that don't move (see
+  // DetachJoint): keep a model static if it or a nested model has one.
+  if (!_static)
+  {
+    std::vector<const ModelInfo *> toCheck{modelInfo};
+    while (!toCheck.empty())
+    {
+      const ModelInfo *model = toCheck.back();
+      toCheck.pop_back();
+      for (const auto linkID : model->linkEntityIds)
+      {
+        const auto linkIt = this->links.find(linkID);
+        if (linkIt == this->links.end())
+          continue;
+        for (const auto collisionID : linkIt->second->collisionEntityIds)
+        {
+          const auto it = this->collisions.find(collisionID);
+          if (it != this->collisions.end() && it->second->heightmap)
+          {
+            gzerr << "Unable to make model [" << modelInfo->name
+                  << "] dynamic: link [" << linkIt->second->name
+                  << "] has a heightmap, and heightmaps are only supported "
+                  << "on links that are static or fixed to the world."
+                  << std::endl;
+            return;
+          }
+        }
+      }
+      for (const auto nestedID : model->nestedModelEntityIds)
+      {
+        const auto nestedIt = this->models.find(nestedID);
+        if (nestedIt != this->models.end())
+          toCheck.push_back(nestedIt->second.get());
+      }
+    }
   }
 
   // Zero out velocities and forces
