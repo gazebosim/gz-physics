@@ -20,6 +20,7 @@
 
 #include <mujoco/mjdata.h>
 
+#include <cmath>
 #include <memory>
 
 #include <gz/common/Profiler.hh>
@@ -122,7 +123,16 @@ void SimulationFeatures::UpdateVelocityServoGains(WorldInfo &_worldInfo)
     if (m->actuator_biastype[i] == mjBIAS_AFFINE)
     {
       const int jointId = m->actuator_trnid[i * 2];
-      const int dofIndex = m->jnt_dofadr[jointId];
+      int dofIndex = m->jnt_dofadr[jointId];
+      // Each ball joint actuator drives the single axis set in its gear.
+      if (m->jnt_type[jointId] == mjJNT_BALL)
+      {
+        for (int axis = 1; axis < 3; ++axis)
+        {
+          if (std::abs(m->actuator_gear[i * 6 + axis]) > 0.0)
+            dofIndex += axis;
+        }
+      }
 
       // Extract effective diagonal inertia for this DOF.
       // The Matrix M in MuJoCo is represented in a compressed sparse row (CSR)
