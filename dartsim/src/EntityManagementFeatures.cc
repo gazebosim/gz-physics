@@ -208,6 +208,8 @@ Identity EntityManagementFeatures::GetWorld(
     const Identity &, std::size_t _worldIndex) const
 {
   GZ_PROFILE("EntityManagementFeatures::GetWorld(Index)");
+  if (_worldIndex >= this->worlds.size())
+    return this->GenerateInvalidId();
   const std::size_t id =
       this->worlds.indexInContainerToID.begin()->second[_worldIndex];
   return this->GenerateIdentity(id, this->worlds.idToObject.at(id));
@@ -218,6 +220,8 @@ Identity EntityManagementFeatures::GetWorld(
     const Identity &, const std::string &_worldName) const
 {
   GZ_PROFILE("EntityManagementFeatures::GetWorld(Name)");
+  if (!this->worlds.HasEntity(_worldName))
+    return this->GenerateInvalidId();
   const std::size_t id = this->worlds.IdentityOf(_worldName);
   return this->GenerateIdentity(id, this->worlds.idToObject.at(id));
 }

@@ -63,6 +63,10 @@ TEST(EntityManagement_TEST, ConstructEmptyWorld)
   EXPECT_EQ("empty world", world->GetName());
   EXPECT_EQ(engine, world->GetEngine());
 
+  // Unknown worlds return nullptr instead of throwing.
+  EXPECT_EQ(nullptr, engine->GetWorld(1));
+  EXPECT_EQ(nullptr, engine->GetWorld("missing"));
+
   auto model = world->ConstructEmptyModel("empty model");
   ASSERT_NE(nullptr, model);
   EXPECT_EQ("empty model", model->GetName());
