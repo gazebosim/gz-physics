@@ -1403,11 +1403,25 @@ bool SDFFeatures::AddSdfCollision(
     const btTransform btInertialToCollision =
       convertTf(linkInfo->inertiaToLinkFrame * linkFrameToCollision);
 
+    btCollisionShape *shapePtr = shape.get();
+    auto colID = this->AddCollision(
+      CollisionInfo{
+        _collision.Name(),
+        std::move(shape),
+        _linkID,
+        linkFrameToCollision});
+
+    // Use user index to store the collision id in gz-physics
+    // This is used by GetContactsFromLastStep to retrieve the collision id
+    // from btCollisionShape
+    shapePtr->setUserIndex(std::size_t(colID));
+    shapePtr->setUserPointer(nullptr);
+
     if (!linkInfo->collider)
     {
 
       this->CreateLinkCollider(_linkID, _isStatic, collideBitmask,
-          categoryBitmask, shape.get(),
+          categoryBitmask, shapePtr,
           btInertialToCollision);
 
       linkInfo->collider->setRestitution(static_cast<btScalar>(restitution));
@@ -1438,26 +1452,29 @@ bool SDFFeatures::AddSdfCollision(
     }
     else if (linkInfo->shape)
     {
-      linkInfo->shape->addChildShape(btInertialToCollision, shape.get());
+      if (GzCollisionDispatcher::HasConvexHullChildShapes(shapePtr))
+      {
+        auto *subCompound = static_cast<btCompoundShape *>(shapePtr);
+        for (int i = 0; i < subCompound->getNumChildShapes(); ++i)
+        {
+          btCollisionShape *childShape = subCompound->getChildShape(i);
+          childShape->setUserIndex(shapePtr->getUserIndex());
+          childShape->setUserPointer(shapePtr);
+          linkInfo->shape->addChildShape(
+              btInertialToCollision * subCompound->getChildTransform(i),
+              childShape);
+        }
+      }
+      else
+      {
+        linkInfo->shape->addChildShape(btInertialToCollision, shapePtr);
+      }
     }
     else
     {
       // TODO(MXG): Maybe we should check if the new collider's properties
       // match the existing collider and issue a warning if they don't.
     }
-
-    btCollisionShape *shapePtr = shape.get();
-    auto colID = this->AddCollision(
-      CollisionInfo{
-        _collision.Name(),
-        std::move(shape),
-        _linkID,
-        linkFrameToCollision});
-
-    // Use user index to store the collision id in gz-physics
-    // This is used by GetContactsFromLastStep to retrieve the collision id
-    // from btCollisionShape
-    shapePtr->setUserIndex(std::size_t(colID));
   }
 
   return true;
@@ -1583,7 +1600,24 @@ void SDFFeatures::CreateLinkCollider(const Identity &_linkID, bool _isStatic,
   linkInfo->shape = std::make_unique<btCompoundShape>();
 
   if (_shape)
-    linkInfo->shape->addChildShape(_shapeTF, _shape);
+  {
+    if (GzCollisionDispatcher::HasConvexHullChildShapes(_shape))
+    {
+      auto *subCompound = static_cast<btCompoundShape *>(_shape);
+      for (int i = 0; i < subCompound->getNumChildShapes(); ++i)
+      {
+        btCollisionShape *childShape = subCompound->getChildShape(i);
+        childShape->setUserIndex(_shape->getUserIndex());
+        childShape->setUserPointer(_shape);
+        linkInfo->shape->addChildShape(
+            _shapeTF * subCompound->getChildTransform(i), childShape);
+      }
+    }
+    else
+    {
+      linkInfo->shape->addChildShape(_shapeTF, _shape);
+    }
+  }
 
   linkInfo->collider->setCollisionShape(linkInfo->shape.get());
 

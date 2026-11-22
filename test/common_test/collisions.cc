@@ -34,9 +34,11 @@
 #include <gz/physics/ConstructEmpty.hh>
 #include <gz/physics/ForwardStep.hh>
 #include <gz/physics/FrameSemantics.hh>
+#include <gz/physics/FreeGroup.hh>
 #include <gz/physics/FreeJoint.hh>
 #include <gz/physics/GetContacts.hh>
 #include <gz/physics/GetEntities.hh>
+#include <gz/physics/RemoveEntities.hh>
 #include <gz/physics/mesh/MeshShape.hh>
 #include <gz/physics/PlaneShape.hh>
 #include <gz/physics/FixedJoint.hh>
@@ -153,8 +155,12 @@ using CollisionMeshFeaturesList = gz::physics::FeatureList<
   gz::physics::sdf::ConstructSdfModel,
   gz::physics::sdf::ConstructSdfWorld,
   gz::physics::LinkFrameSemantics,
+  gz::physics::FindFreeGroupFeature,
+  gz::physics::SetFreeGroupWorldPose,
   gz::physics::ForwardStep,
-  gz::physics::GetEntities
+  gz::physics::GetContactsFromLastStepFeature,
+  gz::physics::GetEntities,
+  gz::physics::RemoveEntities
 >;
 
 using CollisionMeshTestFeaturesList = CollisionTest<CollisionMeshFeaturesList>;
@@ -393,6 +399,245 @@ TEST_F(CollisionMeshTestFeaturesList, MeshDecomposition)
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.x(), 1e-3);
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.y(), 1e-3);
     EXPECT_NEAR(0.0, frameDataSphereLink.linearVelocity.z(), 1e-3);
+  }
+}
+
+TEST_F(CollisionMeshTestFeaturesList, MeshContacts)
+{
+  auto getMeshModelStr = [](const std::string &_optimization,
+                            const std::string &_name,
+                            const gz::math::Pose3d &_pose)
+  {
+    std::stringstream modelStr;
+    modelStr << R"(
+    <sdf version="1.11">
+      <model name=")";
+    modelStr << _name << R"(">
+        <pose>)";
+    modelStr << _pose;
+    modelStr << R"(</pose>
+        <link name="body">
+          <collision name="collision">
+            <geometry>
+              <mesh optimization=")";
+    modelStr << _optimization;
+    modelStr << R"(">
+                <uri>)";
+    modelStr << gz::physics::test::resources::kChassisDae;
+    modelStr << R"(</uri>
+              </mesh>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+    return modelStr.str();
+  };
+
+  std::string boxModelStr = R"(
+  <sdf version="1.6">
+    <model name="model">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="body">
+        <collision name="coll_box">
+          <geometry>
+            <box>
+              <size>10 10 10</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+  </sdf>)";
+
+  for (const std::string &name : this->pluginNames)
+  {
+    // currently only bullet-featherstone supports mesh decomposition
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+      continue;
+
+    std::cout << "Testing plugin: " << name << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(name);
+
+    sdf::Root rootWorld;
+    const sdf::Errors errorsWorld =
+        rootWorld.Load(common_test::worlds::kEmptySdf);
+    ASSERT_TRUE(errorsWorld.empty()) << errorsWorld;
+
+    auto engine =
+        gz::physics::RequestEngine3d<CollisionMeshFeaturesList>::From(plugin);
+    ASSERT_NE(nullptr, engine);
+
+    auto world = engine->ConstructWorld(*rootWorld.WorldByIndex(0));
+    ASSERT_NE(nullptr, world);
+
+    sdf::Root root;
+    gz::math::Pose3d initialModelPose(0, 0, 0, 0, 0, 0);
+    sdf::Errors errors = root.LoadSdfString(getMeshModelStr(
+        "", "mesh", initialModelPose));
+    ASSERT_TRUE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    errors = root.LoadSdfString(boxModelStr);
+    ASSERT_TRUE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    auto mesh = world->GetModel("mesh");
+    ASSERT_NE(nullptr, mesh);
+
+    // step and get contacts
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+
+    world->Step(output, state, input);
+
+    auto contacts = world->GetContactsFromLastStep();
+
+    // large box should be intersecting mesh
+    EXPECT_FALSE(contacts.empty());
+
+    // step and get contacts
+    world->Step(output, state, input);
+    contacts = world->GetContactsFromLastStep();
+
+    std::size_t contactSize = contacts.size();
+    EXPECT_NE(0u, contactSize);
+
+    // try with a decomposed mesh
+    std::string modelName = "mesh_decomposed";
+    errors = root.LoadSdfString(getMeshModelStr(
+        "convex_decomposition", modelName,
+        gz::math::Pose3d(0, 0, 3, 0, 0, 0)));
+    ASSERT_TRUE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    world->ConstructModel(*root.Model());
+
+    // step and get contacts
+    world->Step(output, state, input);
+    contacts = world->GetContactsFromLastStep();
+
+    if (this->PhysicsEngineName(name) == "bullet-featherstone")
+    {
+      // convex decomposed meshes in bullet-featherstone should generate only
+      // 1 contact manifold and (up to) 4 contact points
+      EXPECT_EQ(contactSize + 4u, contacts.size());
+    }
+    else
+    {
+      EXPECT_LT(contactSize, contacts.size());
+    }
+
+    // Step again and verify contact points do not accumulate across steps
+    world->Step(output, state, input);
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(contactSize + 4u, contacts.size());
+
+    // Move the decomposed mesh outside the box and verify its contacts are
+    // cleared
+    auto decomposedModel = world->GetModel(modelName);
+    ASSERT_NE(nullptr, decomposedModel);
+    auto freeGroup = decomposedModel->FindFreeGroup();
+    ASSERT_NE(nullptr, freeGroup);
+    freeGroup->SetWorldPose(
+        gz::math::eigen3::convert(gz::math::Pose3d(0, 0, 20, 0, 0, 0)));
+    world->Step(output, state, input);
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(contactSize, contacts.size());
+
+    // Move the decomposed mesh back inside the box and verify contacts are
+    // restored (4 contact points)
+    freeGroup->SetWorldPose(
+        gz::math::eigen3::convert(gz::math::Pose3d(0, 0, 3, 0, 0, 0)));
+    world->Step(output, state, input);
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(contactSize + 4u, contacts.size());
+
+    // Verify that we can remove the model with convex decomposed mesh
+    world->RemoveModel(modelName);
+    auto model = world->GetModel(modelName);
+    EXPECT_EQ(nullptr, model);
+    world->Step(output, state, input);
+    contacts = world->GetContactsFromLastStep();
+    EXPECT_EQ(contactSize, contacts.size());
+
+    // Test a link containing both primitive collisions and multiple convex
+    // decomposed mesh collisions, verifying that each collision identity is
+    // resolved without ambiguity and each convex decomposed mesh collision is
+    // reduced to at most 4 contact points.
+    std::stringstream multiColModelStr;
+    multiColModelStr << R"(
+    <sdf version="1.11">
+      <model name="multi_collision_model">
+        <pose>0 0 3 0 0 0</pose>
+        <link name="body">
+          <collision name="box_col">
+            <pose>-2 0 0 0 0 0</pose>
+            <geometry>
+              <box><size>0.5 0.5 0.5</size></box>
+            </geometry>
+          </collision>
+          <collision name="mesh_col_1">
+            <pose>0 0 0 0 0 0</pose>
+            <geometry>
+              <mesh optimization="convex_decomposition">
+                <uri>)" << gz::physics::test::resources::kChassisDae << R"(</uri>
+              </mesh>
+            </geometry>
+          </collision>
+          <collision name="mesh_col_2">
+            <pose>2 0 0 0 0 0</pose>
+            <geometry>
+              <mesh optimization="convex_decomposition">
+                <uri>)" << gz::physics::test::resources::kChassisDae << R"(</uri>
+              </mesh>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+    </sdf>)";
+
+    errors = root.LoadSdfString(multiColModelStr.str());
+    ASSERT_TRUE(errors.empty()) << errors;
+    ASSERT_NE(nullptr, root.Model());
+    auto multiColModel = world->ConstructModel(*root.Model());
+    ASSERT_NE(nullptr, multiColModel);
+    auto multiColLink = multiColModel->GetLink("body");
+    ASSERT_NE(nullptr, multiColLink);
+    auto boxCol = multiColLink->GetShape("box_col");
+    auto meshCol1 = multiColLink->GetShape("mesh_col_1");
+    auto meshCol2 = multiColLink->GetShape("mesh_col_2");
+    ASSERT_NE(nullptr, boxCol);
+    ASSERT_NE(nullptr, meshCol1);
+    ASSERT_NE(nullptr, meshCol2);
+
+    world->Step(output, state, input);
+    contacts = world->GetContactsFromLastStep();
+
+    using WorldShapeType = gz::physics::World<
+        gz::physics::FeaturePolicy3d, CollisionMeshFeaturesList>;
+    std::size_t boxColContacts = 0u;
+    std::size_t meshCol1Contacts = 0u;
+    std::size_t meshCol2Contacts = 0u;
+    for (const auto &contact : contacts)
+    {
+      const auto &cp = contact.Get<WorldShapeType::ContactPoint>();
+      if (cp.collision1 == boxCol || cp.collision2 == boxCol)
+        ++boxColContacts;
+      if (cp.collision1 == meshCol1 || cp.collision2 == meshCol1)
+        ++meshCol1Contacts;
+      if (cp.collision1 == meshCol2 || cp.collision2 == meshCol2)
+        ++meshCol2Contacts;
+    }
+
+    EXPECT_GT(boxColContacts, 0u);
+    EXPECT_GT(meshCol1Contacts, 0u);
+    EXPECT_LE(meshCol1Contacts, 4u);
+    EXPECT_GT(meshCol2Contacts, 0u);
+    EXPECT_LE(meshCol2Contacts, 4u);
   }
 }
 
