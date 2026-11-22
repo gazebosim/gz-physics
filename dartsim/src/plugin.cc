@@ -73,6 +73,7 @@ namespace {
 // The solution here is to call the `unregisterAllCreators` function from the
 // plugins translation unit in the hopes that it will force the compiler to keep
 // the destructors.
+#ifndef _WIN32
 struct UnregisterCollisionDetectors
 {
   ~UnregisterCollisionDetectors()
@@ -82,6 +83,7 @@ struct UnregisterCollisionDetectors
 };
 
 UnregisterCollisionDetectors unregisterAtUnload;
+#endif
 }
 
 IGN_PHYSICS_ADD_PLUGIN(Plugin, FeaturePolicy3d, DartsimFeatures)
