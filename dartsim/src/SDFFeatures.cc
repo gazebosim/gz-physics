@@ -732,6 +732,11 @@ Identity SDFFeatures::ConstructSdfLink(
   // TODO(MXG): Consider adding a UUID to this joint name in order to avoid any
   // potential (albeit unlikely) name collisions.
 
+  if (_sdfLink.Kinematic())
+  {
+    jointProperties.mActuatorType = dart::dynamics::Joint::ACCELERATION;
+  }
+
   // Note: When constructing a link from this function, we always instantiate
   // it as a standalone free body within the model. If it should have any joint
   // constraints, those will be added later.
