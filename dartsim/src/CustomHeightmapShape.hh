@@ -19,27 +19,37 @@
 #define GZ_PHYSICS_DARTSIM_SRC_CUSTOMHEIGHTMAPSHAPE_HH_
 
 #include <dart/dynamics/HeightmapShape.hpp>
-#include <gz/common/geospatial/HeightmapData.hh>
+#include <gz/physics/dartsim-plugin/Export.hh>
+#include <gz/physics/heightmap/detail/SampleHeightmap.hh>
 
 namespace gz {
 namespace physics {
 namespace dartsim {
 
 /// \brief This class creates a custom derivative of dartsim's HeightmapShape
-/// class which allows a gz::common::Heightmap to be converted into a
+/// class which allows a sampled gz::common::Heightmap to be converted into a
 /// HeightmapShape that can be used by dartsim.
 /// Using float precision because Bullet's collision detector doesn't support
 /// double. common::HeightmapData also holds floats.
-class CustomHeightmapShape : public dart::dynamics::HeightmapShape<float>
+class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE CustomHeightmapShape
+  : public dart::dynamics::HeightmapShape<float>
 {
   /// \brief Constructor
-  /// \param[in] _input Holds heightmap data.
+  /// \param[in] _sampled Heights of the heightmap, with row 0 at the +y edge.
   /// \param[in] _size Heightmap size in meters.
-  /// \param[in] _subSampling How much to subsample.
   public: CustomHeightmapShape(
-      const common::HeightmapData &_input,
-      const Eigen::Vector3d &_size,
-      int _subSampling);
+      const heightmap::detail::SampledHeightmap &_sampled,
+      const Eigen::Vector3d &_size);
+
+  // Documentation inherited. Returns a CustomHeightmapShape, which keeps the
+  // bounding box of this class, unlike the clone of the base class.
+  public: dart::dynamics::ShapePtr clone() const override;
+
+  // Documentation inherited.
+  protected: void updateBoundingBox() const override;
+
+  /// \brief Constructor of an empty heightmap, for clone().
+  private: CustomHeightmapShape() = default;
 };
 }
 }

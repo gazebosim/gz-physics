@@ -10,6 +10,14 @@ release will remove the deprecated code.
 
 ### Breaking Changes
 
+* **dartsim**: heightmaps now span exactly their `<size>` in x and y. They
+  used to be one cell shorter, centered on the same point, as dartsim spaced
+  the samples `size / n` apart instead of `size / (n - 1)`, where
+  `n = (width - 1) * subSampling + 1` is the number of samples along a side:
+  `1 / n` shorter, for example 0.4% for a 257 pixel heightmap and 0.8% for a
+  129 pixel one, with a subSampling of 1. Terrain features of existing worlds
+  may shift by up to half a cell at the edges of the heightmap.
+
 * **GetRayIntersectionFromLastStepFeature**: `RayIntersectionT::fraction` is
   now `+INF` on a miss (was `NaN`); `NaN` now means error. Use the new
   `IsHit()` helper instead of `std::isnan(fraction)` to detect hits.
