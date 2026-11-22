@@ -262,3 +262,40 @@ transient reaction torques. This can cause the entire assembly—including an
 ungrounded base link resting on the ground—to lift off the ground and take
 several seconds to settle back down, a behavior not observed in DART or
 Bullet-Featherstone.
+
+## MuJoCo-specific SDF parameters
+
+MuJoCo parameters that have no counterpart in SDFormat are read from a
+`<gz:mujoco>` element, with MuJoCo's own names and units (see the
+[MuJoCo XML reference](https://mujoco.readthedocs.io/en/stable/XMLreference.html)).
+When the element is absent the plugin keeps the MuJoCo defaults.
+
+```xml
+<physics name="1ms" type="mujoco">
+  <gz:mujoco>
+    <cone>elliptic</cone>        <!-- elliptic | pyramidal -->
+    <impratio>10</impratio>
+    <contact>
+      <solref>0.0025 1</solref>  <!-- default solref of every collision -->
+    </contact>
+  </gz:mujoco>
+</physics>
+
+<collision name="foot">
+  <surface>
+    <gz:mujoco>
+      <friction>0.8 0.005 0.0001</friction>  <!-- sliding [torsional [rolling]] -->
+      <condim>4</condim>                     <!-- 1, 3, 4 or 6 -->
+      <solref>0.0025 1</solref>
+      <solimp>0.95 0.99 0.001</solimp>       <!-- 3 to 5 values -->
+      <priority>1</priority>
+    </gz:mujoco>
+  </surface>
+</collision>
+```
+
+If `<condim>` is not given, it follows the number of `<friction>` values: 1
+gives 3, 2 gives 4 and 3 gives 6. Invalid values are reported and ignored.
+The `<physics>` element only reaches the plugin if the caller passes it in the
+`sdf::World` given to `ConstructSdfWorld`; without it the world keeps the
+MuJoCo defaults.
