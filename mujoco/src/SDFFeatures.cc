@@ -24,11 +24,14 @@
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <locale>
 #include <memory>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <unordered_map>
@@ -174,6 +177,17 @@ void copyStandardJointAxisProperties(
 double convertScrewThreadPitch(const double _pitch)
 {
   return _pitch / (2.0 * GZ_PI);
+}
+
+/////////////////////////////////////////////////
+/// \brief _value printed with all its digits, whatever the locale.
+std::string exactString(double _value)
+{
+  std::ostringstream stream;
+  stream.imbue(std::locale::classic());
+  stream.precision(17);
+  stream << _value;
+  return stream.str();
 }
 
 /////////////////////////////////////////////////
@@ -393,7 +407,11 @@ struct ModelKinematicStructure
     std::cout << "}\n";
   }
 
-  mjsGeom * AddMesh(mjSpec *_spec, mjsBody *_body, const ::sdf::Mesh *_meshSdf)
+  /// \brief Add a mesh geom to _body. Geoms with the same mesh file and
+  /// scale share one MuJoCo mesh asset.
+  /// \return The geom, or nullptr (after a message) on failure.
+  mjsGeom * AddMesh(WorldInfo &_worldInfo, mjsBody *_body,
+                    const ::sdf::Mesh *_meshSdf)
   {
     auto &meshManager = *gz::common::MeshManager::Instance();
     auto *mesh = meshManager.Load(_meshSdf->Uri());
@@ -404,67 +422,153 @@ struct ModelKinematicStructure
       return nullptr;
     }
 
+    // The submesh and its centering are not part of the name because this
+    // plugin does not read them.
+    const auto &scale = _meshSdf->Scale();
+    const std::string meshName = mesh->Name() + "@scale=" +
+        exactString(scale.X()) + "," + exactString(scale.Y()) + "," +
+        exactString(scale.Z());
+
+    return this->AddSharedMesh(_worldInfo, _body, meshName, [&]()
+    {
+      return this->AddMeshAsset(_worldInfo.mjSpecObj, meshName, scale, *mesh,
+                                _meshSdf->Uri());
+    });
+  }
+
+  /// \brief Add a cone geom to _body. Cones of the same size share one
+  /// MuJoCo mesh asset.
+  /// \return The geom, or nullptr (after a message) on failure.
+  mjsGeom * AddCone(WorldInfo &_worldInfo, mjsBody *_body,
+                    const ::sdf::Cone *_coneSdf)
+  {
+    const std::string meshName = "cone@radius=" +
+        exactString(_coneSdf->Radius()) + ",length=" +
+        exactString(_coneSdf->Length());
+
+    return this->AddSharedMesh(_worldInfo, _body, meshName, [&]()
+    {
+      auto *spec = _worldInfo.mjSpecObj;
+      auto *muMesh = mjs_addMesh(spec, nullptr);
+      if (!muMesh)
+      {
+        gzerr << "Failed to add mesh spec for " << meshName << std::endl;
+        return false;
+      }
+      muMesh->scale[0] = _coneSdf->Radius();
+      muMesh->scale[1] = _coneSdf->Radius();
+      muMesh->scale[2] = _coneSdf->Length() / 2.0;
+      // 36 is the number of segments in the DART plugin implementation
+      double params[3] = {36, 0};
+      if (mjs_setName(muMesh->element, meshName.c_str()) != 0 ||
+          mjs_makeMesh(muMesh, mjMESH_BUILTIN_CONE, params, 2) != 0)
+      {
+        gzerr << "Failed to add mesh spec [" << meshName
+              << "]: " << mjs_getError(spec) << std::endl;
+        mjs_delete(spec, muMesh->element);
+        return false;
+      }
+      return true;
+    });
+  }
+
+  /// \brief Add a geom to _body that uses the mesh asset _meshName, adding
+  /// the asset with _addAsset first if the world doesn't have it yet.
+  /// \return The geom, or nullptr (after a message) on failure.
+  mjsGeom * AddSharedMesh(WorldInfo &_worldInfo, mjsBody *_body,
+                          const std::string &_meshName,
+                          const std::function<bool()> &_addAsset)
+  {
+    // Not looked up with mjs_findElement: after a compile or delete that saw
+    // a mesh, it misses the meshes added later.
+    if (_worldInfo.meshAssets.count(_meshName) == 0)
+    {
+      if (!_addAsset())
+        return nullptr;
+      _worldInfo.meshAssets.insert(_meshName);
+    }
+
     auto geom = mjs_addGeom(_body, nullptr);
     if (!geom)
     {
+      gzerr << "Failed to add a geom for mesh [" << _meshName << "]."
+            << std::endl;
       return nullptr;
     }
     geom->type = mjGEOM_MESH;
-    auto meshName = mesh->Name();
-    mjs_setString(geom->meshname, meshName.c_str());
+    mjs_setString(geom->meshname, _meshName.c_str());
+    return geom;
+  }
 
+  /// \brief Add the MuJoCo mesh asset _meshName with the vertices of _mesh.
+  /// A half built asset is removed again on failure.
+  /// \return True if the asset was added.
+  bool AddMeshAsset(mjSpec *_spec, const std::string &_meshName,
+                    const gz::math::Vector3d &_scale,
+                    const gz::common::Mesh &_mesh, const std::string &_uri)
+  {
     auto *muMesh = mjs_addMesh(_spec, nullptr);
     if (!muMesh)
     {
-      gzerr << "Failed to add mesh spec for " << meshName << std::endl;
-      return nullptr;
+      gzerr << "Failed to add mesh spec for " << _meshName << std::endl;
+      return false;
     }
+    auto discard = [&]()
+    {
+      mjs_delete(_spec, muMesh->element);
+      return false;
+    };
 
     if (!muMesh->uservert || !muMesh->userface)
     {
       gzerr << "muMesh uservert or userface array is null for "
-            << meshName << std::endl;
-      return nullptr;
+            << _meshName << std::endl;
+      return discard();
     }
 
-    mjs_setName(muMesh->element, meshName.c_str());
+    if (mjs_setName(muMesh->element, _meshName.c_str()) != 0)
+    {
+      gzerr << "Failed to name mesh spec [" << _meshName
+            << "]: " << mjs_getError(_spec) << std::endl;
+      return discard();
+    }
 
-    muMesh->scale[0] = _meshSdf->Scale().X();
-    muMesh->scale[1] = _meshSdf->Scale().Y();
-    muMesh->scale[2] = _meshSdf->Scale().Z();
+    muMesh->scale[0] = _scale.X();
+    muMesh->scale[1] = _scale.Y();
+    muMesh->scale[2] = _scale.Z();
     double *verts{nullptr};
     int *indices{nullptr};
 
-    mesh->FillArrays(&verts, &indices);
-    auto nverts = mesh->VertexCount();
+    _mesh.FillArrays(&verts, &indices);
+    auto nverts = _mesh.VertexCount();
 
     if (nverts > 0 && nullptr == verts)
     {
-      gzerr << "Mesh [" << _meshSdf->Uri() << "] has " << nverts
+      gzerr << "Mesh [" << _uri << "] has " << nverts
             << " vertices but FillArrays returned null vertices pointer."
             << std::endl;
       delete[] indices;
-      return nullptr;
+      return discard();
     }
 
-    if (mesh->IndexCount() > 0 && nullptr == indices)
+    if (_mesh.IndexCount() > 0 && nullptr == indices)
     {
-      gzerr << "Mesh [" << _meshSdf->Uri() << "] has " << mesh->IndexCount()
+      gzerr << "Mesh [" << _uri << "] has " << _mesh.IndexCount()
             << " indices but FillArrays returned null indices pointer."
             << std::endl;
       delete[] verts;
-      return nullptr;
+      return discard();
     }
 
     muMesh->uservert->assign(3 * nverts, 0.0);
     std::transform(verts, verts + 3 * nverts, muMesh->uservert->begin(),
         [](double val) {return static_cast<float>(val);});
 
-    mjs_setInt(muMesh->userface, indices, mesh->IndexCount());
+    mjs_setInt(muMesh->userface, indices, _mesh.IndexCount());
 
     delete[] verts;
     delete[] indices;
-    return geom;
+    return true;
   }
 
   void AddJoint(Base &_base, mjSpec *_spec, const ::sdf::Joint *sdfJoint,
@@ -791,7 +895,6 @@ struct ModelKinematicStructure
     // TODO(azeey) Apply pose of inertia frame.
 
     // Parse collisions
-    std::size_t meshCounter = 0;
     for (std::size_t i = 0; i < link->CollisionCount(); ++i)
     {
       const auto *collision = link->CollisionByIndex(i);
@@ -812,19 +915,7 @@ struct ModelKinematicStructure
         }
         case ::sdf::GeometryType::CONE:
         {
-          geom = mjs_addGeom(child, nullptr);
-          geom->type = mjGEOM_MESH;
-          const std::string meshName =
-              collision->Name() + "_cone_" + std::to_string(meshCounter++);
-          auto *muMesh = mjs_addMesh(_spec, nullptr);
-          mjs_setName(muMesh->element, meshName.c_str());
-          mjs_setString(geom->meshname, meshName.c_str());
-          muMesh->scale[0] = shape->ConeShape()->Radius();
-          muMesh->scale[1] = shape->ConeShape()->Radius();
-          muMesh->scale[2] = shape->ConeShape()->Length() / 2.0;
-          // 36 is the number of segments in the DART plugin implementation
-          double params[3] = {36, 0};
-          mjs_makeMesh(muMesh, mjMESH_BUILTIN_CONE, params, 2);
+          geom = this->AddCone(*worldInfo, child, shape->ConeShape());
           break;
         }
         case ::sdf::GeometryType::CYLINDER:
@@ -874,7 +965,7 @@ struct ModelKinematicStructure
         }
         case ::sdf::GeometryType::MESH:
         {
-          geom = this->AddMesh(worldInfo->mjSpecObj, child, shape->MeshShape());
+          geom = this->AddMesh(*worldInfo, child, shape->MeshShape());
           break;
         }
         case ::sdf::GeometryType::HEIGHTMAP:
@@ -933,6 +1024,11 @@ struct ModelKinematicStructure
         // bounding box of the shape.
         _base.frames[shapeInfo->entityId] = std::make_shared<FrameInfo>(
             child, convertPose(collisionPose), worldInfo);
+      }
+      else
+      {
+        gzerr << "Collision [" << collision->Name() << "] of link ["
+              << link->Name() << "] was not added." << std::endl;
       }
     }
 
