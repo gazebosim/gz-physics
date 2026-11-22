@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="heightmap">
+    <!-- Heightmaps are attached to this link by the test, since physics
+         engines do not construct them from SDF. -->
+    <model name="terrain">
+      <static>true</static>
+      <link name="link"/>
+    </model>
+
+    <model name="sphere_low">
+      <pose>8.5 -8.5 1.2 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.025</ixx>
+            <iyy>0.025</iyy>
+            <izz>0.025</izz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <sphere>
+              <radius>0.25</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="sphere_high">
+      <pose>-8.5 -8.5 2.8 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.025</ixx>
+            <iyy>0.025</iyy>
+            <izz>0.025</izz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <sphere>
+              <radius>0.25</radius>
+            </sphere>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="box_on_slope">
+      <pose>0 8.5 1.9 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.0417</ixx>
+            <iyy>0.0417</iyy>
+            <izz>0.0417</izz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.5 0.5 0.5</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+  </world>
+</sdf>

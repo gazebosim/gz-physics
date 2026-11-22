@@ -17,9 +17,13 @@
 #ifndef GZ_PHYSICS_MUJOCO_SRC_SHAPEFEATURES_HH_
 #define GZ_PHYSICS_MUJOCO_SRC_SHAPEFEATURES_HH_
 
+#include <string>
+
+#include <gz/common/geospatial/HeightmapData.hh>
 #include <gz/physics/GetBoundingBox.hh>
 #include <gz/physics/Implements.hh>
 #include <gz/physics/Shape.hh>
+#include <gz/physics/heightmap/HeightmapShape.hh>
 
 #include "Base.hh"
 
@@ -30,7 +34,9 @@ namespace mujoco {
 struct ShapeFeatureList : FeatureList<
   GetShapeBoundingBox,
   GetLinkBoundingBox,
-  GetModelBoundingBox
+  GetModelBoundingBox,
+  heightmap::GetHeightmapShapeProperties,
+  heightmap::AttachHeightmapShapeFeature
 > { };
 
 class ShapeFeatures :
@@ -40,6 +46,21 @@ class ShapeFeatures :
   // ----- Boundingbox Features -----
   public: AlignedBox3d GetShapeAxisAlignedBoundingBox(
               const Identity &_shapeID) const override;
+
+  // ----- Heightmap Features -----
+  public: Identity CastToHeightmapShape(
+      const Identity &_shapeID) const override;
+
+  public: LinearVector3d GetHeightmapShapeSize(
+      const Identity &_heightmapID) const override;
+
+  public: Identity AttachHeightmapShape(
+      const Identity &_linkID,
+      const std::string &_name,
+      const common::HeightmapData &_heightmapData,
+      const Pose3d &_pose,
+      const LinearVector3d &_size,
+      int _subSampling) override;
 };
 
 }  // namespace mujoco

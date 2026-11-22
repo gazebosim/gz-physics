@@ -194,6 +194,18 @@ struct ShapeInfo
 
   /// \brief Cached axis-aligned bounding box. Currently only used for meshes.
   mutable std::optional<gz::physics::AlignedBox3d> cachedAABB;
+
+  /// \brief Height field asset of a heightmap, owned by this shape. Only set
+  /// for heightmaps.
+  mjsHField *hfield{nullptr};
+
+  /// \brief Height range of the sampled heightmap.
+  double heightmapHeight{0.0};
+
+  /// \brief Height of the lowest heightmap point in the shape frame. MuJoCo
+  /// puts the lowest point of a height field at its geom's origin, so the
+  /// geom is offset by this much along the shape frame's z axis.
+  double heightmapMinHeight{0.0};
 };
 
 struct LinkInfo
