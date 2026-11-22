@@ -177,6 +177,15 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
   // in mjData::userdata
   _worldInfo.mjSpecObj->nuserdata = kRequiredUserDataSlots;
 
+  // Before MuJoCo 3.14, mj_recompile saved the control of the i-th actuator
+  // of the spec from ctrl[i] of the old data, including the actuators added
+  // since the last compilation. Positions past the old nu read whatever
+  // memory followed the old ctrl array, so zero them after the recompilation.
+  // A model removed since the last compilation (mjs_delete drops its
+  // actuators from the spec right away) shifts the actuators after it down,
+  // so they take the controls of other actuators. Those are in bounds, and
+  // zero unless a control was set since the last step, which clears them.
+  const int oldNu = _worldInfo.mjModelObj ? _worldInfo.mjModelObj->nu : 0;
   int rc = mj_recompile(_worldInfo.mjSpecObj, nullptr, _worldInfo.mjModelObj,
                         _worldInfo.mjDataObj);
   _worldInfo.specDirty = false;
@@ -184,6 +193,12 @@ bool Base::RecompileSpec(WorldInfo &_worldInfo) const
   if (rc != 0) {
     gzerr << "Error compiling:" << mjs_getError(_worldInfo.mjSpecObj) << "\n";
     return false;
+  }
+
+  if (_worldInfo.mjDataObj && _worldInfo.mjModelObj->nu > oldNu)
+  {
+    mju_zero(_worldInfo.mjDataObj->ctrl + oldNu,
+             _worldInfo.mjModelObj->nu - oldNu);
   }
 
   // Broadphase collision buffers scale quadratically with nbody (~6*nbody^2
