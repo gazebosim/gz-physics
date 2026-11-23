@@ -70,6 +70,15 @@ namespace gz
     }
 
     /////////////////////////////////////////////////
+    // With two-phase name lookup (/permissive-), MSVC 19.29 (Visual Studio
+    // 2019) leaves a wrong packing state after this definition: a member
+    // template with a template template parameter whose return type does
+    // not depend on it. The next header that the including file opens then
+    // reports C4103 (alignment changed after including header). Saving and
+    // restoring the packing around the definition avoids it.
+#ifdef _MSC_VER
+#pragma pack(push)
+#endif
     template <typename FeatureListT>
     template <
         typename PolicyT,
@@ -90,6 +99,9 @@ namespace gz
             *_entity.entity->pimpl, names);
       return names;
     }
+#ifdef _MSC_VER
+#pragma pack(pop)
+#endif
   }
 }
 
