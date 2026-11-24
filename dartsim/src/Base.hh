@@ -536,8 +536,11 @@ class GZ_PHYSICS_DARTSIM_PLUGIN_VISIBLE Base
     const auto &world = this->worlds.at(_worldID);
     auto modelInfo = this->models.at(_modelID);
     auto skel = modelInfo->model;
-    // Remove the contents of the skeleton from local entity storage containers
-    for (auto &nestedModel : modelInfo->nestedModels)
+    // Remove the contents of the skeleton from local entity storage containers.
+    // Each recursive call erases the removed model's own entry from this
+    // vector, so iterate over a copy of the ids to avoid skipping entries.
+    const std::vector<std::size_t> nestedModels = modelInfo->nestedModels;
+    for (const auto &nestedModel : nestedModels)
     {
       this->RemoveModelImpl(_worldID, nestedModel);
     }
