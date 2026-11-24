@@ -237,3 +237,62 @@ TEST(BaseClass, AddNestedModel)
   ASSERT_EQ(2u, parentModelInfo.nestedModels.size());
   EXPECT_EQ(nestedModel2ID, parentModelInfo.nestedModels[1]);
 }
+
+/////////////////////////////////////////////////
+// Removing a model has to cascade to every one of its nested models.
+TEST(BaseClass, RemoveModelWithNestedModels)
+{
+  dartsim::Base base;
+  base.InitiateEngine(0);
+
+  dart::simulation::WorldPtr world = dart::simulation::World::create("default");
+
+  auto worldID = base.AddWorld(world, world->getName());
+  ASSERT_TRUE(base.worlds.HasEntity(worldID));
+
+  auto addSkeleton = [](const std::string &_name)
+  {
+    auto skel = dart::dynamics::Skeleton::create(_name);
+    skel->createJointAndBodyNodePair<dart::dynamics::FreeJoint>();
+    return skel;
+  };
+
+  auto parentRes = base.AddModel(
+      {addSkeleton("parent"), "parent",
+       dart::dynamics::SimpleFrame::createShared(
+           dart::dynamics::Frame::World(), "parent_frame"), ""},
+      worldID);
+  const std::size_t parentID = std::get<0>(parentRes);
+  ASSERT_TRUE(base.models.HasEntity(parentID));
+
+  const std::size_t numNested = 6u;
+  std::vector<std::size_t> nestedIDs;
+  for (std::size_t i = 0; i < numNested; ++i)
+  {
+    const std::string name = "nested" + std::to_string(i);
+    auto res = base.AddNestedModel(
+        {addSkeleton(name), name,
+         dart::dynamics::SimpleFrame::createShared(
+             dart::dynamics::Frame::World(), name + "_frame"), ""},
+        parentID, worldID);
+    nestedIDs.push_back(std::get<0>(res));
+    ASSERT_TRUE(base.models.HasEntity(nestedIDs.back()));
+  }
+
+  EXPECT_EQ(numNested + 1u, base.models.size());
+  EXPECT_EQ(numNested, base.models.at(parentID)->nestedModels.size());
+  EXPECT_EQ(numNested + 1u, world->getNumSkeletons());
+
+  EXPECT_TRUE(base.RemoveModelImpl(worldID, parentID));
+
+  // Every nested model has to be gone, not only the ones the loop happened to
+  // visit.
+  for (std::size_t i = 0; i < nestedIDs.size(); ++i)
+  {
+    EXPECT_FALSE(base.models.HasEntity(nestedIDs[i]))
+        << "nested" << i << " was not removed";
+  }
+  EXPECT_FALSE(base.models.HasEntity(parentID));
+  EXPECT_EQ(0u, base.models.size());
+  EXPECT_EQ(0u, world->getNumSkeletons());
+}
