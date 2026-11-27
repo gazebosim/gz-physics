@@ -37,6 +37,7 @@
 #include <Eigen/Geometry>
 
 #include <algorithm>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -632,6 +633,15 @@ inline void makeColliderDynamic(LinkInfo *_linkInfo)
 }
 
 /////////////////////////////////////////////////
+/// \brief Call _updateColliderCb on every link that is attached, directly or
+/// through other links, as the child of a fixed constraint whose parent is
+/// the link _linkID.
+void updateColliderFlagsRecursive(std::size_t _linkID,
+  const std::unordered_map<std::size_t, std::shared_ptr<JointInfo>> &_joints,
+  const std::unordered_map<std::size_t, std::shared_ptr<LinkInfo>> &_links,
+  std::function<void(LinkInfo *)> _updateColliderCb);
+
+/////////////////////////////////////////////////
 /// \brief Apply the broadphase filter of colliderFilterGroup and
 /// colliderFilterMask to the collider of a link and re-create its broadphase
 /// proxy if the filter changed. The broadphase applies the filter only when
@@ -825,6 +835,12 @@ class Base : public Implements3d<FeatureList<Feature>>
     return this->GenerateIdentity(id, joint);
   }
 
+  /// \brief Remove the fixed constraint of a joint made by AttachFixedJoint
+  /// from the world and revert the collision changes made when attaching.
+  /// Does nothing if the joint has no fixed constraint.
+  /// \param[in] _jointInfo The joint to remove the fixed constraint of.
+  public: void RemoveFixedConstraint(JointInfo *_jointInfo);
+
   public: bool RemoveModelImpl(const Identity &_parentID,
                                const Identity &_modelID)
   {
@@ -885,6 +901,36 @@ class Base : public Implements3d<FeatureList<Feature>>
       }
     }
 
+
+    // Cleanup fixed constraints that attach this model to other models, e.g.
+    // the ones made by AttachFixedJoint. Iterate over a copy because the
+    // constraint is erased from the sets of both of its models.
+    const auto externalConstraints = model->external_constraints;
+    for (const auto jointID : externalConstraints)
+    {
+      auto jointIt = this->joints.find(jointID);
+      if (jointIt == this->joints.end())
+        continue;
+      const auto joint = jointIt->second;
+      this->RemoveFixedConstraint(joint.get());
+
+      auto *childModel = this->ReferenceInterface<ModelInfo>(joint->model);
+      if (childModel)
+        childModel->external_constraints.erase(jointID);
+      if (joint->parentLinkID.has_value())
+      {
+        auto parentLinkIt = this->links.find(joint->parentLinkID.value());
+        if (parentLinkIt != this->links.end())
+        {
+          auto *parentModel = this->ReferenceInterface<ModelInfo>(
+              parentLinkIt->second->model);
+          if (parentModel)
+            parentModel->external_constraints.erase(jointID);
+        }
+      }
+      this->joints.erase(jointIt);
+    }
+    model->external_constraints.clear();
 
     // Cleanup joints
     for (const auto jointID : model->jointEntityIds)

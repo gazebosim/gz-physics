@@ -441,6 +441,248 @@ TYPED_TEST(DetachableJointResetTest, DetachableJointResetAndReattach)
   }
 }
 
+struct DetachableJointRemoveModelFeatureList: gz::physics::FeatureList<
+    DetachableJointFeatureList,
+    gz::physics::GetNestedModelFromModel,
+    gz::physics::RemoveModelFromWorld
+> { };
+
+template <class T>
+class DetachableJointRemoveModelTest : public DetachableJointTest<T>
+{
+  using FeaturePolicy3d = gz::physics::FeaturePolicy3d;
+
+  /// \brief Construct the first world of an SDF string.
+  /// \param[in] _pluginName Name of the physics plugin to use.
+  /// \param[in] _sdf SDF string with the world.
+  /// \param[out] _engine The engine.
+  /// \param[out] _world The constructed world.
+  public: void ConstructWorld(
+              const std::string &_pluginName,
+              const std::string &_sdf,
+              gz::physics::EnginePtr<FeaturePolicy3d, T> &_engine,
+              gz::physics::WorldPtr<FeaturePolicy3d, T> &_world)
+  {
+    std::cout << "Testing plugin: " << _pluginName << std::endl;
+    gz::plugin::PluginPtr plugin = this->loader.Instantiate(_pluginName);
+
+    _engine = gz::physics::RequestEngine3d<T>::From(plugin);
+    ASSERT_NE(nullptr, _engine);
+
+    sdf::Root root;
+    const sdf::Errors errors = root.LoadSdfString(_sdf);
+    ASSERT_TRUE(errors.empty()) << errors;
+
+    _world = _engine->ConstructWorld(*root.WorldByIndex(0));
+    ASSERT_NE(nullptr, _world);
+  }
+
+  /// \brief Step a world a number of times.
+  /// \param[in] _world The world to step.
+  /// \param[in] _steps Number of steps.
+  public: static void Step(gz::physics::WorldPtr<FeaturePolicy3d, T> &_world,
+                           std::size_t _steps)
+  {
+    gz::physics::ForwardStep::Output output;
+    gz::physics::ForwardStep::State state;
+    gz::physics::ForwardStep::Input input;
+    for (std::size_t i = 0; i < _steps; ++i)
+      _world->Step(output, state, input);
+  }
+};
+
+using DetachableJointRemoveModelTestTypes =
+  ::testing::Types<DetachableJointRemoveModelFeatureList>;
+TYPED_TEST_SUITE(DetachableJointRemoveModelTest,
+                 DetachableJointRemoveModelTestTypes);
+
+/////////////////////////////////////////////////
+// A model named _name at height _z with one box link named _linkName.
+// _extra is added inside the model, e.g. a nested model.
+static std::string removeModelSdf(const std::string &_name,
+    const std::string &_linkName, double _z, bool _static,
+    const std::string &_extra = "")
+{
+  return std::string("<model name='") + _name + "'>"
+    "<static>" + (_static ? "true" : "false") + "</static>"
+    "<pose>0 0 " + std::to_string(_z) + " 0 0 0</pose>"
+    "<link name='" + _linkName + "'>"
+    "  <inertial><mass>1.0</mass>"
+    "    <inertia><ixx>0.1</ixx><iyy>0.1</iyy><izz>0.1</izz></inertia>"
+    "  </inertial>"
+    "  <collision name='collision'>"
+    "    <geometry><box><size>0.2 0.2 0.2</size></box></geometry>"
+    "  </collision>"
+    "</link>" + _extra +
+    "</model>";
+}
+
+/////////////////////////////////////////////////
+// Model "parent" at z = 3 and model "child" at z = 2. _staticModel names the
+// one that is static. If _nestedParent is true, model "parent" also has a
+// nested model "nested" with a link "nested_link" at the same pose.
+static std::string removeModelWorld(const std::string &_staticModel,
+    bool _nestedParent = false)
+{
+  const std::string nested = _nestedParent ?
+      removeModelSdf("nested", "nested_link", 0.0,
+          _staticModel == "parent") : "";
+  return "<sdf version='1.9'><world name='remove_model_world'>" +
+      removeModelSdf("parent", "link", 3.0, _staticModel == "parent",
+          nested) +
+      removeModelSdf("child", "link", 2.0, _staticModel == "child") +
+      "</world></sdf>";
+}
+
+// Number of steps (1 ms each) to hold the joint before removing a model.
+// Bullet puts a body to sleep after it has been at rest for 2 s, so this
+// also checks that the body is woken up when the constraint is removed.
+static constexpr std::size_t kHoldSteps = 4000;
+
+/////////////////////////////////////////////////
+// Removing the static parent model of a detachable joint should remove the
+// fixed constraint, so the dynamic child falls. Detaching the joint
+// afterwards should do nothing.
+TYPED_TEST(DetachableJointRemoveModelTest, RemoveParentModel)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // Only bullet-featherstone is checked for now. dartsim keeps the child
+    // in place when the parent model is removed, and does not hold a
+    // dynamic parent with a static child.
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+      continue;
+
+    gz::physics::EnginePtr<gz::physics::FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<gz::physics::FeaturePolicy3d, TypeParam> world;
+    ASSERT_NO_FATAL_FAILURE(this->ConstructWorld(
+        name, removeModelWorld("parent"), engine, world));
+
+    auto parentLink = world->GetModel("parent")->GetLink("link");
+    auto childLink = world->GetModel("child")->GetLink("link");
+    ASSERT_NE(nullptr, parentLink);
+    ASSERT_NE(nullptr, childLink);
+
+    auto fixedJoint = childLink->AttachFixedJoint(parentLink);
+    ASSERT_NE(nullptr, fixedJoint);
+    fixedJoint->SetTransformFromParent(
+        parentLink->FrameDataRelativeToWorld().pose.inverse() *
+        childLink->FrameDataRelativeToWorld().pose);
+
+    this->Step(world, kHoldSteps);
+
+    // The child is held by the static parent
+    EXPECT_NEAR(2.0,
+        childLink->FrameDataRelativeToWorld().pose.translation().z(), 1e-3);
+
+    EXPECT_TRUE(world->RemoveModel("parent"));
+    EXPECT_EQ(nullptr, world->GetModel("parent"));
+
+    this->Step(world, 100);
+
+    // The child falls once the parent is gone (about 5 cm in 0.1 s)
+    EXPECT_LT(childLink->FrameDataRelativeToWorld().pose.translation().z(),
+        1.99);
+
+    // Detaching the joint of a removed parent should not throw
+    EXPECT_NO_THROW(fixedJoint->Detach());
+    this->Step(world, 10);
+  }
+}
+
+/////////////////////////////////////////////////
+// Removing the static child model of a detachable joint should remove the
+// fixed constraint, so the dynamic parent falls.
+TYPED_TEST(DetachableJointRemoveModelTest, RemoveChildModel)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // See RemoveParentModel
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+      continue;
+
+    gz::physics::EnginePtr<gz::physics::FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<gz::physics::FeaturePolicy3d, TypeParam> world;
+    ASSERT_NO_FATAL_FAILURE(this->ConstructWorld(
+        name, removeModelWorld("child"), engine, world));
+
+    auto parentLink = world->GetModel("parent")->GetLink("link");
+    auto childLink = world->GetModel("child")->GetLink("link");
+    ASSERT_NE(nullptr, parentLink);
+    ASSERT_NE(nullptr, childLink);
+
+    auto fixedJoint = childLink->AttachFixedJoint(parentLink);
+    ASSERT_NE(nullptr, fixedJoint);
+    fixedJoint->SetTransformFromParent(
+        parentLink->FrameDataRelativeToWorld().pose.inverse() *
+        childLink->FrameDataRelativeToWorld().pose);
+
+    this->Step(world, kHoldSteps);
+
+    // The parent is held by the static child
+    EXPECT_NEAR(3.0,
+        parentLink->FrameDataRelativeToWorld().pose.translation().z(), 1e-3);
+
+    EXPECT_TRUE(world->RemoveModel("child"));
+    EXPECT_EQ(nullptr, world->GetModel("child"));
+
+    this->Step(world, 100);
+
+    // The parent falls once the child is gone (about 5 cm in 0.1 s)
+    EXPECT_LT(parentLink->FrameDataRelativeToWorld().pose.translation().z(),
+        2.99);
+  }
+}
+
+/////////////////////////////////////////////////
+// Same as RemoveParentModel, but the parent link is in a nested model of
+// the removed model.
+TYPED_TEST(DetachableJointRemoveModelTest, RemoveNestedParentModel)
+{
+  for (const std::string &name : this->pluginNames)
+  {
+    // See RemoveParentModel
+    if (this->PhysicsEngineName(name) != "bullet-featherstone")
+      continue;
+
+    gz::physics::EnginePtr<gz::physics::FeaturePolicy3d, TypeParam> engine;
+    gz::physics::WorldPtr<gz::physics::FeaturePolicy3d, TypeParam> world;
+    ASSERT_NO_FATAL_FAILURE(this->ConstructWorld(
+        name, removeModelWorld("parent", true), engine, world));
+
+    auto nestedModel = world->GetModel("parent")->GetNestedModel("nested");
+    ASSERT_NE(nullptr, nestedModel);
+    auto parentLink = nestedModel->GetLink("nested_link");
+    auto childLink = world->GetModel("child")->GetLink("link");
+    ASSERT_NE(nullptr, parentLink);
+    ASSERT_NE(nullptr, childLink);
+
+    auto fixedJoint = childLink->AttachFixedJoint(parentLink);
+    ASSERT_NE(nullptr, fixedJoint);
+    fixedJoint->SetTransformFromParent(
+        parentLink->FrameDataRelativeToWorld().pose.inverse() *
+        childLink->FrameDataRelativeToWorld().pose);
+
+    this->Step(world, 100);
+
+    // The child is held by the static nested parent
+    EXPECT_NEAR(2.0,
+        childLink->FrameDataRelativeToWorld().pose.translation().z(), 1e-3);
+
+    EXPECT_TRUE(world->RemoveModel("parent"));
+    EXPECT_EQ(nullptr, world->GetModel("parent"));
+
+    this->Step(world, 100);
+
+    // The child falls once the parent is gone
+    EXPECT_LT(childLink->FrameDataRelativeToWorld().pose.translation().z(),
+        1.99);
+
+    EXPECT_NO_THROW(fixedJoint->Detach());
+    this->Step(world, 10);
+  }
+}
+
 int main(int argc, char *argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
