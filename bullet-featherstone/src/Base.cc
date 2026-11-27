@@ -308,6 +308,85 @@ const Eigen::Vector3d &GzMultiBody::GetBaseLinkFrameAngularVelocity() const
   return this->baseLinkFrameAngVel;
 }
 
+/////////////////////////////////////////////////
+void updateColliderFlagsRecursive(std::size_t _linkID,
+  const std::unordered_map<std::size_t, std::shared_ptr<JointInfo>> &_joints,
+  const std::unordered_map<std::size_t, std::shared_ptr<LinkInfo>> &_links,
+  std::function<void(LinkInfo *)> _updateColliderCb)
+{
+  GZ_PROFILE("bullet_featherstone::updateColliderFlagsRecursive");
+  btMultiBodyFixedConstraint *fixedConstraint = nullptr;
+  std::size_t childLinkID = 0u;
+  for (const auto &joint : _joints)
+  {
+    if (!joint.second->fixedConstraint)
+      continue;
+    if (!joint.second->parentLinkID.has_value() ||
+        joint.second->parentLinkID.value() != _linkID)
+      continue;
+
+    fixedConstraint =  joint.second->fixedConstraint.get();
+    childLinkID = std::size_t(joint.second->childLinkID);
+  }
+
+  if (!fixedConstraint)
+    return;
+
+  auto childInfo = _links.at(childLinkID);
+  _updateColliderCb(childInfo.get());
+
+  updateColliderFlagsRecursive(childLinkID, _joints, _links, _updateColliderCb);
+}
+
+/////////////////////////////////////////////////
+void Base::RemoveFixedConstraint(JointInfo *_jointInfo)
+{
+  if (!_jointInfo->fixedConstraint)
+    return;
+
+  // Make links dynamic again as they were originally not static
+  // This is done by reverting any collision flag changes
+  // made in AttachJoint
+  auto *linkInfo = this->ReferenceInterface<LinkInfo>(_jointInfo->childLinkID);
+  ModelInfo *parentModelInfo = nullptr;
+  if (_jointInfo->parentLinkID.has_value())
+  {
+    auto parentLinkInfo = this->links.at(_jointInfo->parentLinkID.value());
+    parentModelInfo =
+        this->ReferenceInterface<ModelInfo>(parentLinkInfo->model);
+
+    btMultiBodyLinkCollider *parentCollider = parentLinkInfo->collider.get();
+    btMultiBodyLinkCollider *childCollider = linkInfo->collider.get();
+    if (parentCollider && childCollider)
+    {
+      parentCollider->setIgnoreCollisionCheck(childCollider, false);
+      childCollider->setIgnoreCollisionCheck(parentCollider, false);
+      // Recursively make child colliders dynamic if they were originally
+      // not static
+      if (!linkInfo->isStaticOrFixed && isColliderStatic(linkInfo))
+      {
+        makeColliderDynamic(linkInfo);
+        updateColliderFlagsRecursive(std::size_t(_jointInfo->childLinkID),
+            this->joints, this->links, makeColliderDynamic);
+      }
+    }
+  }
+
+  auto *modelInfo = this->ReferenceInterface<ModelInfo>(_jointInfo->model);
+  if (modelInfo)
+  {
+    auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
+    world->world->removeMultiBodyConstraint(_jointInfo->fixedConstraint.get());
+    _jointInfo->fixedConstraint.reset();
+    _jointInfo->fixedConstraint = nullptr;
+    modelInfo->body->wakeUp();
+    // The parent may have been held by the child, e.g. if the child is
+    // static, so wake it up too
+    if (parentModelInfo && parentModelInfo->body)
+      parentModelInfo->body->wakeUp();
+  }
+}
+
 }  // namespace bullet_featherstone
 }  // namespace physics
 }  // namespace gz

@@ -56,36 +56,6 @@ void recreateJointLimitConstraint(JointInfo *_jointInfo, ModelInfo *_modelInfo,
 }
 
 /////////////////////////////////////////////////
-void updateColliderFlagsRecursive(std::size_t _linkID,
-  const std::unordered_map<std::size_t, std::shared_ptr<JointInfo>> &_joints,
-  const std::unordered_map<std::size_t, std::shared_ptr<LinkInfo>> &_links,
-  std::function<void(LinkInfo *)> _updateColliderCb)
-{
-  GZ_PROFILE("bullet_featherstone::updateColliderFlagsRecursive");
-  btMultiBodyFixedConstraint *fixedConstraint = nullptr;
-  std::size_t childLinkID = 0u;
-  for (const auto &joint : _joints)
-  {
-    if (!joint.second->fixedConstraint)
-      continue;
-    if (!joint.second->parentLinkID.has_value() ||
-        joint.second->parentLinkID.value() != _linkID)
-      continue;
-
-    fixedConstraint =  joint.second->fixedConstraint.get();
-    childLinkID = std::size_t(joint.second->childLinkID);
-  }
-
-  if (!fixedConstraint)
-    return;
-
-  auto childInfo = _links.at(childLinkID);
-  _updateColliderCb(childInfo.get());
-
-  updateColliderFlagsRecursive(childLinkID, _joints, _links, _updateColliderCb);
-}
-
-/////////////////////////////////////////////////
 double JointFeatures::GetJointPosition(
     const Identity &_id, const std::size_t _dof) const
 {
@@ -624,6 +594,11 @@ Identity JointFeatures::AttachFixedJoint(
       linkInfo->model
     });
 
+  // Track the constraint in both models so that it is removed with either
+  // of them
+  modelInfo->external_constraints.insert(std::size_t(jointID));
+  parentModelInfo->external_constraints.insert(std::size_t(jointID));
+
   auto parentLinkIdx = parentLinkInfo->indexInModel.value_or(-1);
   auto childLinkIdx = linkInfo->indexInModel.value_or(-1);
   auto *jointInfo = this->ReferenceInterface<JointInfo>(jointID);
@@ -674,43 +649,7 @@ void JointFeatures::DetachJoint(const Identity &_jointId)
 {
   GZ_PROFILE("JointFeatures::DetachJoint");
   auto jointInfo = this->ReferenceInterface<JointInfo>(_jointId);
-  if (jointInfo->fixedConstraint)
-  {
-    // Make links dynamic again as they were originally not static
-    // This is done by reverting any collision flag changes
-    // made in AttachJoint
-    auto *linkInfo = this->ReferenceInterface<LinkInfo>(jointInfo->childLinkID);
-    if (jointInfo->parentLinkID.has_value())
-    {
-      auto parentLinkInfo = this->links.at(jointInfo->parentLinkID.value());
-
-      btMultiBodyLinkCollider *parentCollider = parentLinkInfo->collider.get();
-      btMultiBodyLinkCollider *childCollider = linkInfo->collider.get();
-      if (parentCollider && childCollider)
-      {
-        parentCollider->setIgnoreCollisionCheck(childCollider, false);
-        childCollider->setIgnoreCollisionCheck(parentCollider, false);
-        // Recursively make child colliders dynamic if they were originally
-        // not static
-        if (!linkInfo->isStaticOrFixed && isColliderStatic(linkInfo))
-        {
-          makeColliderDynamic(linkInfo);
-          updateColliderFlagsRecursive(std::size_t(jointInfo->childLinkID),
-              this->joints, this->links, makeColliderDynamic);
-        }
-      }
-    }
-
-    auto modelInfo = this->ReferenceInterface<ModelInfo>(jointInfo->model);
-    if (modelInfo)
-    {
-      auto *world = this->ReferenceInterface<WorldInfo>(modelInfo->world);
-      world->world->removeMultiBodyConstraint(jointInfo->fixedConstraint.get());
-      jointInfo->fixedConstraint.reset();
-      jointInfo->fixedConstraint = nullptr;
-      modelInfo->body->wakeUp();
-    }
-  }
+  this->RemoveFixedConstraint(jointInfo);
 }
 
 /////////////////////////////////////////////////
